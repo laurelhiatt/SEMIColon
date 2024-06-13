@@ -1,0 +1,131 @@
+---
+title: "Mutation_Signatures"
+output: 
+  html_document: 
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Mutation Signature Analysis
+This rmarkdown describes the process to extract mutation signatures from sperm and identify mutagenic processes acting on bulk sperm across different age ranges. 
+
+Mutation signatures will be extracted using the [*mutSignatures*](https://cran.r-project.org/web/packages/mutSignatures/vignettes/get_sarted_with_mutSignatures.html) package in R. 
+
+Information on known COSMIC signatures (n=30) can be found [here](https://cancer.sanger.ac.uk/signatures/signatures_v2/)
+
+## Load in packages
+```{r, message=FALSE}
+library(ggplot2)
+library(mutSignatures)
+library(BSgenome.Hsapiens.UCSC.hg38)
+library(data.table)
+```
+
+
+## Generate mutationCounts object
+```{r, message=FALSE}
+## Define working directory
+setwd("~/quinlan/u1240855/spermseq/scripts/analysis/mutation_signatures/")
+
+## Import and prepare data from VCF files
+file1 <- "19610X1.1.custom_variants_filtered.vcf"
+file2 <- "19610X2.1.custom_variants_filtered.vcf"
+files <- c(file1, file2)
+vcf_data <- importVCFfiles(files)
+
+## Load the UCSC GRCh38 reference genome  
+grch38 <- BSgenome.Hsapiens.UCSC.hg38
+
+## Compute mutation types
+full_data <- processVCFdata(vcfData = vcf_data, BSGenomeDb = grch38, sample_colName = "SAMPLEID")
+
+## Count mutation types in each sample
+allVCF.counts <- countMutTypes(mutTable = full_data, sample_colName = "SAMPLEID")
+```
+
+## Examine *de novo* mutation signatures
+```{r, results='asis'}
+## Extract number of de novo signatures to extract
+allVCF.assess <- prelimProcessAssess(input = allVCF.counts, approach = "counts")
+parameter_num <- allVCF.assess[which(allVCF.assess$percentErr == 0)[1], "numProcess"]
+
+## How many signatures should we extract? 
+num_sign <- parameter_num
+
+## Define parameters for the non-negative matrix factorization procedure
+allVCF.params <- 
+  setMutClusterParams(
+    num_sign, 
+    num_totIterations = 50, 
+    num_parallelCores = 8
+  )
+
+## Extracct new signatures
+allVCF.analysis <- decipherMutationalProcesses(input = allVCF.counts, 
+                                               params = allVCF.params)
+
+## Visualize exposures
+deNovo.signs <- allVCF.analysis$Results$signatures
+```
+## *De Novo* Signatures {.tabset}
+```{r, results='asis', echo=FALSE}
+## Iterate through each signature and plot
+for (num in 1:num_sign) {
+  cat("###", paste0("De Novo Signature ", num), " \n")
+  msigPlot(deNovo.signs, signature = num)
+  cat(' \n\n')
+}
+```
+
+## Examine known COSMIC signatures 
+```{r}
+## Retrieve COSMIC signatures from online repo
+cosmix <- getCosmicSignatures()
+
+## Breakdown signatures
+DNA_damage <- c(1, 2, 7, 11, 13) ## 1 - spontaneous deamination, 2 - APOBEc cytosine deaminase, 7 - UV, 11 - alkylating agent, 13 - AID/APOBEC cytidine deaminase (C>U)
+DNA_damage_df <- data.table("Signature" = DNA_damage, "Name" = rep("DNA Damage", length(DNA_damage)))
+
+DNA_repair <- c(3, 6, 15, 20, 26) ## 3 - DNA DSB break repair, 6 - Mismatch repair, 15 - Mismatch repair, 20 - Mismatch repair, 26 - Mismatch repair
+DNA_repair_df <- data.table("Signature" = DNA_repair, "Name" = rep("DNA Repair", length(DNA_repair)))
+
+Replication <- c(9, 10) ## 9 - polymearse and AID, polymerase POLE
+Replication_df <- data.table("Signature" = Replication, "Name" = rep("Replication", length(Replication)))
+
+Lifestyle <- c(4, 22, 24, 29) ## 4 - smoking, 22 - aristolochic acid, 24 - aflatoxin, 29 - chewing tobacco
+Lifestyle_df <- data.table("Signature" = Lifestyle, "Name" = rep("Lifestyle", length(Lifestyle)))
+
+Unknown <- c(5, 8, 12, 14, 16, 17, 18, 19, 21, 23, 25, 27, 28, 30)
+Unknown_df <- data.table("Signature" = Unknown, "Name" = rep("Unknown", length(Unknown)))
+
+COSMIC_df <- rbind(DNA_damage_df, DNA_repair_df, Replication_df, Lifestyle_df, Unknown_df)
+```
+
+## COSMIC Signatures {.tabset}
+```{r, results='asis', echo=FALSE}
+## Iterate through each COSMIC etiology
+for (etiology in unique(COSMIC_df$Name)) {
+  ## Define signature to use
+  sigs <- COSMIC_df[Name == etiology]$Signature
+  
+  ## Resolve mutation signatures from VCF data
+  mut_sig <- resolveMutSignatures(mutCountData = allVCF.counts, signFreqData = cosmix[sigs])
+  
+  ## Plot COSMIC signatures
+  new.p <- msigPlot(x = mut_sig$results$count.result)
+  my.feats <- unique(new.p$data$feature)
+  new.p +
+  ggtitle(label = "COSMIC signatures") +
+  scale_fill_manual(name = paste0(etiology, "\nSignatures"),
+                    values = grDevices::heat.colors(length(my.feats)))
+  
+  cat("###", paste0("COSMIC Etiology: ", etiology), " \n")
+  print(new.p)
+  cat(' \n\n')
+}
+```
+
+## End
