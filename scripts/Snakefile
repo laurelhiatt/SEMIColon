@@ -1,0 +1,37 @@
+# /scratch/ucgd/lustre-work/quinlan/data-shared/datasets/spermseq/wgs
+
+configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config.yaml"
+# Pipeline plans
+# - Align fastqs to reference genome
+#     - I do *not* need to merge the R1s and R3s
+#     - We think I do not need to trim (for now)
+#     - Lets do whatever Lee-Six did, to hg38
+# - Variant calling (Call mutations)
+#     - FreeBayes?
+#     - DeepVariant?
+#     - Likely SNVs, maybe indels?
+# - Pipeline to process called variants/Vcf
+#     - PASS variants, filter
+# - Mutational signatures
+#     - https://github.com/HLee-Six/colon_microbiopsies what Lee-Six did (in R)
+# - Mutational spectra
+# - Make plots and save to rational places
+
+# rule practice:
+#     input: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/notblank.txt"
+#     output: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/blank.txt"
+#     shell:
+#         "rm {input} | touch {output}"
+
+rule bwa_mem:
+    input:
+        fasta="/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta",
+        R1="/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/test_R1.fastq.gz",
+        R3="/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/test_R3.fastq.gz"
+    output:
+        "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/test_merged.fastq.gz"
+    threads: 8
+    conda: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/semicolonsmk.yaml"
+    shell:
+        "bwa mem -t {threads} {input.fasta} {input.R1} {input.R3} | samblaster | samtools view -Sb > {output}"
+
