@@ -1,6 +1,7 @@
 # /scratch/ucgd/lustre-work/quinlan/data-shared/datasets/spermseq/wgs
 
-configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config.yaml"
+#configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config.yaml"
+
 # Pipeline plans
 # - Align fastqs to reference genome
 #     - I do *not* need to merge the R1s and R3s
@@ -29,7 +30,7 @@ rule bwa_mem:
         R1="/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/test_R1.fastq.gz",
         R3="/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/test_R3.fastq.gz"
     output:
-        "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/test_merged.fastq.gz"
+        "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/test.bam"
     threads: 8
     conda: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/semicolonsmk.yaml"
     shell:
