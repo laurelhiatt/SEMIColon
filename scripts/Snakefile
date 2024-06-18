@@ -75,7 +75,7 @@ rule bwa_mem_bam:
     conda: "../data/semicolonsmk.yaml"
     shell:
         """
-        bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r3_clean} | samblaster | samtools view -b -F 4 > {output.zip_bam}
+        bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} | samblaster | samtools view -b -F 4 > {output.zip_bam}
         """
 
 
