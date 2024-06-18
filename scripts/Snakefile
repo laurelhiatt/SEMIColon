@@ -37,15 +37,15 @@ wildcard_constraints:
 # Rule 'all', defining all requested output.
 rule all:
     input:
-        expand("{out_dir}/data/{sample}-sorted.bai", out_dir = out_dir, sample = samples)
+        expand("{out_dir}/{sample}-sorted.bai", out_dir = out_dir, sample = samples)
 
 # Rule 'fastp' preprocesses the reads by detecting and removing adapters,
 # filtering reads with an average quality less than 20, and producing
 # filtered fastq reads with preprocessing reports.
 rule fastp:
     input:
-        R1= in_dir + "/{sample}_R1.fastq.gz",
-        R3= in_dir + "/{sample}_R3.fastq.gz"
+        R1 = in_dir + "/{sample}_R1.fastq.gz",
+        R3 = in_dir + "/{sample}_R3.fastq.gz"
     output:
         r1_clean = "{out_dir}/{sample}_R1.clean.fastq",
         r3_clean = "{out_dir}/{sample}_R3.clean.fastq",
@@ -67,8 +67,8 @@ rule fastp:
 # Convert to bam (exclude unmapped reads with -F 4)
 rule bwa_mem_bam:
     input:
-        r1_clean = "{out_dir}/{sample}_R1.clean.fastq",
-        r3_clean = "{out_dir}/{sample}_R3.clean.fastq",
+        r1_clean = rules.fastp.output.r1_clean,
+        r3_clean = rules.fastp.output.r3_clean,
         ref = reference
     output:
        zip_bam = "{out_dir}/{sample}.bam.gz"
@@ -79,7 +79,7 @@ rule bwa_mem_bam:
 
 rule gunzip:
     input:
-       zip_bam = "{out_dir}/{sample}.bam.gz"
+        zip_bam = rules.bwa_mem_bam.output.zip_bam
     output:
         bam = "{out_dir}/{sample}.bam"
     shell:
