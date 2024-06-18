@@ -1,6 +1,12 @@
 # /scratch/ucgd/lustre-work/quinlan/data-shared/datasets/spermseq/wgs
 
-#configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config.yaml"
+configfile: '../data/config.yaml'
+in_dir: str = config["input_directory"]
+out_dir: str = config["output_directory"]
+reference: str = config["reference_genome"]
+samples: list[str] = config["samples"]
+
+
 
 ### IMPORTS ###
 import snakemake
@@ -8,10 +14,6 @@ import os
 import re
 
 # Pipeline plans
-# - Align fastqs to reference genome
-#     - I do *not* need to merge the R1s and R3s
-#     - We think I do not need to trim (for now)
-#     - Lets do whatever Lee-Six did, to hg38
 # - Variant calling (Call mutations)
 #     - FreeBayes?
 #     - DeepVariant?
@@ -35,20 +37,20 @@ wildcard_constraints:
 # Rule 'all', defining all requested output.
 rule all:
     input:
-        expand("../data/{sample}-sorted.bai", sample = samples)
+        expand("{out_dir}/data/{sample}-sorted.bai", out_dir = out_dir, sample = samples)
 
 # Rule 'fastp' preprocesses the reads by detecting and removing adapters,
 # filtering reads with an average quality less than 20, and producing
 # filtered fastq reads with preprocessing reports.
 rule fastp:
     input:
-        R1="../data/{sample}_R1.fastq.gz",
-        R3="../data/{sample}_R3.fastq.gz"
+        R1= in_dir + "/{sample}_R1.fastq.gz",
+        R3= in_dir + "/{sample}_R3.fastq.gz"
     output:
-        r1_clean = "../data/{sample}_R1.clean.fastq",
-        r3_clean = "../data/{sample}_R3.clean.fastq",
-        html_report = "../reports/{sample}-fastp-report.html",
-        json_report = "../reports/{sample}-fastp-report.json"
+        r1_clean = "{out_dir}/{sample}_R1.clean.fastq",
+        r3_clean = "{out_dir}/{sample}_R3.clean.fastq",
+        html_report = "{out_dir}/reports/{sample}-fastp-report.html",
+        json_report = "{out_dir}/reports/{sample}-fastp-report.json"
     shell:
         """
         fastp --in1 {input.R1} --in2 {input.R3} \
@@ -65,21 +67,21 @@ rule fastp:
 # Convert to bam (exclude unmapped reads with -F 4)
 rule bwa_mem_bam:
     input:
-        r1_clean = "../data/{sample}_R1.clean.fastq",
-        r3_clean = "../data/{sample}_R3.clean.fastq",
-        fasta="/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta"
+        r1_clean = "{out_dir}/{sample}_R1.clean.fastq",
+        r3_clean = "{out_dir}/{sample}_R3.clean.fastq",
+        ref = reference
     output:
-       zip_bam = "../data/{sample}.bam.gz"
+       zip_bam = "{out_dir}/{sample}.bam.gz"
     threads: 8
-    conda: "../data/semicolonsmk.yaml"
+    conda: in_dir + "/semicolonsmk.yaml"
     shell:
-        "bwa mem -t {threads} {input.fasta} {input.r1_clean} {input.r3_clean} | samblaster | samtools view -b -F 4 > {output.zip_bam}"
+        "bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r3_clean} | samblaster | samtools view -b -F 4 > {output.zip_bam}"
 
 rule gunzip:
     input:
-        zip_bam = "../data/{sample}.bam.gz"
+       zip_bam = "{out_dir}/{sample}.bam.gz"
     output:
-        bam = "../data/{sample}.bam"
+        bam = "{out_dir}/{sample}.bam"
     shell:
         """
         gunzip {input.zip_bam} > {output.bam}
@@ -87,9 +89,9 @@ rule gunzip:
 
 rule sort_bam:
     input:
-        bam = "../data/{sample}.bam"
+        bam = "{out_dir}/{sample}.bam"
     output:
-        bam_sort = "../data/{sample}-sorted.bam"
+        bam_sort = "{out_dir}/{sample}-sorted.bam"
     shell:
         """
         samtools sort {input.bam} -o {output.bam_sort}
@@ -97,9 +99,9 @@ rule sort_bam:
 
 rule index_bam:
     input:
-        bam_sort = "../data/{sample}-sorted.bam"
+        bam_sort = "{out_dir}/{sample}-sorted.bam"
     output:
-        bai = "../data/{sample}-sorted.bai"
+        bai = "{out_dir}/{sample}-sorted.bai"
     shell:
         """
         samtools index -b {input.bam_sort} -o {output.bai}

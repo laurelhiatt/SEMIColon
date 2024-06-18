@@ -1,3 +1,5 @@
+input_directory: "../data"
+output_directory: "../data/output"
+reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta"
 samples:
-    A: ../data/samples/A.fastq
-    B: data/samples/B.fastq
+    - test
