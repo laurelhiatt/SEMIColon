@@ -62,7 +62,7 @@ rule fastp:
 
 # Aligns cleaned fastq reads to the defined reference genome
 # Mark duplicates and extract discordant and split reads from sam files
-# Convert to bam
+# Convert to bam (exclude unmapped reads with -F 4)
 rule bwa_mem_bam:
     input:
         r1_clean = "../data/{sample}_R1.clean.fastq",
@@ -73,7 +73,7 @@ rule bwa_mem_bam:
     threads: 8
     conda: "../data/semicolonsmk.yaml"
     shell:
-        "bwa mem -t {threads} {input.fasta} {input.r1_clean} {input.r3_clean} | samblaster | samtools view -b > {output.zip_bam}"
+        "bwa mem -t {threads} {input.fasta} {input.r1_clean} {input.r3_clean} | samblaster | samtools view -b -F 4 > {output.zip_bam}"
 
 rule gunzip:
     input:
