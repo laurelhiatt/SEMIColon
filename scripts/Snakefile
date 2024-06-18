@@ -51,6 +51,7 @@ rule fastp:
         r3_clean = "{out_dir}/{sample}_R3.clean.fastq",
         html_report = "{out_dir}/reports/{sample}-fastp-report.html",
         json_report = "{out_dir}/reports/{sample}-fastp-report.json"
+    conda: in_dir + "/semicolonsmk.yaml"
     shell:
         """
         fastp --in1 {input.R1} --in2 {input.R3} \
@@ -82,6 +83,7 @@ rule gunzip:
         zip_bam = rules.bwa_mem_bam.output.zip_bam
     output:
         bam = "{out_dir}/{sample}.bam"
+    conda: in_dir + "/semicolonsmk.yaml"
     shell:
         """
         gunzip {input.zip_bam} > {output.bam}
@@ -92,6 +94,7 @@ rule sort_bam:
         bam = rules.gunzip.output.bam
     output:
         bam_sort = "{out_dir}/{sample}-sorted.bam"
+    conda: in_dir + "/semicolonsmk.yaml"
     shell:
         """
         samtools sort {input.bam} -o {output.bam_sort}
@@ -102,6 +105,7 @@ rule index_bam:
         bam_sort = rules.sort_bam.output.bam_sort
     output:
         bai = "{out_dir}/{sample}-sorted.bai"
+    conda: in_dir + "/semicolonsmk.yaml"
     shell:
         """
         samtools index -b {input.bam_sort} -o {output.bai}
