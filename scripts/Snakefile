@@ -89,7 +89,7 @@ rule gunzip:
 
 rule sort_bam:
     input:
-        bam = "{out_dir}/{sample}.bam"
+        bam = rules.gunzip.output.bam
     output:
         bam_sort = "{out_dir}/{sample}-sorted.bam"
     shell:
@@ -99,7 +99,7 @@ rule sort_bam:
 
 rule index_bam:
     input:
-        bam_sort = "{out_dir}/{sample}-sorted.bam"
+        bam_sort = rules.sort_bam.output.bam_sort
     output:
         bai = "{out_dir}/{sample}-sorted.bai"
     shell:
