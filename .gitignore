@@ -1,2 +1,5 @@
 # Temp file directory
 /scripts/.snakemake/*
+
+# Output directory
+/data/output/*
