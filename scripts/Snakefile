@@ -33,8 +33,8 @@ wildcard_constraints:
 # Rule 'all', defining all requested output.
 rule all:
     input:
-        expand("{out_dir}/{sample}-sorted.bai", out_dir = out_dir, sample = samples),
-        expand("{out_dir}/{sample}-var.vcf", out_dir = out_dir, sample = samples)
+        expand("{out_dir}/bam/{sample}-sorted.bai", out_dir = out_dir, sample = samples),
+        expand("{out_dir}/vcf/{sample}-var.vcf", out_dir = out_dir, sample = samples)
 
 
 # Rule 'fastp' preprocesses the reads by detecting and removing adapters,
@@ -45,8 +45,8 @@ rule fastp:
         R1 = in_dir + "/{sample}_R1.merged.trimmed.fastq.gz",
         R2 = in_dir + "/{sample}_R2.merged.trimmed.fastq.gz"
     output:
-        r1_clean = "{out_dir}/{sample}_R1.clean.fastq",
-        r2_clean = "{out_dir}/{sample}_R2.clean.fastq",
+        r1_clean = "{out_dir}/fastq/{sample}_R1.clean.fastq",
+        r2_clean = "{out_dir}/fastq/{sample}_R2.clean.fastq",
         html_report = "{out_dir}/reports/{sample}-fastp-report.html",
         json_report = "{out_dir}/reports/{sample}-fastp-report.json"
     conda: "../data/semicolonsmk.yaml"
@@ -70,7 +70,7 @@ rule bwa_mem_bam:
         r2_clean = rules.fastp.output.r2_clean,
         ref = reference
     output:
-       zip_bam = "{out_dir}/{sample}.bam.gz"
+       zip_bam = "{out_dir}/bam/{sample}.bam.gz"
     threads: 8
     conda: "../data/semicolonsmk.yaml"
     shell:
@@ -83,7 +83,7 @@ rule gunzip:
     input:
         zip_bam = rules.bwa_mem_bam.output.zip_bam
     output:
-        bam = "{out_dir}/{sample}.bam"
+        bam = "{out_dir}/bam/{sample}.bam"
     conda: "../data/semicolonsmk.yaml"
     shell:
         """
@@ -94,7 +94,7 @@ rule sort_bam:
     input:
         bam = rules.gunzip.output.bam
     output:
-        bam_sort = "{out_dir}/{sample}-sorted.bam"
+        bam_sort = "{out_dir}/bam/{sample}-sorted.bam"
     conda: "../data/semicolonsmk.yaml"
     shell:
         """
@@ -105,7 +105,7 @@ rule index_bam:
     input:
         bam_sort = rules.sort_bam.output.bam_sort
     output:
-        bai = "{out_dir}/{sample}-sorted.bai"
+        bai = "{out_dir}/bam/{sample}-sorted.bai"
     conda: "../data/semicolonsmk.yaml"
     shell:
         """
@@ -118,7 +118,7 @@ rule freebayes:
         ref = reference
 
     output:
-        vcf = "{out_dir}/{sample}-var.vcf"
+        vcf = "{out_dir}/vcf/{sample}-var.vcf"
     shell:
         """
         freebayes -f {input.ref} {input.bam_sort} > {output.vcf}
