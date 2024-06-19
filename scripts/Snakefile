@@ -4,10 +4,12 @@ configfile: '../data/config.yaml'
 in_dir: str = config["input_directory"]
 out_dir: str = config["output_directory"]
 reference: str = config["reference_genome"]
+reference_index: str = config["reference_genome_index"]
 samples: list[str] = config["samples"]
-
-
-
+nchunks = config["nchunks"]
+chunks = list(range(1,nchunks+1))
+chroms = ["chr1","chr2","chr3","chr4","chr6","chr7","chr8","chr9","chr10","chr11","chr12","chr13","chr14","chr15","chr16","chr17",
+"chr18","chr19","chr20","chr21","chr22","chrX","chrY"]
 ### IMPORTS ###
 import snakemake
 import os
@@ -34,7 +36,8 @@ wildcard_constraints:
 rule all:
     input:
         expand("{out_dir}/bam/{sample}-sorted.bai", out_dir = out_dir, sample = samples),
-        expand("{out_dir}/vcf/{sample}-var.vcf", out_dir = out_dir, sample = samples)
+        expand("{out_dir}/vcf/{sample}-var.vcf", out_dir = out_dir, sample = samples),
+        expand("{out_dir}/vcf/{chroms}/{sample}-variants.{i}.vcf", out_dir = out_dir, chroms = chroms, sample = samples, i = chunks)
 
 
 # Rule 'fastp' preprocesses the reads by detecting and removing adapters,
@@ -112,14 +115,43 @@ rule index_bam:
         samtools index -b {input.bam_sort} -o {output.bai}
         """
 
-rule freebayes:
+rule generateregions:
+    input:
+        index = reference_index,
+        chroms = chroms
+    params:
+        chunks = chunks
+    output:
+        regions = expand("{out_dir}/regions/chunk.{chroms}.region.{i}.bed", i = chunks, out_dir = out_dir, chroms = chroms)
+
+    conda: "../data/semicolonsmk.yaml"
+    shell:
+        # "../scripts/GenerateFreebayesRegions.R" # This is located in the scripts/ directory of freebayes
+        "python variant_calling/fasta_generate_regions.py {input.index} --chunks 9 --bed ../data/output/regions/chunk"
+
+
+# Current filtering:
+### min-alternate-count 2
+### min-alternate-qsum 40 : NO LONGER
+
+rule freebayes_variant_calling:
     input:
         bam_sort = rules.sort_bam.output.bam_sort,
-        ref = reference
-
+        ref = reference,
+        regions = "../data/output/regions/chunk.{chroms}.region.{i}.bed"
     output:
-        vcf = "{out_dir}/vcf/{sample}-var.vcf"
+        temp("{out_dir}/vcf/{chroms}/{sample}-variants.{i}.vcf")
     shell:
         """
-        freebayes -f {input.ref} {input.bam_sort} > {output.vcf}
+        freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} {input.bam_sort} > {output}
         """
+
+rule ConcatVCFs:
+    input:
+        chunk_vcf = expand("{out_dir}/vcf/{chroms}/{sample}-variants.{i}.vcf", i = chunks, out_dir = out_dir, sample = samples, chroms = chroms)
+    output:
+        vcf = "{out_dir}/vcf/{sample}-var.vcf"
+    conda: "../data/semicolonsmk.yaml"
+    threads:4
+    shell:
+        "bcftools concat {input.chunk_vcf} | vcfuniq > {output.vcf}"
