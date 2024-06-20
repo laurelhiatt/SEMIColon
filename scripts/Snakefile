@@ -114,7 +114,6 @@ rule index_bam:
 rule generateregions:
     input:
         index = reference_index,
-        chroms = chroms
     params:
         chunks = chunks
     output:
