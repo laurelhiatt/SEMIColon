@@ -130,6 +130,7 @@ rule generateregions:
 rule freebayes_variant_calling:
     input:
         bam_sort = rules.sort_bam.output.bam_sort,
+        bai = rules.index_bam.output.bai,
         ref = reference,
         regions = "../data/output/regions/chunk.{chroms}.region.{i}.bed"
     output:
