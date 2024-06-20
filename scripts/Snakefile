@@ -10,8 +10,8 @@ nchunks = config["nchunks"]
 chunks = list(range(1,nchunks+1))
 chroms = ["chr1","chr2","chr3","chr4","chr6","chr7","chr8","chr9","chr10","chr11","chr12","chr13","chr14","chr15","chr16","chr17",
 "chr18","chr19","chr20","chr21","chr22","chrX","chrY"]
+
 ### IMPORTS ###
-import snakemake
 import os
 import re
 
@@ -30,15 +30,16 @@ import re
 
 # Wildcard constraints; should all be alphanumeric
 wildcard_constraints:
-    sample = "[A-Za-z0-9]+"
+    sample = "[A-Za-z0-9]+",
+    chroms = "[A-Za-z0-9]+",
+    i = "[0-9]+",
+    out_dir = out_dir
 
 # Rule 'all', defining all requested output.
 rule all:
     input:
         expand("{out_dir}/bam/{sample}-sorted.bai", out_dir = out_dir, sample = samples),
-        expand("{out_dir}/vcf/{sample}-var.vcf", out_dir = out_dir, sample = samples),
-        expand("{out_dir}/vcf/{chroms}/{sample}-variants.{i}.vcf", out_dir = out_dir, chroms = chroms, sample = samples, i = chunks)
-
+        expand("{out_dir}/vcf/{sample}-var.vcf", out_dir = out_dir, sample = samples)
 
 # Rule 'fastp' preprocesses the reads by detecting and removing adapters,
 # filtering reads with an average quality less than 20, and producing
@@ -52,7 +53,6 @@ rule fastp:
         r2_clean = "{out_dir}/fastq/{sample}_R2.clean.fastq",
         html_report = "{out_dir}/reports/{sample}-fastp-report.html",
         json_report = "{out_dir}/reports/{sample}-fastp-report.json"
-    conda: "../data/semicolonsmk.yaml"
     shell:
         """
         fastp --in1 {input.R1} --in2 {input.R2} \
@@ -75,7 +75,6 @@ rule bwa_mem_bam:
     output:
        zip_bam = "{out_dir}/bam/{sample}.bam.gz"
     threads: 8
-    conda: "../data/semicolonsmk.yaml"
     shell:
         """
         bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} | samblaster | samtools view -b -F 4 > {output.zip_bam}
@@ -87,7 +86,6 @@ rule gunzip:
         zip_bam = rules.bwa_mem_bam.output.zip_bam
     output:
         bam = "{out_dir}/bam/{sample}.bam"
-    conda: "../data/semicolonsmk.yaml"
     shell:
         """
         gunzip {input.zip_bam}
@@ -98,7 +96,6 @@ rule sort_bam:
         bam = rules.gunzip.output.bam
     output:
         bam_sort = "{out_dir}/bam/{sample}-sorted.bam"
-    conda: "../data/semicolonsmk.yaml"
     shell:
         """
         samtools sort {input.bam} -o {output.bam_sort}
@@ -109,7 +106,6 @@ rule index_bam:
         bam_sort = rules.sort_bam.output.bam_sort
     output:
         bai = "{out_dir}/bam/{sample}-sorted.bai"
-    conda: "../data/semicolonsmk.yaml"
     shell:
         """
         samtools index -b {input.bam_sort} -o {output.bai}
@@ -123,8 +119,6 @@ rule generateregions:
         chunks = chunks
     output:
         regions = expand("{out_dir}/regions/chunk.{chroms}.region.{i}.bed", i = chunks, out_dir = out_dir, chroms = chroms)
-
-    conda: "../data/semicolonsmk.yaml"
     shell:
         # "../scripts/GenerateFreebayesRegions.R" # This is located in the scripts/ directory of freebayes
         "python variant_calling/fasta_generate_regions.py {input.index} --chunks 9 --bed ../data/output/regions/chunk"
@@ -140,18 +134,22 @@ rule freebayes_variant_calling:
         ref = reference,
         regions = "../data/output/regions/chunk.{chroms}.region.{i}.bed"
     output:
-        temp("{out_dir}/vcf/{chroms}/{sample}-variants.{i}.vcf")
+       full = temp("{out_dir}/vcf/{chroms}/{sample}-variants.{i}.vcf.gz")
     shell:
         """
-        freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} {input.bam_sort} > {output}
+        RAW_VCF={output.full}
+        RAW_VCF=${{RAW_VCF%%.gz}}
+        freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} {input.bam_sort} > $RAW_VCF
+        bgzip -f $RAW_VCF
+        tabix -f -p vcf {output.full}
         """
 
 rule ConcatVCFs:
     input:
-        chunk_vcf = expand("{out_dir}/vcf/{chroms}/{sample}-variants.{i}.vcf", i = chunks, out_dir = out_dir, sample = samples, chroms = chroms)
+        chunk_vcf = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{sample}-variants.{i}.vcf.gz",
+        i = chunks, out_dir = wildcard.out_dir, sample = wildcard.sample, chroms = chroms)
     output:
         vcf = "{out_dir}/vcf/{sample}-var.vcf"
-    conda: "../data/semicolonsmk.yaml"
     threads:4
     shell:
-        "bcftools concat {input.chunk_vcf} | vcfuniq > {output.vcf}"
+        "bcftools concat -a {input.chunk_vcf} > {output.vcf}"

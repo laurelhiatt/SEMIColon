@@ -10,3 +10,4 @@ scripts/variant_calling/GenerateFreebayesRegions.R
 scripts/variant_calling/fasta_generate_regions.py
 
 scripts/log.txt
+.vscode/settings.json
