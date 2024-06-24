@@ -39,7 +39,9 @@ wildcard_constraints:
 rule all:
     input:
         expand("{out_dir}/bam/{sample}-sorted.bai", out_dir = out_dir, sample = samples),
-        expand("{out_dir}/vcf/concat/{sample}-var.vcf", out_dir = out_dir, sample = samples)
+        expand("{out_dir}/vcf/concat/{sample}-var.vcf", out_dir = out_dir, sample = samples),
+        expand("{out_dir}/vcf/filtered/{sample}-filtered-var.vcf", out_dir = out_dir, sample = samples),
+
 
 # Rule 'fastp' preprocesses the reads by detecting and removing adapters,
 # filtering reads with an average quality less than 20, and producing
@@ -125,7 +127,6 @@ rule generateregions:
 
 # Current filtering:
 ### min-alternate-count 2
-### min-alternate-qsum 40 : NO LONGER
 
 # rule freebayes_variant_calling:
 #     input:
@@ -144,7 +145,8 @@ rule generateregions:
 #         tabix -f -p vcf {output.full}
 #         """
 
-
+# Current filtering:
+### min-alternate-count 2
 ### separate calling based on blood and sperm ploidy
 rule freebayes_variant_calling:
     input:
@@ -172,7 +174,6 @@ rule freebayes_variant_calling:
         tabix -f -p vcf {output.full}
         """
 
-
 rule ConcatVCFs:
     input:
         chunk_vcf = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{sample}-variants.{i}.vcf.gz",
@@ -181,5 +182,44 @@ rule ConcatVCFs:
         vcf = "{out_dir}/vcf/concat/{sample}-var.vcf"
     threads:4
     shell:
-        "bcftools concat -a {input.chunk_vcf} > {output.vcf}"
+        """
+        bcftools concat -a {input.chunk_vcf} > {output.vcf}
+        """
 
+
+
+#QUAL<30: Filter out variants with quality score less than 30.
+#DP<10: Filter out variants with depth of coverage less than 10.
+#GQ<20: Filter out variants with genotype quality less than 20.
+#MQ<30: Filter out variants with mapping quality less than 30.
+#SB>-10: Filter out variants with strand bias greater than -10.
+# rule filterVCFs:
+#     input:
+#         vcf = rules.ConcatVCFs.output.vcf
+#     output:
+#         filtered_vcf = "{out_dir}/vcf/filtered/{sample}-filtered-var.vcf"
+#     threads:4
+#     shell:
+#         """
+#         bcftools filter -O z -o {output.filtered_vcf} -s LOWQUAL -e 'QUAL<30 || FORMAT/DP<10 || GQ<20 || MQ<30 || SB>-10' {input.vcf}
+#         tabix -p vcf {output.filtered_vcf}
+#         """
+
+# can use -s STRING to soft-filter and label with string
+
+
+rule filterVCFs:
+    input:
+        vcf = rules.ConcatVCFs.output.vcf
+    output:
+        snp_vcf = temp("{out_dir}/vcf/filtered/{sample}-snp-var.vcf.gz"),
+        filtered_vcf = "{out_dir}/vcf/filtered/{sample}-filtered-var.vcf"
+    threads: 4
+    shell:
+        """
+        # Filter for SNPs only
+        bcftools view -v snps {input.vcf} -Oz -o {output.snp_vcf}
+
+        # Apply quality filters
+        bcftools filter -O v -o {output.filtered_vcf} -e 'QUAL<30 || FORMAT/DP<10' {output.snp_vcf}
+        """
