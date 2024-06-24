@@ -39,7 +39,7 @@ wildcard_constraints:
 rule all:
     input:
         expand("{out_dir}/bam/{sample}-sorted.bai", out_dir = out_dir, sample = samples),
-        expand("{out_dir}/vcf/{sample}-var.vcf", out_dir = out_dir, sample = samples)
+        expand("{out_dir}/vcf/concat/{sample}-var.vcf", out_dir = out_dir, sample = samples)
 
 # Rule 'fastp' preprocesses the reads by detecting and removing adapters,
 # filtering reads with an average quality less than 20, and producing
@@ -153,7 +153,8 @@ rule freebayes_variant_calling:
         ref = reference,
         regions = "../data/output/regions/chunk.{chroms}.region.{i}.bed"
     output:
-        full = temp("{out_dir}/vcf/{chroms}/{sample}-variants.{i}.vcf.gz")
+        full = temp("{out_dir}/vcf/{chroms}/{sample}-variants.{i}.vcf.gz"),
+        full_index = temp("{out_dir}/vcf/{chroms}/{sample}-variants.{i}.vcf.gz.tbi"),
     params:
         sample_type = lambda wildcards: "haploid" if int(wildcards.sample[6:]) <= 10 else "diploid"
     shell:
@@ -177,7 +178,8 @@ rule ConcatVCFs:
         chunk_vcf = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{sample}-variants.{i}.vcf.gz",
         i = chunks, out_dir = wildcard.out_dir, sample = wildcard.sample, chroms = chroms)
     output:
-        vcf = "{out_dir}/vcf/{sample}-var.vcf"
+        vcf = "{out_dir}/vcf/concat/{sample}-var.vcf"
     threads:4
     shell:
         "bcftools concat -a {input.chunk_vcf} > {output.vcf}"
+
