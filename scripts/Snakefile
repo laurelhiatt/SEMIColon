@@ -127,6 +127,25 @@ rule generateregions:
 ### min-alternate-count 2
 ### min-alternate-qsum 40 : NO LONGER
 
+# rule freebayes_variant_calling:
+#     input:
+#         bam_sort = rules.sort_bam.output.bam_sort,
+#         bai = rules.index_bam.output.bai,
+#         ref = reference,
+#         regions = "../data/output/regions/chunk.{chroms}.region.{i}.bed"
+#     output:
+#        full = temp("{out_dir}/vcf/{chroms}/{sample}-variants.{i}.vcf.gz")
+#     shell:
+#         """
+#         RAW_VCF={output.full}
+#         RAW_VCF=${{RAW_VCF%%.gz}}
+#         freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} {input.bam_sort} > $RAW_VCF
+#         bgzip -f $RAW_VCF
+#         tabix -f -p vcf {output.full}
+#         """
+
+
+### separate calling based on blood and sperm ploidy
 rule freebayes_variant_calling:
     input:
         bam_sort = rules.sort_bam.output.bam_sort,
@@ -134,15 +153,24 @@ rule freebayes_variant_calling:
         ref = reference,
         regions = "../data/output/regions/chunk.{chroms}.region.{i}.bed"
     output:
-       full = temp("{out_dir}/vcf/{chroms}/{sample}-variants.{i}.vcf.gz")
+        full = temp("{out_dir}/vcf/{chroms}/{sample}-variants.{i}.vcf.gz")
+    params:
+        sample_type = lambda wildcards: "haploid" if int(wildcards.sample[6:]) <= 10 else "diploid"
     shell:
         """
         RAW_VCF={output.full}
         RAW_VCF=${{RAW_VCF%%.gz}}
-        freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} {input.bam_sort} > $RAW_VCF
+
+        if [[ {params.sample_type} == "haploid" ]]; then
+            freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} --ploidy 1 {input.bam_sort} > $RAW_VCF
+        else
+            freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} {input.bam_sort} > $RAW_VCF
+        fi
+
         bgzip -f $RAW_VCF
         tabix -f -p vcf {output.full}
         """
+
 
 rule ConcatVCFs:
     input:
