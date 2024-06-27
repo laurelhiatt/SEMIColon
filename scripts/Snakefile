@@ -32,7 +32,7 @@ wildcard_constraints:
 rule all:
     input:
         expand("{out_dir}/bam/{sample}-sorted.bai", out_dir = out_dir, sample = samples),
-        expand("{out_dir}/vcf/concat/{donor}-var.vcf.gz", out_dir = out_dir, donor = matches.keys())
+        expand("{out_dir}/vcf/{donor}-var.vcf.gz", out_dir = out_dir, donor = matches.keys())
 
 # Rule 'fastp' preprocesses the reads by detecting and removing adapters,
 # filtering reads with an average quality less than 20, and producing
@@ -149,13 +149,13 @@ rule ConcatVCFs:
         chunk_vcf = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz", i = chunks, out_dir = wildcard.out_dir, donor = wildcard.donor, chroms = chroms),
         chunk_vcf_index = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", i = chunks, out_dir = wildcard.out_dir, donor = wildcard.donor, chroms = chroms),
     output:
-        vcf = "{out_dir}/vcf/concat/{donor}-var.vcf.gz"
+        vcf = "{out_dir}/vcf/{donor}-var.vcf.gz"
     shell:
         """
         RAW_VCF={output.vcf}
         RAW_VCF=${{RAW_VCF%%.gz}}
 
-        bcftools concat -a {input.chunk_vcf} > {output.vcf}
+        bcftools concat -a {input.chunk_vcf} > $RAW_VCF
         bgzip -f $RAW_VCF
         tabix -f -p vcf {output.vcf}
         """
