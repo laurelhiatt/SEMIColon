@@ -70,7 +70,7 @@ rule bwa_mem_bam:
     threads: 8
     shell:
         """
-        bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} | samblaster | samtools view -b -F 4 > {output.zip_bam}
+        bwa mem -t -R {threads} {input.ref} {input.r1_clean} {input.r2_clean} | samblaster | samtools view -b -F 4 > {output.zip_bam}
         """
 
 
@@ -138,7 +138,7 @@ rule freebayes_variant_calling:
             RAW_VCF={output.full}
             RAW_VCF=${{RAW_VCF%%.gz}}
 
-            freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} {params.location}{blood}-sorted.bam {params.location}{sperm1}-sorted.bam {params.location}{sperm2}-sorted.bam > $RAW_VCF
+            freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} {params.location}{blood}-sorted.bam {params.location}{sperm1}-sorted.bam {params.location}{sperm2}-sorted.bam --gvcf -g 1000 > $RAW_VCF
 
             bgzip -f $RAW_VCF
             tabix -f -p vcf {output.full}
