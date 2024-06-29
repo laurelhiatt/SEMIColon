@@ -31,7 +31,7 @@ wildcard_constraints:
 # Rule 'all', defining all requested output.
 rule all:
     input:
-        expand("{out_dir}/bam/{sample}-sortedRG.bai", out_dir = out_dir, sample = samples),
+        expand("{out_dir}/bam/{sample}-sorted.bai", out_dir = out_dir, sample = samples),
         expand("{out_dir}/vcf/{donor}-var.vcf.gz", out_dir = out_dir, donor = matches.keys())
 
 # Rule 'fastp' preprocesses the reads by detecting and removing adapters,
@@ -66,7 +66,7 @@ rule bwa_mem_bam:
         r2_clean = rules.fastp.output.r2_clean,
         ref = reference
     output:
-       zip_bam = "{out_dir}/bam/{sample}.bam.gz"
+       zip_bam = temp("{out_dir}/bam/{sample}.bam.gz")
     threads: 8
     shell:
         """
@@ -77,7 +77,7 @@ rule gunzip:
     input:
         zip_bam = rules.bwa_mem_bam.output.zip_bam
     output:
-        bam = "{out_dir}/bam/{sample}.bam"
+        bam = temp("{out_dir}/bam/{sample}.bam")
     shell:
         """
         gunzip {input.zip_bam}
@@ -87,7 +87,7 @@ rule sort_bam:
     input:
         bam = rules.gunzip.output.bam
     output:
-        bam_sort = "{out_dir}/bam/{sample}-sorted.bam"
+        bam_sort = temp("{out_dir}/bam/{sample}-sortednoRG.bam")
     shell:
         """
         samtools sort {input.bam} -o {output.bam_sort}
@@ -103,7 +103,7 @@ rule addrg:
     input:
         bam_sort = rules.sort_bam.output.bam_sort
     output:
-        sort_bam_RG = "{out_dir}/bam/{sample}-sortedRG.bam"
+        sort_bam_RG = "{out_dir}/bam/{sample}-sorted.bam"
     params:
         donor = lambda wildcards: get_donor(wildcards.sample, matches)
     shell:
@@ -117,7 +117,7 @@ rule index_bam:
     input:
         bam_sort = rules.addrg.output.sort_bam_RG
     output:
-        bai = "{out_dir}/bam/{sample}-sortedRG.bai"
+        bai = "{out_dir}/bam/{sample}-sorted.bai"
     shell:
         """
         samtools index -b {input.bam_sort} -o {output.bai}
@@ -138,8 +138,8 @@ rule generateregions:
 ### min-alternate-count 2
 rule freebayes_variant_calling:
     input:
-        bam_sort = lambda wildcard: expand("../data/output/bam/{sample}-sortedRG.bam", sample = samples),
-        bai = lambda wildcard: expand("../data/output/bam/{sample}-sortedRG.bai", sample = samples),
+        bam_sort = lambda wildcard: expand("../data/output/bam/{sample}-sorted.bam", sample = samples),
+        bai = lambda wildcard: expand("../data/output/bam/{sample}-sorted.bai", sample = samples),
         ref = reference,
         regions = "../data/output/regions/chunk.{chroms}.region.{i}.bed"
     output:
@@ -157,7 +157,7 @@ rule freebayes_variant_calling:
             RAW_VCF={output.full}
             RAW_VCF=${{RAW_VCF%%.gz}}
 
-            freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} {params.location}{blood}-sortedRG.bam {params.location}{sperm1}-sortedRG.bam {params.location}{sperm2}-sortedRG.bam > $RAW_VCF
+            freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} {params.location}{blood}-sorted.bam {params.location}{sperm1}-sorted.bam {params.location}{sperm2}-sorted.bam > $RAW_VCF
 
             bgzip -f $RAW_VCF
             tabix -f -p vcf {output.full}
