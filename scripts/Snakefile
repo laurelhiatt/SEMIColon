@@ -108,8 +108,10 @@ rule addrg:
         donor = lambda wildcards: get_donor(wildcards.sample, matches)
     shell:
         """
-        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} > {output.sort_bam_RG}
+        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
+        samtools view -b > {output.sort_bam_RG}
         """
+
 
 rule index_bam:
     input:
@@ -155,7 +157,7 @@ rule freebayes_variant_calling:
             RAW_VCF={output.full}
             RAW_VCF=${{RAW_VCF%%.gz}}
 
-            freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} {params.location}{blood}-sorted.bam {params.location}{sperm1}-sorted.bam {params.location}{sperm2}-sorted.bam --gvcf -g 1000 > $RAW_VCF
+            freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} {params.location}{blood}-sortedRG.bam {params.location}{sperm1}-sortedRG.bam {params.location}{sperm2}-sortedRG.bam > $RAW_VCF
 
             bgzip -f $RAW_VCF
             tabix -f -p vcf {output.full}
