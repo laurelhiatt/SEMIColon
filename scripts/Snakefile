@@ -31,7 +31,7 @@ wildcard_constraints:
 # Rule 'all', defining all requested output.
 rule all:
     input:
-        expand("{out_dir}/bam/{sample}-sorted.bai", out_dir = out_dir, sample = samples),
+        expand("{out_dir}/bam/{sample}-sortedRG.bai", out_dir = out_dir, sample = samples),
         expand("{out_dir}/vcf/{donor}-var.vcf.gz", out_dir = out_dir, donor = matches.keys())
 
 # Rule 'fastp' preprocesses the reads by detecting and removing adapters,
@@ -70,9 +70,8 @@ rule bwa_mem_bam:
     threads: 8
     shell:
         """
-        bwa mem -t -R {threads} {input.ref} {input.r1_clean} {input.r2_clean} | samblaster | samtools view -b -F 4 > {output.zip_bam}
+        bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} | samblaster | samtools view -b -F 4 > {output.zip_bam}
         """
-
 
 rule gunzip:
     input:
@@ -94,11 +93,29 @@ rule sort_bam:
         samtools sort {input.bam} -o {output.bam_sort}
         """
 
-rule index_bam:
+def get_donor(sample, matches):
+    for donor, samples in matches.items():
+        if sample in samples['sperm_samples'] or sample == samples['blood_sample']:
+            return donor
+    raise KeyError(f"Sample {sample} not found in matches dictionary")
+
+rule addrg:
     input:
         bam_sort = rules.sort_bam.output.bam_sort
     output:
-        bai = "{out_dir}/bam/{sample}-sorted.bai"
+        sort_bam_RG = "{out_dir}/bam/{sample}-sortedRG.bam"
+    params:
+        donor = lambda wildcards: get_donor(wildcards.sample, matches)
+    shell:
+        """
+        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} > {output.sort_bam_RG}
+        """
+
+rule index_bam:
+    input:
+        bam_sort = rules.addrg.output.sort_bam_RG
+    output:
+        bai = "{out_dir}/bam/{sample}-sortedRG.bai"
     shell:
         """
         samtools index -b {input.bam_sort} -o {output.bai}
@@ -119,8 +136,8 @@ rule generateregions:
 ### min-alternate-count 2
 rule freebayes_variant_calling:
     input:
-        bam_sort = lambda wildcard: expand("../data/output/bam/{sample}-sorted.bam", sample = samples),
-        bai = lambda wildcard: expand("../data/output/bam/{sample}-sorted.bai", sample = samples),
+        bam_sort = lambda wildcard: expand("../data/output/bam/{sample}-sortedRG.bam", sample = samples),
+        bai = lambda wildcard: expand("../data/output/bam/{sample}-sortedRG.bai", sample = samples),
         ref = reference,
         regions = "../data/output/regions/chunk.{chroms}.region.{i}.bed"
     output:
