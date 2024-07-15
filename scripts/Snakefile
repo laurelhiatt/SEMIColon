@@ -52,7 +52,7 @@ rule fastp:
         --out1 {output.r1_clean} --out2 {output.r2_clean} \
         --detect_adapter_for_pe \
         --average_qual 20 \
-        --thread {threads} \
+        --thread 10 \
         --html {output.html_report} \
         --json {output.json_report}
         """
@@ -60,37 +60,17 @@ rule fastp:
 # Aligns cleaned fastq reads to the defined reference genome
 # Mark duplicates and extract discordant and split reads from sam files
 # Convert to bam (exclude unmapped reads with -F 4)
-rule bwa_mem_bam:
+rule align_and_sort:
     input:
         r1_clean = rules.fastp.output.r1_clean,
         r2_clean = rules.fastp.output.r2_clean,
         ref = reference
     output:
-       zip_bam = temp("{out_dir}/bam/{sample}.bam.gz")
+        bam_sort = temp("{out_dir}/bam/{sample}-sortednoRG.bam")
     threads: 8
     shell:
         """
-        bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} | samblaster | samtools view -b -F 4 > {output.zip_bam}
-        """
-
-rule gunzip:
-    input:
-        zip_bam = rules.bwa_mem_bam.output.zip_bam
-    output:
-        bam = temp("{out_dir}/bam/{sample}.bam")
-    shell:
-        """
-        gunzip {input.zip_bam}
-        """
-
-rule sort_bam:
-    input:
-        bam = rules.gunzip.output.bam
-    output:
-        bam_sort = temp("{out_dir}/bam/{sample}-sortednoRG.bam")
-    shell:
-        """
-        samtools sort {input.bam} -o {output.bam_sort}
+        bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} | samblaster | samtools view -b | samtools sort -o {output.bam_sort}
         """
 
 def get_donor(sample, matches):
@@ -101,7 +81,7 @@ def get_donor(sample, matches):
 
 rule addrg:
     input:
-        bam_sort = rules.sort_bam.output.bam_sort
+        bam_sort = rules.align_and_sort.output.bam_sort
     output:
         sort_bam_RG = "{out_dir}/bam/{sample}-sorted.bam"
     params:
@@ -111,7 +91,6 @@ rule addrg:
         samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
         samtools view -b > {output.sort_bam_RG}
         """
-
 
 rule index_bam:
     input:
