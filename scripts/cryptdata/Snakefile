@@ -57,16 +57,11 @@ rule fastp:
         --adapter_sequence=AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
         --adapter_sequence_r2=AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT \
         --average_qual 20 \
-        --thread 30 \
+        --thread 16 \
         --html {output.html_report} \
         --json {output.json_report} \
         --filter_by_index1 {params.index_1} \
         --filter_by_index2 {params.index_2} \
-        --dedup \
-        --trim_poly_x \
-        --cut_front \
-        --cut_tail \
-        --correction
         """
 
 
