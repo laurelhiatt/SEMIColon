@@ -39,8 +39,8 @@ rule all:
 # filtered fastq reads with preprocessing reports.
 rule fastp:
     input:
-        R1 = in_dir + "/{sample}_R1.merged.trimmed.fastq.gz",
-        R2 = in_dir + "/{sample}_R2.merged.trimmed.fastq.gz"
+        R1 = in_dir + "/{sample}_R1.merged.fastq.gz",
+        R2 = in_dir + "/{sample}_R2.merged.fastq.gz"
     output:
         r1_clean = "{out_dir}/fastq/{sample}_R1.clean.fastq",
         r2_clean = "{out_dir}/fastq/{sample}_R2.clean.fastq",

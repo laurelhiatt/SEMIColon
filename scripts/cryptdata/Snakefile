@@ -10,8 +10,9 @@ chroms = ["chr1","chr2","chr3","chr4","chr6","chr7","chr8","chr9","chr10","chr11
 "chr18","chr19","chr20","chr21","chr22","chrX","chrY"]
 
 matches = {
-    'P_48': {'crypt_samples': ['24286X1', '24286X2', '24286X3', '24286X4']},
-    'pos_control': {'crypt_samples': ['24286X5']}
+    'P_48_LH': {'crypt_samples': ['24286X1', '24286X2', '24286X3', '24286X4']},
+    'pos_control': {'crypt_samples': ['24286X5']},
+    'P_48_MolDx': {'crypt_samples':['24281X1', '24281X2', '24281X3'] }
 }
 
 ### IMPORTS ###
@@ -30,6 +31,7 @@ rule all:
     input:
         expand("{out_dir}/bam/{sample}-sorted.bai", out_dir = out_dir, sample = samples),
         expand("{out_dir}/bam/{sample}-sorted.bam", out_dir = out_dir, sample = samples),
+        expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples)
 
 #        expand("{out_dir}/vcf/{donor}-var.vcf.gz", out_dir = out_dir, donor = matches.keys())
 
@@ -45,18 +47,28 @@ rule fastp:
         r2_clean = "{out_dir}/fastq/{sample}_R2.clean.fastq",
         html_report = "{out_dir}/reports/{sample}-fastp-report.html",
         json_report = "{out_dir}/reports/{sample}-fastp-report.json"
+    params:
+        index_1 = "~/u1264408/Git/SEMIColon/data/index1.txt",
+        index_2 = "~/u1264408/Git/SEMIColon/data/index2.txt"
     shell:
         """
         fastp --in1 {input.R1} --in2 {input.R2} \
         --out1 {output.r1_clean} --out2 {output.r2_clean} \
-        --detect_adapter_for_pe \
         --adapter_sequence=AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
         --adapter_sequence_r2=AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT \
         --average_qual 20 \
-        --thread 10 \
+        --thread 30 \
         --html {output.html_report} \
-        --json {output.json_report}
+        --json {output.json_report} \
+        --filter_by_index1 {params.index_1} \
+        --filter_by_index2 {params.index_2} \
+        --dedup \
+        --trim_poly_x \
+        --cut_front \
+        --cut_tail \
+        --correction
         """
+
 
 # Aligns cleaned fastq reads to the defined reference genome
 # Mark duplicates and extract discordant and split reads from sam files
@@ -101,6 +113,16 @@ rule index_bam:
     shell:
         """
         samtools index -b {input.bam_sort} -o {output.bai}
+        """
+
+rule check_bam:
+    input:
+        bam_sort = rules.addrg.output.sort_bam_RG
+    output:
+        stats = "{out_dir}/bam/{sample}-sorted.stats"
+    shell:
+        """
+        samtools stats {input.bam_sort} > {output.stats}
         """
 
 # rule generateregions:

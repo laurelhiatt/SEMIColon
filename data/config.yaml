@@ -1,4 +1,4 @@
-input_directory: "/scratch/ucgd/lustre-work/quinlan/data-shared/datasets/spermseq/wgs/19841R/Fastq/merged_trimmed_fastq"
+input_directory: "/scratch/ucgd/lustre-work/quinlan/data-shared/datasets/spermseq/wgs/19841R/Fastq/merged_fastq"
 output_directory: "../data/output"
 reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta"
 reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
