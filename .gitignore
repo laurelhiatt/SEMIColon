@@ -1,6 +1,7 @@
 # Temp file directory
 /scripts/.snakemake/*
 /scripts/log.txt
+/scripts/cryptdata/.snakemake/*
 
 # Output directory
 /data/output/*

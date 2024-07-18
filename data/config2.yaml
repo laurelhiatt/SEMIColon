@@ -1,0 +1,12 @@
+input_directory: "/scratch/ucgd/lustre-labs/quinlan/data-shared/SEMIColon/24286R/24286R/Fastq/shortname_fastqs"
+output_directory: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/cryptdata"
+reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta"
+reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
+nchunks: 9
+
+samples:
+    - 24286X1
+    - 24286X2
+    - 24286X3
+    - 24286X4
+    - 24286X5
