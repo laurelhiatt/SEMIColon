@@ -18,6 +18,7 @@ matches = {
 ### IMPORTS ###
 import os
 import re
+import pandas as pd
 
 # Wildcard constraints; should all be alphanumeric
 wildcard_constraints:
@@ -35,9 +36,17 @@ rule all:
 
 #        expand("{out_dir}/vcf/{donor}-var.vcf.gz", out_dir = out_dir, donor = matches.keys())
 
+
+# Read the barcode mapping file into a dictionary
+barcode_df = pd.read_csv("/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/barcode_mapping.txt",
+    names=["sample", "barcode"])
+barcode_dict = barcode_df.set_index("sample")["barcode"].to_dict()
+print("Barcode dictionary:", barcode_dict)
+
 # Rule 'fastp' preprocesses the reads by detecting and removing adapters,
 # filtering reads with an average quality less than 20, and producing
 # filtered fastq reads with preprocessing reports.
+
 rule fastp:
     input:
         R1 = in_dir + "/{sample}R1_001.fastq.gz",
@@ -48,10 +57,36 @@ rule fastp:
         html_report = "{out_dir}/reports/{sample}-fastp-report.html",
         json_report = "{out_dir}/reports/{sample}-fastp-report.json"
     params:
-        index_1 = "~/u1264408/Git/SEMIColon/data/index1.txt",
-        index_2 = "~/u1264408/Git/SEMIColon/data/index2.txt"
-    shell:
-        """
+        barcode_1 = lambda wildcards: barcode_dict[wildcards.sample].split('+')[0],
+        barcode_2 = lambda wildcards: barcode_dict[wildcards.sample].split('+')[1],
+        temp_dir = "/tmp/barcodes"
+
+    run:
+        import os
+
+        # Ensure temporary directory exists
+        os.makedirs(params.temp_dir, exist_ok=True)
+
+        # Prepare barcode files
+        barcode1_file = os.path.join(params.temp_dir, f"{wildcards.sample}_barcode1.txt")
+        barcode2_file = os.path.join(params.temp_dir, f"{wildcards.sample}_barcode2.txt")
+
+        with open(barcode1_file, 'w') as f:
+            f.write(params.barcode_1 + '\n')
+
+        with open(barcode2_file, 'w') as f:
+            f.write(params.barcode_2 + '\n')
+
+        shell("""
+        echo "Processing sample: {wildcards.sample}"
+        echo "Barcode 1: {params.barcode_1}"
+        echo "Barcode 2: {params.barcode_2}"
+
+        if [ "{params.barcode_1}" = "UNKNOWN" ] || [ "{params.barcode_2}" = "UNKNOWN" ]; then
+            echo "Error: Barcode for sample {wildcards.sample} not found in barcode mapping file."
+            exit 1
+        fi
+
         fastp --in1 {input.R1} --in2 {input.R2} \
         --out1 {output.r1_clean} --out2 {output.r2_clean} \
         --adapter_sequence=AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
@@ -60,10 +95,10 @@ rule fastp:
         --thread 16 \
         --html {output.html_report} \
         --json {output.json_report} \
-        --filter_by_index1 {params.index_1} \
-        --filter_by_index2 {params.index_2} \
-        """
+        --filter_by_index1 {barcode1_file} \
+        --filter_by_index2 {barcode2_file} \
 
+        """)
 
 # Aligns cleaned fastq reads to the defined reference genome
 # Mark duplicates and extract discordant and split reads from sam files
