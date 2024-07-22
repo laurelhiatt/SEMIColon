@@ -32,7 +32,9 @@ wildcard_constraints:
 rule all:
     input:
         expand("{out_dir}/bam/{sample}-sorted.bai", out_dir = out_dir, sample = samples),
-        expand("{out_dir}/vcf/{donor}-var.vcf.gz", out_dir = out_dir, donor = matches.keys())
+        expand("{out_dir}/vcf/{donor}-var.vcf.gz", out_dir = out_dir, donor = matches.keys()),
+        expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples)
+
 
 # Rule 'fastp' preprocesses the reads by detecting and removing adapters,
 # filtering reads with an average quality less than 20, and producing
@@ -51,7 +53,6 @@ rule fastp:
         fastp --in1 {input.R1} --in2 {input.R2} \
         --out1 {output.r1_clean} --out2 {output.r2_clean} \
         --detect_adapter_for_pe \
-        --average_qual 20 \
         --thread 10 \
         --html {output.html_report} \
         --json {output.json_report}
@@ -100,6 +101,16 @@ rule index_bam:
     shell:
         """
         samtools index -b {input.bam_sort} -o {output.bai}
+        """
+
+rule check_bam:
+    input:
+        bam_sort = rules.addrg.output.sort_bam_RG
+    output:
+        stats = "{out_dir}/bam/{sample}-sorted.stats"
+    shell:
+        """
+        samtools stats {input.bam_sort} > {output.stats}
         """
 
 rule generateregions:
