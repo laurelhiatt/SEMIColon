@@ -6,6 +6,10 @@
 # Output directory
 /data/output/*
 
+#Data for tools
+/data/KRAKEN/*
+/data/standard_db/*
+
 # Externally derived scripts
 scripts/variant_calling/GenerateFreebayesRegions.R
 scripts/variant_calling/fasta_generate_regions.py
