@@ -1,6 +1,6 @@
 # Temp file directory
 /scripts/.snakemake/*
-/scripts/LeeSixData/.snakemake/*
+/scripts/LeeSixData/.snakemake/log/*
 /scripts/log.txt
 /scripts/cryptdata/.snakemake/*
 
@@ -20,3 +20,6 @@ scripts/log.txt
 data/KRAKEN/taxonomy/.nucl_gb.accession2taxid.gz.vpIBXa
 scripts/24286X3_001.fastq.gz_kraken2_classification.txt
 data/default_credential_file.json
+scripts/LeeSixdata/.snakemake/log/2024-09-03T134113.990784.snakemake.log
+scripts/LeeSixdata/.snakemake/log/2024-09-03T134409.966742.snakemake.log
+scripts/LeeSixdata/.snakemake/log/2024-09-03T134523.429869.snakemake.log
