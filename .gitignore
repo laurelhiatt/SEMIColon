@@ -18,3 +18,4 @@ scripts/log.txt
 .vscode/settings.json
 data/KRAKEN/taxonomy/.nucl_gb.accession2taxid.gz.vpIBXa
 scripts/24286X3_001.fastq.gz_kraken2_classification.txt
+data/default_credential_file.json

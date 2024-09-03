@@ -91,12 +91,10 @@ rule fastp:
         --out1 {output.r1_clean} --out2 {output.r2_clean} \
         --adapter_sequence=AGATCGGAAGAGCACACGTCTGAACTCCAGTCA \
         --adapter_sequence_r2=AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT \
-        --average_qual 20 \
         --thread 16 \
         --html {output.html_report} \
         --json {output.json_report} \
-        --filter_by_index1 {barcode1_file} \
-        --filter_by_index2 {barcode2_file} \
+        --disable_quality_filtering --disable_adapter_trimming --disable_trim_poly_g
 
         """)
 
