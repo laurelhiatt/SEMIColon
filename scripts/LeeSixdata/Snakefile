@@ -1,0 +1,148 @@
+configfile: '/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/LeeSixconfig.yaml'
+in_dir: str = config["input_directory"]
+out_dir: str = config["output_directory"]
+reference: str = config["reference_genome"]
+reference_index: str = config["reference_genome_index"]
+samples: list[str] = config["samples"]
+nchunks = config["nchunks"]
+chunks = list(range(1,nchunks+1))
+chroms = ["chr1","chr2","chr3","chr4","chr6","chr7","chr8","chr9","chr10","chr11","chr12","chr13","chr14","chr15","chr16","chr17",
+"chr18","chr19","chr20","chr21","chr22","chrX","chrY"]
+
+matches = {
+    'HLS': {'crypt_samples': ['HLS_1C_30_B5', 'HLS_1C_30_D5', 'HLS_1C_30_G5', 'HLS_1C_30_H5', 'HLS_2C_30_D6', 'HLS_2C_30_E6']},
+    'PD28690': {'crypt_samples': ['PD28690bx_2_a5', 'PD28690bx_2_d5', 'PD28690cb_2_g3', 'PD28690cb_2_h3']},
+    'PD34199': {'crypt_samples': ['PD34199a_c17', 'PD34199a_c22', 'PD34199a_c27', 'PD34199a_c28', 'PD34199a_c31', 'PD34199a_c3', 'PD34199a_c5', 'PD34199a_c7']}
+}
+
+
+### IMPORTS ###
+import os
+import re
+
+# Wildcard constraints; should all be alphanumeric
+wildcard_constraints:
+    sample = "[A-Za-z0-9]+",
+    chroms = "[A-Za-z0-9]+",
+    i = "[0-9]+",
+    out_dir = out_dir
+
+# Rule 'all', defining all requested output.
+rule all:
+    input:
+        expand("{out_dir}/bam/{sample}-sorted.bai", out_dir = out_dir, sample = samples),
+        expand("{out_dir}/vcf/{donor}-var.vcf.gz", out_dir = out_dir, donor = matches.keys()),
+        expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples)
+
+# from downloaded crams
+rule align_and_sort:
+    input:
+        cram = lambda wildcards: (
+            "{input_dir}/{sample}_merged.cram" if os.path.exists(f"{wildcards.input_dir}/{wildcards.sample}_merged.cram")
+            else "{input_dir}/{sample}.cram"
+        ),
+        ref = reference
+    output:
+        bam_sort = temp("{out_dir}/bam/{sample}-sortednoRG.bam")
+    threads: 8
+    shell:
+        """
+        # Convert CRAM to BAM and sort
+        samtools sort -@ {threads} -o {output.bam_sort} {input.cram}
+        """
+
+
+# def get_donor(sample, matches):
+#     for donor, samples in matches.items():
+#         if sample in samples['sperm_samples'] or sample == samples['blood_sample']:
+#             return donor
+#     raise KeyError(f"Sample {sample} not found in matches dictionary")
+
+# rule addrg:
+#     input:
+#         bam_sort = rules.align_and_sort.output.bam_sort
+#     output:
+#         sort_bam_RG = "{out_dir}/bam/{sample}-sorted.bam"
+#     params:
+#         donor = lambda wildcards: get_donor(wildcards.sample, matches)
+#     shell:
+#         """
+#         samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
+#         samtools view -b > {output.sort_bam_RG}
+#         """
+
+# rule index_bam:
+#     input:
+#         bam_sort = rules.addrg.output.sort_bam_RG
+#     output:
+#         bai = "{out_dir}/bam/{sample}-sorted.bai"
+#     shell:
+#         """
+#         samtools index -b {input.bam_sort} -o {output.bai}
+#         """
+
+# rule check_bam:
+#     input:
+#         bam_sort = rules.addrg.output.sort_bam_RG
+#     output:
+#         stats = "{out_dir}/bam/{sample}-sorted.stats"
+#     shell:
+#         """
+#         samtools stats {input.bam_sort} > {output.stats}
+#         """
+
+# rule generateregions:
+#     input:
+#         index = reference_index,
+#     params:
+#         chunks = chunks
+#     output:
+#         regions = expand("{out_dir}/regions/chunk.{chroms}.region.{i}.bed", i = chunks, out_dir = out_dir, chroms = chroms)
+#     shell:
+#         # "../scripts/GenerateFreebayesRegions.R" # This is located in the scripts/ directory of freebayes
+#         "python variant_calling/fasta_generate_regions.py {input.index} --chunks 9 --bed ../data/output/regions/chunk"
+
+# # Current filtering:
+# ### min-alternate-count 2
+# rule freebayes_variant_calling:
+#     input:
+#         bam_sort = lambda wildcard: expand("../data/output/bam/{sample}-sorted.bam", sample = samples),
+#         bai = lambda wildcard: expand("../data/output/bam/{sample}-sorted.bai", sample = samples),
+#         ref = reference,
+#         regions = "../data/output/regions/chunk.{chroms}.region.{i}.bed"
+#     output:
+#         full = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz"),
+#         full_index = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi")
+#     params:
+#         location = "../data/output/bam/"
+#     run:
+#         donor = wildcards.donor
+#         blood = matches[donor]["blood_sample"]
+#         sperm1 = matches[donor]["sperm_samples"][0]
+#         sperm2 = matches[donor]["sperm_samples"][1]
+
+#         shell("""
+#             RAW_VCF={output.full}
+#             RAW_VCF=${{RAW_VCF%%.gz}}
+
+#             freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} {params.location}{blood}-sorted.bam {params.location}{sperm1}-sorted.bam {params.location}{sperm2}-sorted.bam > $RAW_VCF
+
+#             bgzip -f $RAW_VCF
+#             tabix -f -p vcf {output.full}
+#         """)
+
+# rule ConcatVCFs:
+#     input:
+#         chunk_vcf = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz", i = chunks, out_dir = wildcard.out_dir, donor = wildcard.donor, chroms = chroms),
+#         chunk_vcf_index = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", i = chunks, out_dir = wildcard.out_dir, donor = wildcard.donor, chroms = chroms),
+#     output:
+#         vcf = "{out_dir}/vcf/{donor}-var.vcf.gz"
+#     shell:
+#         """
+#         RAW_VCF={output.vcf}
+#         RAW_VCF=${{RAW_VCF%%.gz}}
+
+#         bcftools concat -a {input.chunk_vcf} > $RAW_VCF
+#         bgzip -f $RAW_VCF
+#         tabix -f -p vcf {output.vcf}
+#         """

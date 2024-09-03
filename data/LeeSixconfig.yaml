@@ -2,7 +2,7 @@ metadata_file: "/scratch/general/pe-nfs1/u1264408/EGAD00001004192/LeeSixMetadata
 
 input_directory: "/scratch/ucgd/lustre-labs/quinlan/data-shared/datasets/SEMIColon/EGAD00001004192/"
 
-output_directory: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/LeeSixdata/"
+output_directory: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/"
 
 reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh37/human_g1k_v37_decoy_phix.fasta"
 
