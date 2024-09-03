@@ -45,14 +45,17 @@ def get_donor(sample, matches):
             return donor
     raise KeyError(f"Sample {sample} not found in matches dictionary")
 
+
+
 # from downloaded crams
 rule align_and_sort:
     input:
-        cram = lambda wc: in_dir + "/" + get_donor(wc.sample, matches) + "/" + "{sample}_final.cram"
-
+        cram = lambda wc: f"{in_dir}/{get_donor(wc.sample, matches)}/{wc.sample}_final.cram"
+    params:
+        donor = lambda wildcards: get_donor(wildcards.sample, matches)
     output:
-        bam_sort = "{out_dir}/bam/{donor}/{sample}-sortednoRG.bam"
-    threads: 8
+        bam_sort = "{out_dir}/bam/{params.donor}/{sample}-sortednoRG.bam"
+
     shell:
         """
         echo "Input CRAM file: {input.cram}"
@@ -60,6 +63,7 @@ rule align_and_sort:
         samtools sort -o {output.bam_sort} {input.cram}
         echo "Successfully sorted CRAM to BAM: {output.bam_sort}"
         """
+
 
 # rule addrg:
 #     input:
