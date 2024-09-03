@@ -1,5 +1,6 @@
 # Temp file directory
 /scripts/.snakemake/*
+/scripts/LeeSixData/.snakemake/*
 /scripts/log.txt
 /scripts/cryptdata/.snakemake/*
 
