@@ -30,7 +30,7 @@ wildcard_constraints:
 # Rule 'all', defining all requested output.
 rule all:
     input:
-        expand("{out_dir}/bam/{sample}-sorted.bai", out_dir = out_dir, sample = samples),
+        expand("{out_dir}/bam/{donor}/{sample}-sorted.bai", out_dir = out_dir, sample = samples, donor = donors),
         expand("{out_dir}/vcf/{donor}-var.vcf.gz", out_dir = out_dir, donor = matches.keys()),
         expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples)
 
@@ -38,12 +38,12 @@ rule all:
 rule align_and_sort:
     input:
         cram = lambda wildcards: (
-            "{input_dir}/{sample}_merged.cram" if os.path.exists(f"{wildcards.input_dir}/{wildcards.sample}_merged.cram")
-            else "{input_dir}/{sample}.cram"
+            "{input_dir}/{donor}/{sample}_merged.cram" if os.path.exists(f"{wildcards.input_dir}/{wildcards.sample}_merged.cram")
+            else "{input_dir}/{donor}/{sample}.cram"
         ),
         ref = reference
     output:
-        bam_sort = temp("{out_dir}/bam/{sample}-sortednoRG.bam")
+        bam_sort = temp("{out_dir}/bam/{donor}/{sample}-sortednoRG.bam")
     threads: 8
     shell:
         """
@@ -52,44 +52,44 @@ rule align_and_sort:
         """
 
 
-# def get_donor(sample, matches):
-#     for donor, samples in matches.items():
-#         if sample in samples['sperm_samples'] or sample == samples['blood_sample']:
-#             return donor
-#     raise KeyError(f"Sample {sample} not found in matches dictionary")
+def get_donor(sample, matches):
+    for donor, samples in matches.items():
+        if sample in samples['crypt_samples']:
+            return donor
+    raise KeyError(f"Sample {sample} not found in matches dictionary")
 
-# rule addrg:
-#     input:
-#         bam_sort = rules.align_and_sort.output.bam_sort
-#     output:
-#         sort_bam_RG = "{out_dir}/bam/{sample}-sorted.bam"
-#     params:
-#         donor = lambda wildcards: get_donor(wildcards.sample, matches)
-#     shell:
-#         """
-#         samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
-#         samtools view -b > {output.sort_bam_RG}
-#         """
+rule addrg:
+    input:
+        bam_sort = rules.align_and_sort.output.bam_sort
+    output:
+        sort_bam_RG = "{out_dir}/bam/{donor}/{sample}-sorted.bam"
+    params:
+        donor = lambda wildcards: get_donor(wildcards.sample, matches)
+    shell:
+        """
+        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
+        samtools view -b > {output.sort_bam_RG}
+        """
 
-# rule index_bam:
-#     input:
-#         bam_sort = rules.addrg.output.sort_bam_RG
-#     output:
-#         bai = "{out_dir}/bam/{sample}-sorted.bai"
-#     shell:
-#         """
-#         samtools index -b {input.bam_sort} -o {output.bai}
-#         """
+rule index_bam:
+    input:
+        bam_sort = rules.addrg.output.sort_bam_RG
+    output:
+        bai = "{out_dir}/bam/{donor}/{sample}-sorted.bai"
+    shell:
+        """
+        samtools index -b {input.bam_sort} -o {output.bai}
+        """
 
-# rule check_bam:
-#     input:
-#         bam_sort = rules.addrg.output.sort_bam_RG
-#     output:
-#         stats = "{out_dir}/bam/{sample}-sorted.stats"
-#     shell:
-#         """
-#         samtools stats {input.bam_sort} > {output.stats}
-#         """
+rule check_bam:
+    input:
+        bam_sort = rules.addrg.output.sort_bam_RG
+    output:
+        stats = "{out_dir}/bam/{donor}/{sample}-sorted.stats"
+    shell:
+        """
+        samtools stats {input.bam_sort} > {output.stats}
+        """
 
 # rule generateregions:
 #     input:
