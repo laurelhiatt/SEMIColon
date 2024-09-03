@@ -3,6 +3,7 @@
 /scripts/LeeSixData/.snakemake/log/*
 /scripts/log.txt
 /scripts/cryptdata/.snakemake/*
+/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/LeeSixdata/.snakemake/log
 
 # Output directory
 /data/output/*
@@ -23,3 +24,6 @@ data/default_credential_file.json
 scripts/LeeSixdata/.snakemake/log/2024-09-03T134113.990784.snakemake.log
 scripts/LeeSixdata/.snakemake/log/2024-09-03T134409.966742.snakemake.log
 scripts/LeeSixdata/.snakemake/log/2024-09-03T134523.429869.snakemake.log
+scripts/LeeSixdata/.snakemake/log/2024-09-03T141206.689002.snakemake.log
+scripts/LeeSixdata/.snakemake/log/2024-09-03T141348.647138.snakemake.log
+scripts/LeeSixdata/.snakemake/log/2024-09-03T143129.220943.snakemake.log

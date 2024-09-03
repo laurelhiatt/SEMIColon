@@ -16,14 +16,13 @@ matches = {
     'PD34199': {'crypt_samples': ['PD34199a_c17', 'PD34199a_c22', 'PD34199a_c27', 'PD34199a_c28', 'PD34199a_c31', 'PD34199a_c3', 'PD34199a_c5', 'PD34199a_c7']}
 }
 
-
 ### IMPORTS ###
 import os
 import re
 
 # Wildcard constraints; should all be alphanumeric
 wildcard_constraints:
-    sample = "[A-Za-z0-9]+",
+    sample = "[A-Za-z0-9_]+",
     chroms = "[A-Za-z0-9]+",
     i = "[0-9]+",
     out_dir = out_dir,
@@ -39,35 +38,31 @@ rule all:
 
 #         expand("{out_dir}/vcf/{donor}-var.vcf.gz", out_dir = out_dir, donor = matches.keys()),
 
+def get_donor(sample, matches):
+    for donor, samples in matches.items():
+        if sample in samples['crypt_samples']:
+            return donor
+    raise KeyError(f"Sample {sample} not found in matches dictionary")
 
 # from downloaded crams
 rule align_and_sort:
     input:
-        cram = in_dir + "/{donor}/{sample}_merged.cram",
-        ref = reference
+        cram = lambda wc: in_dir + "/" + get_donor(wc.sample, matches) + "/" + "{sample}_final.cram"
+
     output:
         bam_sort = "{out_dir}/bam/{donor}/{sample}-sortednoRG.bam"
     threads: 8
     shell:
         """
-        # Print input and output files for debugging
         echo "Input CRAM file: {input.cram}"
-        echo "Reference file: {input.ref}"
         echo "Output BAM file: {output.bam_sort}"
-
-        # Convert CRAM to BAM and sort
         samtools sort -o {output.bam_sort} {input.cram}
-
-        # Print success message
         echo "Successfully sorted CRAM to BAM: {output.bam_sort}"
         """
 
-
-# def get_donor(sample, matches):
-#     for donor, samples in matches.items():
-#         if sample in samples['crypt_samples']:
-#             return donor
-#     raise KeyError(f"Sample {sample} not found in matches dictionary")
+use rule align_and_sort as align_and_sort_unmerged with:
+    input:
+        cram = lambda wc: in_dir + "/" + get_donor(wc.sample, matches) + "/" + "{sample}.cram"
 
 # rule addrg:
 #     input:
