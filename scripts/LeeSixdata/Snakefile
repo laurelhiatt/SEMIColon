@@ -45,8 +45,6 @@ def get_donor(sample, matches):
             return donor
     raise KeyError(f"Sample {sample} not found in matches dictionary")
 
-
-
 # from downloaded crams
 rule align_and_sort:
     input:
