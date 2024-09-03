@@ -1,0 +1,45 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 30
+Rules claiming more threads will be scaled down.
+Job stats:
+job               count
+--------------  -------
+align_and_sort       83
+total                83
+
+Select jobs to execute...
+Execute 3 jobs...
+
+[Tue Sep  3 16:41:31 2024]
+localrule align_and_sort:
+    input: /scratch/ucgd/lustre-labs/quinlan/data-shared/datasets/SEMIColon/EGAD00001004192/PD34199/PD34199a_c28_final.cram
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS/PD34199a_c28-sortednoRG.bam
+    jobid: 53
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS/PD34199a_c28-sortednoRG.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, donor=HLS, sample=PD34199a_c28
+    threads: 8
+    resources: tmpdir=/tmp
+
+
+[Tue Sep  3 16:41:32 2024]
+localrule align_and_sort:
+    input: /scratch/ucgd/lustre-labs/quinlan/data-shared/datasets/SEMIColon/EGAD00001004192/HLS/HLS_2C_30_E6_final.cram
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199/HLS_2C_30_E6-sortednoRG.bam
+    jobid: 23
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199/HLS_2C_30_E6-sortednoRG.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, donor=PD34199, sample=HLS_2C_30_E6
+    threads: 8
+    resources: tmpdir=/tmp
+
+
+[Tue Sep  3 16:41:32 2024]
+localrule align_and_sort:
+    input: /scratch/ucgd/lustre-labs/quinlan/data-shared/datasets/SEMIColon/EGAD00001004192/PD34199/PD34199a_c17_final.cram
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34202/PD34199a_c17-sortednoRG.bam
+    jobid: 44
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34202/PD34199a_c17-sortednoRG.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, donor=PD34202, sample=PD34199a_c17
+    threads: 8
+    resources: tmpdir=/tmp
+

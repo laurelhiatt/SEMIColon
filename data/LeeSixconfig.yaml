@@ -30,7 +30,8 @@ samples:
 - PD34199a_c5
 - PD34199a_c7
 - PD34202a_s9
-
+- PD34199a_t31
+- PD34199a_t28
 
 donors:
 - HLS
