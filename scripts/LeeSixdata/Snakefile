@@ -30,10 +30,9 @@ wildcard_constraints:
     donor = "[A-Za-z0-9]+"
 
 
-# Rule 'all', defining all requested output.
 rule all:
     input:
-        expand("{out_dir}/bam/{donor}/{sample}-sortednoRG.bam", out_dir = out_dir, sample = samples, donor = donors)
+        expand("{out_dir}/bam/{sample}-sortednoRG.bam", out_dir = out_dir, sample = samples, donor = donors)
         # expand("{out_dir}/bam/{donor}/{sample}-sorted.bai", out_dir = out_dir, sample = samples, donor = donors),
         # expand("{out_dir}/bam/{donor}/{sample}-sorted.stats", out_dir = out_dir, sample = samples, donor = donors)
 
@@ -49,10 +48,9 @@ def get_donor(sample, matches):
 rule align_and_sort:
     input:
         cram = lambda wc: f"{in_dir}/{get_donor(wc.sample, matches)}/{wc.sample}_final.cram"
-    params:
-        donor = lambda wildcards: get_donor(wildcards.sample, matches)
+
     output:
-        bam_sort = "{out_dir}/bam/{params.donor}/{sample}-sortednoRG.bam"
+        bam_sort = "{out_dir}/bam/{sample}-sortednoRG.bam"
 
     shell:
         """
