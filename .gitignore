@@ -1,9 +1,9 @@
 # Temp file directory
 /scripts/.snakemake/*
-/scripts/LeeSixData/.snakemake/log/*
+/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/LeeSixdata/.snakemake/log/
 /scripts/log.txt
 /scripts/cryptdata/.snakemake/*
-/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/LeeSixdata/.snakemake/log
+/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/LeeSixdata/.snakemake/log/*
 
 # Output directory
 /data/output/*
