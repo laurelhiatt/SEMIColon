@@ -220,3 +220,67 @@ localrule align_and_sort:
     wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=HLS_1C_30_H5
     resources: tmpdir=/tmp
 
+[Tue Sep  3 19:03:13 2024]
+Finished job 5.
+1 of 22 steps (5%) done
+[Tue Sep  3 19:06:37 2024]
+Finished job 12.
+2 of 22 steps (9%) done
+[Tue Sep  3 19:09:23 2024]
+Finished job 9.
+3 of 22 steps (14%) done
+[Tue Sep  3 19:09:50 2024]
+Finished job 13.
+4 of 22 steps (18%) done
+[Tue Sep  3 19:11:38 2024]
+Finished job 7.
+5 of 22 steps (23%) done
+[Tue Sep  3 19:12:01 2024]
+Finished job 21.
+6 of 22 steps (27%) done
+[Tue Sep  3 19:12:52 2024]
+Finished job 14.
+7 of 22 steps (32%) done
+[Tue Sep  3 19:13:54 2024]
+Finished job 4.
+8 of 22 steps (36%) done
+[Tue Sep  3 19:14:22 2024]
+Finished job 15.
+9 of 22 steps (41%) done
+[Tue Sep  3 19:15:13 2024]
+Finished job 6.
+10 of 22 steps (45%) done
+[Tue Sep  3 19:15:35 2024]
+Finished job 19.
+11 of 22 steps (50%) done
+[Tue Sep  3 19:19:45 2024]
+Finished job 18.
+12 of 22 steps (55%) done
+[Tue Sep  3 19:19:50 2024]
+Finished job 20.
+13 of 22 steps (59%) done
+[Tue Sep  3 19:19:53 2024]
+Finished job 8.
+14 of 22 steps (64%) done
+[Tue Sep  3 19:20:06 2024]
+Finished job 11.
+15 of 22 steps (68%) done
+[Tue Sep  3 19:21:42 2024]
+Finished job 16.
+16 of 22 steps (73%) done
+[Tue Sep  3 19:23:12 2024]
+Finished job 10.
+17 of 22 steps (77%) done
+[Tue Sep  3 19:23:28 2024]
+Finished job 17.
+18 of 22 steps (82%) done
+[Tue Sep  3 19:26:57 2024]
+Finished job 2.
+19 of 22 steps (86%) done
+[Tue Sep  3 19:41:18 2024]
+Finished job 3.
+20 of 22 steps (91%) done
+[Tue Sep  3 19:45:53 2024]
+Finished job 1.
+21 of 22 steps (95%) done
+Complete log: .snakemake/log/2024-09-03T173742.348595.snakemake.log

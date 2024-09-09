@@ -1,0 +1,225 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 30
+Rules claiming more threads will be scaled down.
+Job stats:
+job          count
+---------  -------
+addrg           21
+all              1
+check_bam       21
+index_bam       21
+total           64
+
+Select jobs to execute...
+Execute 21 jobs...
+
+[Mon Sep  9 14:21:42 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c17-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c17-sorted.bam
+    jobid: 43
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c17-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=PD34199a_c17
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:58 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD28690cb_2_h3-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD28690cb_2_h3-sorted.bam
+    jobid: 41
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD28690cb_2_h3-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=PD28690cb_2_h3
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:58 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD28690cb_2_g3-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD28690cb_2_g3-sorted.bam
+    jobid: 39
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD28690cb_2_g3-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=PD28690cb_2_g3
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:58 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD28690bx_2_d5-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD28690bx_2_d5-sorted.bam
+    jobid: 37
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD28690bx_2_d5-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=PD28690bx_2_d5
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:58 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD28690bx_2_a5-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD28690bx_2_a5-sorted.bam
+    jobid: 35
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD28690bx_2_a5-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=PD28690bx_2_a5
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:58 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_2C_30_E6-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_2C_30_E6-sorted.bam
+    jobid: 33
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_2C_30_E6-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=HLS_2C_30_E6
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:58 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_t28-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_t28-sorted.bam
+    jobid: 63
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_t28-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=PD34199a_t28
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:58 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_2C_30_D6-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_2C_30_D6-sorted.bam
+    jobid: 31
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_2C_30_D6-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=HLS_2C_30_D6
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:58 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_t31-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_t31-sorted.bam
+    jobid: 61
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_t31-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=PD34199a_t31
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:58 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_1C_30_H5-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_1C_30_H5-sorted.bam
+    jobid: 29
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_1C_30_H5-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=HLS_1C_30_H5
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:58 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34202a_s9-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34202a_s9-sorted.bam
+    jobid: 59
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34202a_s9-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=PD34202a_s9
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:58 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_1C_30_G5-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_1C_30_G5-sorted.bam
+    jobid: 27
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_1C_30_G5-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=HLS_1C_30_G5
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:59 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c7-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c7-sorted.bam
+    jobid: 57
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c7-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=PD34199a_c7
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:59 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c5-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c5-sorted.bam
+    jobid: 55
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c5-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=PD34199a_c5
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:59 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_1C_30_D5-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_1C_30_D5-sorted.bam
+    jobid: 25
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_1C_30_D5-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=HLS_1C_30_D5
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:59 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c3-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c3-sorted.bam
+    jobid: 53
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c3-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=PD34199a_c3
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:59 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_1C_30_B5-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_1C_30_B5-sorted.bam
+    jobid: 23
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/HLS_1C_30_B5-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=HLS_1C_30_B5
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:59 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c31-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c31-sorted.bam
+    jobid: 51
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c31-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=PD34199a_c31
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:59 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c28-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c28-sorted.bam
+    jobid: 49
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c28-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=PD34199a_c28
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:59 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c27-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c27-sorted.bam
+    jobid: 47
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c27-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=PD34199a_c27
+    resources: tmpdir=/tmp
+
+
+[Mon Sep  9 14:21:59 2024]
+localrule addrg:
+    input: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c22-sortednoRG.bam
+    output: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c22-sorted.bam
+    jobid: 45
+    reason: Missing output files: /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata/bam/PD34199a_c22-sorted.bam
+    wildcards: out_dir=/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/LeeSixdata, sample=PD34199a_c22
+    resources: tmpdir=/tmp
+

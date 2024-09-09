@@ -32,9 +32,9 @@ wildcard_constraints:
 
 rule all:
     input:
-        expand("{out_dir}/bam/{sample}-sortednoRG.bam", out_dir = out_dir, sample = samples, donor = donors)
-        # expand("{out_dir}/bam/{donor}/{sample}-sorted.bai", out_dir = out_dir, sample = samples, donor = donors),
-        # expand("{out_dir}/bam/{donor}/{sample}-sorted.stats", out_dir = out_dir, sample = samples, donor = donors)
+        expand("{out_dir}/bam/{sample}-sortednoRG.bam", out_dir = out_dir, sample = samples, donor = donors),
+        expand("{out_dir}/bam/{sample}-sorted.bai", out_dir = out_dir, sample = samples, donor = donors),
+        expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples, donor = donors)
 
 #         expand("{out_dir}/vcf/{donor}-var.vcf.gz", out_dir = out_dir, donor = matches.keys()),
 
@@ -61,37 +61,37 @@ rule align_and_sort:
         """
 
 
-# rule addrg:
-#     input:
-#         bam_sort = rules.align_and_sort.output.bam_sort
-#     output:
-#         sort_bam_RG = "{out_dir}/bam/{donor}/{sample}-sorted.bam"
-#     params:
-#         donor = lambda wildcards: get_donor(wildcards.sample, matches)
-#     shell:
-#         """
-#         samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
-#         samtools view -b > {output.sort_bam_RG}
-#         """
+rule addrg:
+    input:
+        bam_sort = rules.align_and_sort.output.bam_sort
+    output:
+        sort_bam_RG = "{out_dir}/bam/{sample}-sorted.bam"
+    params:
+        donor = lambda wildcards: get_donor(wildcards.sample, matches)
+    shell:
+        """
+        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
+        samtools view -b > {output.sort_bam_RG}
+        """
 
-# rule index_bam:
-#     input:
-#         bam_sort = rules.addrg.output.sort_bam_RG
-#     output:
-#         bai = "{out_dir}/bam/{donor}/{sample}-sorted.bam.bai"
-#     shell:
-#         """
-#         samtools index {input.bam_sort}
-#         """
+rule index_bam:
+    input:
+        bam_sort = rules.addrg.output.sort_bam_RG
+    output:
+        bai = "{out_dir}/bam/{sample}-sorted.bai"
+    shell:
+        """
+        samtools index {input.bam_sort}
+        """
 
-# rule check_bam:
-#     input:
-#         bam_sort = rules.addrg.output.sort_bam_RG
-#     output:
-#         stats = "{out_dir}/bam/{donor}/{sample}-sorted.stats"
-#     shell:
-#         """
-#         samtools stats {input.bam_sort} > {output.stats}
+rule check_bam:
+    input:
+        bam_sort = rules.addrg.output.sort_bam_RG
+    output:
+        stats = "{out_dir}/bam/{sample}-sorted.stats"
+    shell:
+        """
+        samtools stats {input.bam_sort} > {output.stats}
 #         """
 
 # rule generateregions:
