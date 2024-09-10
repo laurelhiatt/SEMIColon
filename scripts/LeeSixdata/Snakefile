@@ -33,7 +33,7 @@ wildcard_constraints:
 rule all:
     input:
         expand("{out_dir}/bam/{sample}-sortednoRG.bam", out_dir = out_dir, sample = samples, donor = donors),
-        expand("{out_dir}/bam/{sample}-sorted.bai", out_dir = out_dir, sample = samples, donor = donors),
+        expand("{out_dir}/bam/{sample}-sorted.bam.bai", out_dir = out_dir, sample = samples, donor = donors),
         expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples, donor = donors)
 
 #         expand("{out_dir}/vcf/{donor}-var.vcf.gz", out_dir = out_dir, donor = matches.keys()),
@@ -78,7 +78,7 @@ rule index_bam:
     input:
         bam_sort = rules.addrg.output.sort_bam_RG
     output:
-        bai = "{out_dir}/bam/{sample}-sorted.bai"
+        bai = "{out_dir}/bam/{sample}-sorted.bam.bai"
     shell:
         """
         samtools index {input.bam_sort}
@@ -92,7 +92,7 @@ rule check_bam:
     shell:
         """
         samtools stats {input.bam_sort} > {output.stats}
-#         """
+        """
 
 # rule generateregions:
 #     input:
