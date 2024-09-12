@@ -34,7 +34,9 @@ rule all:
     input:
         expand("{out_dir}/bam/{sample}-sorted.bam.bai", out_dir = out_dir, sample = samples, donor = donors),
         expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples, donor = donors),
-        expand("{out_dir}/vcf/{donor}-var.vcf.gz", out_dir = out_dir, donor = matches.keys()),
+        expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf", out_dir = out_dir, sample = samples, donor = donors, chroms = chroms, i = chunks),
+
+        #expand("{out_dir}/vcf/{donor}-var.vcf", out_dir = out_dir, donor = matches.keys()),
 
 def get_donor(sample, matches):
     for donor, samples in matches.items():
@@ -68,7 +70,7 @@ rule addrg:
         donor = lambda wildcards: get_donor(wildcards.sample, matches)
     shell:
         """
-        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
+        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tDS:{params.donor}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
         samtools view -b > {output.sort_bam_RG}
         """
 
@@ -113,38 +115,40 @@ rule freebayes_variant_calling:
         ref = reference,
         regions = "{out_dir}/regions/chunk.{chroms}.region.{i}.bed"
     output:
-        full = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz"),
-        full_index = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi")
+        full = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf",
     params:
         location = "{out_dir}/bam/"
     run:
         donor = wildcards.donor
         crypt_samples = matches[donor]["crypt_samples"]
 
-        bam_files = " ".join([f"{params.location}{sample}-sorted.bam" for sample in crypt_samples])
-        print(bam_files)
+        bam_files = list(set(f"{params.location}{sample}-sorted.bam" for sample in crypt_samples))
+        bam_files = " ".join(bam_files)
 
         shell("""
             RAW_VCF={output.full}
-            RAW_VCF=${{RAW_VCF%%.gz}}
+
 
             freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} {bam_files} > $RAW_VCF
 
-            bgzip -f $RAW_VCF
-            tabix -f -p vcf {output.full}
         """)
 
+            #        full_index = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi")
 
-rule ConcatVCFs:
-    input:
-        chunk_vcf = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz", i=chunks, out_dir=wildcard.out_dir, donor=wildcard.donor, chroms=chroms),
-        chunk_vcf_index = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", i=chunks, out_dir=wildcard.out_dir, donor=wildcard.donor, chroms=chroms)
-    output:
-        vcf = "{out_dir}/vcf/{donor}-var.vcf.gz"
-    shell:
-        """
-        RAW_VCF={output.vcf}
-        bcftools concat -a {input.chunk_vcf} > $RAW_VCF
-        bgzip -f $RAW_VCF
-        tabix -f -p vcf {output.vcf}
-        """
+#            RAW_VCF=${{RAW_VCF%%.gz}}
+           # bgzip -f $RAW_VCF
+           # tabix -f -p vcf {output.full}
+
+# rule ConcatVCFs:
+#     input:
+#         chunk_vcf = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz", i=chunks, out_dir=wildcard.out_dir, donor=wildcard.donor, chroms=chroms),
+#         chunk_vcf_index = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", i=chunks, out_dir=wildcard.out_dir, donor=wildcard.donor, chroms=chroms)
+#     output:
+#         vcf = "{out_dir}/vcf/{donor}-var.vcf.gz"
+#     shell:
+#         """
+#         RAW_VCF={output.vcf}
+#         bcftools concat -a {input.chunk_vcf} > $RAW_VCF
+#         bgzip -f $RAW_VCF
+#         tabix -f -p vcf {output.vcf}
+#         """
