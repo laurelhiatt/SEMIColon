@@ -1,0 +1,14 @@
+executor: slurm
+retries: 1
+jobs: 30
+resources:
+- threads=100
+- mem_mb=200000
+default-resources:
+- slurm_account="ucgd-rw"
+- slurm_partition="ucgd-shared-rw"
+- runtime=1440
+- mem_mb=8000*attempt
+software-deployment-method: conda
+rerun-incomplete: true
+configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/snakemake_config/LeeSixconfig.yaml"

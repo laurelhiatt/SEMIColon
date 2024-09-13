@@ -1,4 +1,4 @@
-configfile: '/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/LeeSixconfig.yaml'
+configfile: '/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/snakemake_config/LeeSixconfig.yaml'
 in_dir: str = config["input_directory"]
 out_dir: str = config["output_directory"]
 reference: str = config["reference_genome"]
@@ -70,7 +70,7 @@ rule addrg:
         donor = lambda wildcards: get_donor(wildcards.sample, matches)
     shell:
         """
-        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tDS:{params.donor}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
+        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
         samtools view -b > {output.sort_bam_RG}
         """
 
@@ -113,23 +113,26 @@ rule freebayes_variant_calling:
         bam_sort = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam", sample=samples, out_dir=out_dir),
         bai = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam.bai", sample=samples, out_dir=out_dir),
         ref = reference,
-        regions = "{out_dir}/regions/chunk.{chroms}.region.{i}.bed"
+        regions = rules.generateregions.output.regions
     output:
         full = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf",
     params:
         location = "{out_dir}/bam/"
+    resources:
+        mem_mb = 16000
     run:
         donor = wildcards.donor
         crypt_samples = matches[donor]["crypt_samples"]
 
         bam_files = list(set(f"{params.location}{sample}-sorted.bam" for sample in crypt_samples))
         bam_files = " ".join(bam_files)
+        print(bam_files)
 
         shell("""
             RAW_VCF={output.full}
 
 
-            freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} {bam_files} > $RAW_VCF
+            freebayes --min-alternate-count 2 --debug -f {input.ref} -t {input.regions} {bam_files} > $RAW_VCF
 
         """)
 
