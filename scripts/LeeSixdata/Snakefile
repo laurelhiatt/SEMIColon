@@ -10,11 +10,16 @@ chunks = list(range(1,nchunks+1))
 chroms = ["1","2","3","4","6","7","8","9","10","11","12","13","14","15","16","17",
 "18","19","20","21","22","X","Y"]
 
+# matches = {
+#     'HLS': {'crypt_samples': ['HLS_1C_30_B5', 'HLS_1C_30_D5', 'HLS_1C_30_G5', 'HLS_1C_30_H5', 'HLS_2C_30_D6', 'HLS_2C_30_E6']},
+#     'PD28690': {'crypt_samples': ['PD28690bx_2_a5', 'PD28690bx_2_d5', 'PD28690cb_2_g3', 'PD28690cb_2_h3']},
+#     'PD34199': {'crypt_samples': ['PD34199a_c17', 'PD34199a_c22', 'PD34199a_c27', 'PD34199a_c28', 'PD34199a_c31', 'PD34199a_c3', 'PD34199a_c5', 'PD34199a_c7', 'PD34199a_t31', 'PD34199a_t28']},
+#     'PD34202': {'crypt_samples': ['PD34202a_s9']}
+#     }
+
 matches = {
-    'HLS': {'crypt_samples': ['HLS_1C_30_B5', 'HLS_1C_30_D5', 'HLS_1C_30_G5', 'HLS_1C_30_H5', 'HLS_2C_30_D6', 'HLS_2C_30_E6']},
-    'PD28690': {'crypt_samples': ['PD28690bx_2_a5', 'PD28690bx_2_d5', 'PD28690cb_2_g3', 'PD28690cb_2_h3']},
-    'PD34199': {'crypt_samples': ['PD34199a_c17', 'PD34199a_c22', 'PD34199a_c27', 'PD34199a_c28', 'PD34199a_c31', 'PD34199a_c3', 'PD34199a_c5', 'PD34199a_c7', 'PD34199a_t31', 'PD34199a_t28']},
-    'PD34202': {'crypt_samples': ['PD34202a_s9']}
+    'HLS': {'crypt_samples': ['HLS_1C_30_B5']},
+    'PD34199': {'crypt_samples': ['PD34199a_t28']},
     }
 
 ### IMPORTS ###
@@ -113,7 +118,7 @@ rule freebayes_variant_calling:
         bam_sort = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam", sample=samples, out_dir=out_dir),
         bai = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam.bai", sample=samples, out_dir=out_dir),
         ref = reference,
-        regions = rules.generateregions.output.regions
+        regions = "{out_dir}/regions/chunk.{chroms}.region.{i}.bed"
     output:
         full = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf",
     params:
@@ -124,17 +129,19 @@ rule freebayes_variant_calling:
         donor = wildcards.donor
         crypt_samples = matches[donor]["crypt_samples"]
 
-        bam_files = list(set(f"{params.location}{sample}-sorted.bam" for sample in crypt_samples))
-        bam_files = " ".join(bam_files)
-        print(bam_files)
+        # Create a temporary file for BAM file paths
+        bam_file_list = temp(f"bam_list_{wildcards.donor}_{wildcards.i}.txt")
+
+        with open(bam_file_list, "w") as f:
+            for sample in crypt_samples:
+                f.write(f"{params.location}{sample}-sorted.bam\n")
 
         shell("""
             RAW_VCF={output.full}
 
-
-            freebayes --min-alternate-count 2 --debug -f {input.ref} -t {input.regions} {bam_files} > $RAW_VCF
-
+            freebayes --min-alternate-count 2 --debug -f {input.ref} -t {input.regions} -L {bam_file_list} > $RAW_VCF
         """)
+
 
             #        full_index = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi")
 
