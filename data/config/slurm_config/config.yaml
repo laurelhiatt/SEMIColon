@@ -5,9 +5,9 @@ resources:
 - threads=100
 - mem_mb=200000
 default-resources:
-- slurm_account="ucgd-rw"
-- slurm_partition="ucgd-shared-rw"
-- runtime=1440
+- slurm_account="quinlan-rw"
+- slurm_partition="quinlan-shared-rw"
+- runtime=20160
 - mem_mb=8000*attempt
 software-deployment-method: conda
 rerun-incomplete: True

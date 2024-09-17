@@ -39,7 +39,7 @@ rule all:
     input:
         expand("{out_dir}/bam/{sample}-sorted.bam.bai", out_dir = out_dir, sample = samples, donor = donors),
         expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples, donor = donors),
-        expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf", out_dir = out_dir, sample = samples, donor = donors, chroms = chroms, i = chunks),
+        expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz", out_dir = out_dir, sample = samples, donor = donors, chroms = chroms, i = chunks),
 
         #expand("{out_dir}/vcf/{donor}-var.vcf", out_dir = out_dir, donor = matches.keys()),
 
@@ -130,7 +130,7 @@ rule freebayes_variant_calling:
         crypt_samples = matches[donor]["crypt_samples"]
 
         # Create a temporary file for BAM file paths
-        bam_file_list = temp(f"bam_list_{wildcards.donor}_{wildcards.i}.txt")
+        bam_file_list = temp(f"bam_list_{wildcards.donor}.txt")
 
         with open(bam_file_list, "w") as f:
             for sample in crypt_samples:
@@ -143,6 +143,20 @@ rule freebayes_variant_calling:
         """)
 
 
+rule index:
+    input:
+        chunk_vcf = expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf", out_dir = out_dir, chroms = chroms, i = chunks, donor = donors)
+    output:
+        chunk_zip = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz",
+        chunk_zip_index = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi"
+
+
+    shell:
+        """
+        bgzip -f {input.chunk_vcf}
+        tabix -f -p vcf {output.chunk_zip}
+        """
+#
             #        full_index = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi")
 
 #            RAW_VCF=${{RAW_VCF%%.gz}}
