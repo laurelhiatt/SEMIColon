@@ -65,7 +65,6 @@ rule align_and_sort:
         echo "Successfully sorted CRAM to BAM: {output.bam_sort}"
         """
 
-
 rule addrg:
     input:
         bam_sort = rules.align_and_sort.output.bam_sort
@@ -108,8 +107,22 @@ rule generateregions:
     output:
         regions = expand("{out_dir}/regions/chunk.{chroms}.region.{i}.bed", i = chunks, out_dir = out_dir, chroms = chroms)
     shell:
-        # "../scripts/GenerateFreebayesRegions.R" # This is located in the scripts/ directory of freebayes
-        "python /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/variant_calling/fasta_generate_regions.py --fai {input.reference} --chunks 9 --bed {input.out_dir}/regions/chunk"
+        """
+        python /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/variant_calling/fasta_generate_regions.py --fai {input.reference} --chunks 9 --bed {input.out_dir}/regions/chunk
+        """
+
+
+rule make_bam_list:
+    input:
+        bam_sort = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam", sample=samples, out_dir=out_dir)
+    params:
+        location = "{out_dir}/bam/"
+    output:
+        bam_file_list = temp("{out_dir}/bam_list_{donor}.txt")
+    shell:
+        """
+        python /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/LeeSixdata/create_bam_list.py {wildcards.donor} {params.location} {wildcards.out_dir}
+        """
 
 # # Current filtering:
 # ### min-alternate-count 2
@@ -117,30 +130,19 @@ rule freebayes_variant_calling:
     input:
         bam_sort = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam", sample=samples, out_dir=out_dir),
         bai = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam.bai", sample=samples, out_dir=out_dir),
+        bam_file_list = "{out_dir}/bam_list_{donor}.txt",
         ref = reference,
         regions = "{out_dir}/regions/chunk.{chroms}.region.{i}.bed"
     output:
         full = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf",
-    params:
-        location = "{out_dir}/bam/"
+
     resources:
         mem_mb = 16000
-    run:
-        donor = wildcards.donor
-        crypt_samples = matches[donor]["crypt_samples"]
-
-        # Create a temporary file for BAM file paths
-        bam_file_list = temp(f"bam_list_{wildcards.donor}.txt")
-
-        with open(bam_file_list, "w") as f:
-            for sample in crypt_samples:
-                f.write(f"{params.location}{sample}-sorted.bam\n")
-
-        shell("""
-            RAW_VCF={output.full}
-
-            freebayes --min-alternate-count 2 --debug -f {input.ref} -t {input.regions} -L {bam_file_list} > $RAW_VCF
-        """)
+    shell:
+        """
+        RAW_VCF={output.full}
+        freebayes --min-alternate-count 2 --debug -f {input.ref} -t {input.regions} -L {input.bam_file_list} > $RAW_VCF
+        """
 
 
 rule index:
