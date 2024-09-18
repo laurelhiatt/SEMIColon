@@ -39,8 +39,8 @@ rule all:
     input:
         expand("{out_dir}/bam/{sample}-sorted.bam.bai", out_dir = out_dir, sample = samples, donor = donors),
         expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples, donor = donors),
-        expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz", out_dir = out_dir, sample = samples, donor = donors, chroms = chroms, i = chunks),
-
+        expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", out_dir = out_dir, sample = samples, donor = donors, chroms = chroms, i = chunks),
+        expand("{out_dir}/vcf/{donor}-var.vcf.gz", out_dir = out_dir, donor = donors)
         #expand("{out_dir}/vcf/{donor}-var.vcf", out_dir = out_dir, donor = matches.keys()),
 
 def get_donor(sample, matches):
@@ -153,29 +153,26 @@ rule compress_chunks:
         bgzip -f {input.chunk_vcf}
         """
 
+rule index_chunks:
+    input:
+        chunk_zip = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz"
+    output:
+        chunk_zip_index = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi"
+    shell:
+        """
+        tabix -f -p vcf {input.chunk_zip}
+        """
 
-#         chunk_zip_index = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi"
-
-#         tabix -f -p vcf {output.chunk_zip}
-
-
-#
-            #        full_index = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi")
-
-#            RAW_VCF=${{RAW_VCF%%.gz}}
-           # bgzip -f $RAW_VCF
-           # tabix -f -p vcf {output.full}
-
-# rule ConcatVCFs:
-#     input:
-#         chunk_vcf = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz", i=chunks, out_dir=wildcard.out_dir, donor=wildcard.donor, chroms=chroms),
-#         chunk_vcf_index = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", i=chunks, out_dir=wildcard.out_dir, donor=wildcard.donor, chroms=chroms)
-#     output:
-#         vcf = "{out_dir}/vcf/{donor}-var.vcf.gz"
-#     shell:
-#         """
-#         RAW_VCF={output.vcf}
-#         bcftools concat -a {input.chunk_vcf} > $RAW_VCF
-#         bgzip -f $RAW_VCF
-#         tabix -f -p vcf {output.vcf}
-#         """
+rule ConcatVCFs:
+    input:
+        chunk_zip = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz", i = chunks, out_dir = wildcard.out_dir, donor = wildcard.donor, chroms = chroms),
+        chunk_vcf_index = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", i = chunks, out_dir = wildcard.out_dir, donor = wildcard.donor, chroms = chroms),
+    output:
+        vcf = "{out_dir}/vcf/{donor}-var.vcf.gz",
+        vcf_index = "{out_dir}/vcf/{donor}-var.vcf.gz.tbi"
+    shell:
+        """
+        FULL_VCF={output.vcf}
+        bcftools concat -a {input.chunk_zip} -o $FULL_VCF
+        tabix -f -p vcf {output.vcf}
+        """
