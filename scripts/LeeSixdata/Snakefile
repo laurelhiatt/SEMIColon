@@ -114,7 +114,8 @@ rule generateregions:
 
 rule make_bam_list:
     input:
-        bam_sort = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam", sample=samples, out_dir=out_dir)
+        bam_sort = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam", sample=samples, out_dir=out_dir),
+        bai = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam.bai", sample=samples, out_dir=out_dir)
     params:
         location = "{out_dir}/bam/"
     output:
@@ -128,36 +129,36 @@ rule make_bam_list:
 # ### min-alternate-count 2
 rule freebayes_variant_calling:
     input:
-        bam_sort = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam", sample=samples, out_dir=out_dir),
-        bai = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam.bai", sample=samples, out_dir=out_dir),
         bam_file_list = "{out_dir}/bam_list_{donor}.txt",
         ref = reference,
         regions = "{out_dir}/regions/chunk.{chroms}.region.{i}.bed"
     output:
         full = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf",
-
     resources:
         mem_mb = 16000
     shell:
         """
         RAW_VCF={output.full}
-        freebayes --min-alternate-count 2 --debug -f {input.ref} -t {input.regions} -L {input.bam_file_list} > $RAW_VCF
+        freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} -L {input.bam_file_list} > $RAW_VCF
         """
 
 
-rule index:
+rule compress_chunks:
     input:
-        chunk_vcf = expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf", out_dir = out_dir, chroms = chroms, i = chunks, donor = donors)
+        chunk_vcf = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf"
     output:
         chunk_zip = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz",
-        chunk_zip_index = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi"
-
-
     shell:
         """
         bgzip -f {input.chunk_vcf}
-        tabix -f -p vcf {output.chunk_zip}
         """
+
+
+#         chunk_zip_index = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi"
+
+#         tabix -f -p vcf {output.chunk_zip}
+
+
 #
             #        full_index = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi")
 
