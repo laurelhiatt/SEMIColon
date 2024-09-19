@@ -74,7 +74,7 @@ rule addrg:
         donor = lambda wildcards: get_donor(wildcards.sample, matches)
     shell:
         """
-        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
+        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
         samtools view -b > {output.sort_bam_RG}
         """
 
@@ -133,7 +133,7 @@ rule freebayes_variant_calling:
         ref = reference,
         regions = "{out_dir}/regions/chunk.{chroms}.region.{i}.bed"
     output:
-        full = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf",
+        full = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf"),
     resources:
         mem_mb = 16000
     shell:
@@ -147,7 +147,7 @@ rule compress_chunks:
     input:
         chunk_vcf = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf"
     output:
-        chunk_zip = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz",
+        chunk_zip = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz")
     shell:
         """
         bgzip -f {input.chunk_vcf}
@@ -157,7 +157,7 @@ rule index_chunks:
     input:
         chunk_zip = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz"
     output:
-        chunk_zip_index = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi"
+        chunk_zip_index = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi")
     shell:
         """
         tabix -f -p vcf {input.chunk_zip}
