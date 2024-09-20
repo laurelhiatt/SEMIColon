@@ -74,7 +74,7 @@ rule addrg:
         donor = lambda wildcards: get_donor(wildcards.sample, matches)
     shell:
         """
-        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
+        samtools addreplacerg -r samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
         samtools view -b > {output.sort_bam_RG}
         """
 
@@ -138,8 +138,7 @@ rule freebayes_variant_calling:
         mem_mb = 16000
     shell:
         """
-        RAW_VCF={output.full}
-        freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} -L {input.bam_file_list} > $RAW_VCF
+        freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} -L {input.bam_file_list} > {output.full}
         """
 
 
@@ -172,7 +171,6 @@ rule ConcatVCFs:
         vcf_index = "{out_dir}/vcf/{donor}-var.vcf.gz.tbi"
     shell:
         """
-        FULL_VCF={output.vcf}
-        bcftools concat -a {input.chunk_zip} -o $FULL_VCF
+        bcftools concat -a {input.chunk_zip} -o {output.vcf}
         tabix -f -p vcf {output.vcf}
         """
