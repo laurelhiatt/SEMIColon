@@ -1,3 +1,25 @@
-scripts/fromhannah.py
+# Temp file directory
+/scripts/.snakemake/*
+/scripts/LeeSixdata/.snakemake/
+/scripts/log.txt
+/scripts/cryptdata/.snakemake/*
+/scripts/LeeSixdata/.snakemake/*
+
+# Output directory
+/data/output/*
+
+#Data for tools
+/data/KRAKEN/*
+/data/standard_db/*
+
+# Externally derived scripts
+scripts/variant_calling/GenerateFreebayesRegions.R
+scripts/variant_calling/fasta_generate_regions.py
+
+scripts/log.txt
+.vscode/settings.json
+data/KRAKEN/taxonomy/.nucl_gb.accession2taxid.gz.vpIBXa
+scripts/24286X3_001.fastq.gz_kraken2_classification.txt
+data/default_credential_file.jsonscripts/fromhannah.py
 data/PD28690-chr21-snps-chunk.vcf
 data/PD34199_chr2_chunk2_snps_chunk.vcf

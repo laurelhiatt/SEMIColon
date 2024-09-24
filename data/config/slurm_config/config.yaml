@@ -1,0 +1,14 @@
+executor: slurm
+retries: 1
+jobs: 30
+resources:
+- threads=100
+- mem_mb=200000
+default-resources:
+- slurm_account="quinlan-rw"
+- slurm_partition="quinlan-shared-rw"
+- runtime=20160
+- mem_mb=8000*attempt
+software-deployment-method: conda
+rerun-incomplete: True
+configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/snakemake_config/LeeSixconfig.yaml"
