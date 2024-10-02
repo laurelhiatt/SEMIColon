@@ -8,7 +8,7 @@ reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh37/human_g1k_v
 
 reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh37/human_g1k_v37_decoy_phix.fasta.fai"
 
-nchunks: 9
+nchunks: 20
 
 samples:
 - HLS_1C_30_B5

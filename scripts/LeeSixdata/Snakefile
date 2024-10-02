@@ -108,7 +108,7 @@ rule generateregions:
         regions = expand("{out_dir}/regions/chunk.{chroms}.region.{i}.bed", i = chunks, out_dir = out_dir, chroms = chroms)
     shell:
         """
-        python /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/variant_calling/fasta_generate_regions.py --fai {input.reference} --chunks 9 --bed {input.out_dir}/regions/chunk
+        python /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/variant_calling/fasta_generate_regions.py --fai {input.reference} --chunks 20  --bed {input.out_dir}/regions/chunk
         """
 
 
@@ -135,7 +135,7 @@ rule freebayes_variant_calling:
     output:
         full = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf"),
     resources:
-        mem_mb = 16000
+        mem_mb = 32000
     shell:
         """
         freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} -L {input.bam_file_list} > {output.full}
