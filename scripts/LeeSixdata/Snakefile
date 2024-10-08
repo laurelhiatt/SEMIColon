@@ -40,7 +40,7 @@ rule all:
         expand("{out_dir}/bam/{sample}-sorted.bam.bai", out_dir = out_dir, sample = samples, donor = donors),
         expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples, donor = donors),
         expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", out_dir = out_dir, sample = samples, donor = donors, chroms = chroms, i = chunks),
-        expand("{out_dir}/vcf/{donor}-var.vcf.gz", out_dir = out_dir, donor = donors)
+        expand("{out_dir}/vcf/{donor}-annotated-var.vcf.gz", out_dir = out_dir, donor = donors)
         #expand("{out_dir}/vcf/{donor}-var.vcf", out_dir = out_dir, donor = matches.keys()),
 
 def get_donor(sample, matches):
@@ -127,6 +127,7 @@ rule make_bam_list:
 
 # # Current filtering:
 # ### min-alternate-count 2
+### qsum 40
 rule freebayes_variant_calling:
     input:
         bam_file_list = "{out_dir}/bam_list_{donor}.txt",
@@ -138,7 +139,7 @@ rule freebayes_variant_calling:
         mem_mb = 32000
     shell:
         """
-        freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} -L {input.bam_file_list} > {output.full}
+        freebayes --min-alternate-count 2 --min-alternate-qsum 40 -f {input.ref} -t {input.regions} -L {input.bam_file_list} > {output.full}
         """
 
 
@@ -174,3 +175,26 @@ rule ConcatVCFs:
         bcftools concat -a {input.chunk_zip} -o {output.vcf}
         tabix -f -p vcf {output.vcf}
         """
+
+
+rule decomposeVCFs:
+    input:
+        vcf = "{out_dir}/vcf/{donor}-var.vcf.gz",
+        fasta = reference
+    output:
+        clean_vcf = temp("{out_dir}/vcf/{donor}-clean-var.vcf.gz"),
+    shell:
+        """
+        bcftools norm -m - {input.vcf} -w 10000 -f {input.fasta} -O b -o {output.clean_vcf}
+        """
+
+rule annotateVCFs:
+    input:
+        clean_vcf = "{out_dir}/vcf/{donor}-clean-var.vcf.gz",
+    output:
+        annotated_vcf = "{out_dir}/vcf/{donor}-annotated-var.vcf.gz",
+    shell:
+        """
+        slivar expr -g /scratch/ucgd/lustre/common/data/Slivar/db/gnomad.hg37.zip -v {input.clean_vcf} -o {output.annotated_vcf}
+        """
+
