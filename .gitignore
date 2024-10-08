@@ -23,3 +23,4 @@ scripts/24286X3_001.fastq.gz_kraken2_classification.txt
 data/default_credential_file.jsonscripts/fromhannah.py
 data/PD28690-chr21-snps-chunk.vcf
 data/PD34199_chr2_chunk2_snps_chunk.vcf
+data/default_credential_file.json
