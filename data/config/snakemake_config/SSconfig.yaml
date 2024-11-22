@@ -1,0 +1,24 @@
+#metadata_file: "/scratch/general/pe-nfs1/u1264408/EGAD00001004192/LeeSixMetadata.csv"
+
+input_directory: "/scratch/ucgd/lustre-labs/quinlan/data-shared/datasets/SEMIColon/SlideScrape"
+output_directory: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/SlideScrape"
+reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta"
+reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
+
+nchunks: 20
+
+samples:
+- A1
+- A2
+- A3
+- A4
+- A5
+- A6
+- A7
+- B1
+- B2
+- B3
+- B4
+
+donors:
+- GB115

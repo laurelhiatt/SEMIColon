@@ -1,20 +1,17 @@
-configfile: '../data/config.yaml'
+configfile: '/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/snakemake_config/SSconfig.yaml'
 in_dir: str = config["input_directory"]
 out_dir: str = config["output_directory"]
 reference: str = config["reference_genome"]
 reference_index: str = config["reference_genome_index"]
 samples: list[str] = config["samples"]
+donors: list[str] = config["donors"]
 nchunks = config["nchunks"]
 chunks = list(range(1,nchunks+1))
 chroms = ["chr1","chr2","chr3","chr4","chr6","chr7","chr8","chr9","chr10","chr11","chr12","chr13","chr14","chr15","chr16","chr17",
 "chr18","chr19","chr20","chr21","chr22","chrX","chrY"]
 
 matches = {
-    'D212_92N8014': {'sperm_samples': ['19841X5', '19841X10'], 'blood_sample': '19841X15'},
-    'D100_VG6U010': {'sperm_samples': ['19841X4', '19841X9'], 'blood_sample': '19841X14'},
-    'D091_IX8Y012': {'sperm_samples': ['19841X3', '19841X8'], 'blood_sample': '19841X13'},
-    'D127_V5ET001': {'sperm_samples': ['19841X2', '19841X7'], 'blood_sample': '19841X12'},
-    'D130_WN11-001': {'sperm_samples': ['19841X1', '19841X6'], 'blood_sample': '19841X11'}
+    'GB115': {'crypt_samples': ['A1', 'A2', "A3", "A4", "A5", "A6", "A7", "B1", "B2", "B3", "B4"]},
 }
 
 ### IMPORTS ###
@@ -23,17 +20,26 @@ import re
 
 # Wildcard constraints; should all be alphanumeric
 wildcard_constraints:
-    sample = "[A-Za-z0-9]+",
+    sample = "[A-Za-z0-9_]+",
     chroms = "[A-Za-z0-9]+",
     i = "[0-9]+",
-    out_dir = out_dir
+    out_dir = out_dir,
+    donor = "[A-Za-z0-9]+"
 
-# Rule 'all', defining all requested output.
+
 rule all:
     input:
-        expand("{out_dir}/bam/{sample}-sorted.bai", out_dir = out_dir, sample = samples),
-        expand("{out_dir}/vcf/{donor}-var.vcf.gz", out_dir = out_dir, donor = matches.keys()),
-        expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples)
+        expand("{out_dir}/bam/{sample}-sorted.bam.bai", out_dir = out_dir, sample = samples, donor = donors),
+        expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples, donor = donors),
+        expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", out_dir = out_dir, sample = samples, donor = donors, chroms = chroms, i = chunks),
+        expand("{out_dir}/vcf/{donor}-annotated-var.vcf.gz", out_dir = out_dir, donor = donors)
+        #expand("{out_dir}/vcf/{donor}-var.vcf", out_dir = out_dir, donor = matches.keys()),
+
+def get_donor(sample, matches):
+    for donor, samples in matches.items():
+        if sample in samples['crypt_samples']:
+            return donor
+    raise KeyError(f"Sample {sample} not found in matches dictionary")
 
 
 # Rule 'fastp' preprocesses the reads by detecting and removing adapters,
@@ -41,8 +47,8 @@ rule all:
 # filtered fastq reads with preprocessing reports.
 rule fastp:
     input:
-        R1 = in_dir + "/{sample}_R1.merged.fastq.gz",
-        R2 = in_dir + "/{sample}_R2.merged.fastq.gz"
+        R1 = in_dir + "/{sample}_R1.fastq.gz",
+        R2 = in_dir + "/{sample}_R2.fastq.gz"
     output:
         r1_clean = "{out_dir}/fastq/{sample}_R1.clean.fastq",
         r2_clean = "{out_dir}/fastq/{sample}_R2.clean.fastq",
@@ -61,6 +67,7 @@ rule fastp:
 # Aligns cleaned fastq reads to the defined reference genome
 # Mark duplicates and extract discordant and split reads from sam files
 # Convert to bam (exclude unmapped reads with -F 4)
+
 rule align_and_sort:
     input:
         r1_clean = rules.fastp.output.r1_clean,
@@ -73,12 +80,6 @@ rule align_and_sort:
         """
         bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} | samblaster | samtools view -b | samtools sort -o {output.bam_sort}
         """
-
-def get_donor(sample, matches):
-    for donor, samples in matches.items():
-        if sample in samples['sperm_samples'] or sample == samples['blood_sample']:
-            return donor
-    raise KeyError(f"Sample {sample} not found in matches dictionary")
 
 rule addrg:
     input:
@@ -97,10 +98,10 @@ rule index_bam:
     input:
         bam_sort = rules.addrg.output.sort_bam_RG
     output:
-        bai = "{out_dir}/bam/{sample}-sorted.bai"
+        bai = "{out_dir}/bam/{sample}-sorted.bam.bai"
     shell:
         """
-        samtools index -b {input.bam_sort} -o {output.bai}
+        samtools index {input.bam_sort}
         """
 
 rule check_bam:
@@ -115,56 +116,100 @@ rule check_bam:
 
 rule generateregions:
     input:
-        index = reference_index,
+        reference = reference,
+        out_dir = out_dir
     params:
         chunks = chunks
     output:
         regions = expand("{out_dir}/regions/chunk.{chroms}.region.{i}.bed", i = chunks, out_dir = out_dir, chroms = chroms)
     shell:
-        # "../scripts/GenerateFreebayesRegions.R" # This is located in the scripts/ directory of freebayes
-        "python variant_calling/fasta_generate_regions.py {input.index} --chunks 9 --bed ../data/output/regions/chunk"
+        """
+        python /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/variant_calling/fasta_generate_regions.py --fai {input.reference} --chunks 20  --bed {input.out_dir}/regions/chunk
+        """
 
-# Current filtering:
-### min-alternate-count 2
+rule make_bam_list:
+    input:
+        bam_sort = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam", sample=samples, out_dir=out_dir),
+        bai = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam.bai", sample=samples, out_dir=out_dir)
+    params:
+        location = "{out_dir}/bam/"
+    output:
+        bam_file_list = temp("{out_dir}/bam_list_{donor}.txt")
+    shell:
+        """
+        python /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/create_bam_list.py {wildcards.donor} {params.location} {wildcards.out_dir}
+        """
+
+# # Current filtering:
+# ### min-alternate-count 2
+### qsum 40
 rule freebayes_variant_calling:
     input:
-        bam_sort = lambda wildcard: expand("../data/output/bam/{sample}-sorted.bam", sample = samples),
-        bai = lambda wildcard: expand("../data/output/bam/{sample}-sorted.bai", sample = samples),
+        bam_file_list = "{out_dir}/bam_list_{donor}.txt",
         ref = reference,
-        regions = "../data/output/regions/chunk.{chroms}.region.{i}.bed"
+        regions = "{out_dir}/regions/chunk.{chroms}.region.{i}.bed"
     output:
-        full = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz"),
-        full_index = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi")
-    params:
-        location = "../data/output/bam/"
-    run:
-        donor = wildcards.donor
-        blood = matches[donor]["blood_sample"]
-        sperm1 = matches[donor]["sperm_samples"][0]
-        sperm2 = matches[donor]["sperm_samples"][1]
+        full = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf"),
+    resources:
+        mem_mb = 32000
+    shell:
+        """
+        freebayes --min-alternate-count 2 --min-alternate-qsum 40 -f {input.ref} -t {input.regions} -L {input.bam_file_list} > {output.full}
+        """
 
-        shell("""
-            RAW_VCF={output.full}
-            RAW_VCF=${{RAW_VCF%%.gz}}
 
-            freebayes --min-alternate-count 2 -f {input.ref} -t {input.regions} {params.location}{blood}-sorted.bam {params.location}{sperm1}-sorted.bam {params.location}{sperm2}-sorted.bam > $RAW_VCF
+rule compress_chunks:
+    input:
+        chunk_vcf = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf"
+    output:
+        chunk_zip = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz")
+    shell:
+        """
+        bgzip -f {input.chunk_vcf}
+        """
 
-            bgzip -f $RAW_VCF
-            tabix -f -p vcf {output.full}
-        """)
+rule index_chunks:
+    input:
+        chunk_zip = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz"
+    output:
+        chunk_zip_index = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi")
+    shell:
+        """
+        tabix -f -p vcf {input.chunk_zip}
+        """
 
 rule ConcatVCFs:
     input:
-        chunk_vcf = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz", i = chunks, out_dir = wildcard.out_dir, donor = wildcard.donor, chroms = chroms),
+        chunk_zip = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz", i = chunks, out_dir = wildcard.out_dir, donor = wildcard.donor, chroms = chroms),
         chunk_vcf_index = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", i = chunks, out_dir = wildcard.out_dir, donor = wildcard.donor, chroms = chroms),
     output:
-        vcf = "{out_dir}/vcf/{donor}-var.vcf.gz"
+        vcf = "{out_dir}/vcf/{donor}-var.vcf.gz",
+        vcf_index = "{out_dir}/vcf/{donor}-var.vcf.gz.tbi"
     shell:
         """
-        RAW_VCF={output.vcf}
-        RAW_VCF=${{RAW_VCF%%.gz}}
-
-        bcftools concat -a {input.chunk_vcf} > $RAW_VCF
-        bgzip -f $RAW_VCF
+        bcftools concat -a {input.chunk_zip} -o {output.vcf}
         tabix -f -p vcf {output.vcf}
         """
+
+
+rule decomposeVCFs:
+    input:
+        vcf = "{out_dir}/vcf/{donor}-var.vcf.gz",
+        fasta = reference
+    output:
+        clean_vcf = temp("{out_dir}/vcf/{donor}-clean-var.vcf.gz"),
+    shell:
+        """
+        bcftools norm -m - {input.vcf} -w 10000 -f {input.fasta} -O b -o {output.clean_vcf}
+        """
+
+rule annotateVCFs:
+    input:
+        clean_vcf = "{out_dir}/vcf/{donor}-clean-var.vcf.gz",
+    output:
+        annotated_vcf = "{out_dir}/vcf/{donor}-annotated-var.vcf.gz",
+    shell:
+        """
+        slivar expr -g /scratch/ucgd/lustre/common/data/Slivar/db/gnomad.hg38.genomes.v3.fix.zip -v {input.clean_vcf} -o {output.annotated_vcf}
+        """
+
