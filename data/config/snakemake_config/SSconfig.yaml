@@ -5,7 +5,7 @@ output_directory: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMICo
 reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta"
 reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
 
-nchunks: 20
+nchunks: 9
 
 samples:
 - A1

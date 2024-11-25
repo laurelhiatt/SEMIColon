@@ -64,6 +64,19 @@ rule fastp:
         --json {output.json_report}
         """
 
+rule generateregions:
+    input:
+        index = reference_index,
+        out_dir = out_dir
+    params:
+        chunks = chunks
+    output:
+        regions = "{out_dir}/regions/chunk.{chroms}.region.{i}.bed"
+    shell:
+        """
+        python /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/variant_calling/fasta_generate_regions.py --fai {input.index} --chunks 9  --bed {input.out_dir}/regions/chunk
+        """
+
 # Aligns cleaned fastq reads to the defined reference genome
 # Mark duplicates and extract discordant and split reads from sam files
 # Convert to bam (exclude unmapped reads with -F 4)
@@ -112,19 +125,6 @@ rule check_bam:
     shell:
         """
         samtools stats {input.bam_sort} > {output.stats}
-        """
-
-rule generateregions:
-    input:
-        reference = reference,
-        out_dir = out_dir
-    params:
-        chunks = chunks
-    output:
-        regions = expand("{out_dir}/regions/chunk.{chroms}.region.{i}.bed", i = chunks, out_dir = out_dir, chroms = chroms)
-    shell:
-        """
-        python /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/variant_calling/fasta_generate_regions.py --fai {input.reference} --chunks 20  --bed {input.out_dir}/regions/chunk
         """
 
 rule make_bam_list:
