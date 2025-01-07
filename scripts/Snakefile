@@ -1,4 +1,4 @@
-configfile: '/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/snakemake_config/SSconfig.yaml'
+configfile: '/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/snakemake_config/CCconfig.yaml'
 in_dir: str = config["input_directory"]
 out_dir: str = config["output_directory"]
 reference: str = config["reference_genome"]
@@ -11,7 +11,8 @@ chroms = ["chr1","chr2","chr3","chr4","chr6","chr7","chr8","chr9","chr10","chr11
 "chr18","chr19","chr20","chr21","chr22","chrX","chrY"]
 
 matches = {
-    'GB115': {'crypt_samples': ['A1', 'A2', "A3", "A4", "A5", "A6", "A7", "B1", "B2", "B3", "B4"]},
+    'GB115': {'crypt_samples': ['Laurel-1', 'Laurel-2', "Laurel-3", "Laurel-5", "Laurel-6", "Laurel-7",
+    "Laurel-8", "Laurel-10", "Laurel-11", "Laurel-12", "Laurel-13", "Laurel-14", "Laurel-15", "Laurel-16", "Laurel-17"]},
 }
 
 ### IMPORTS ###
@@ -20,7 +21,7 @@ import re
 
 # Wildcard constraints; should all be alphanumeric
 wildcard_constraints:
-    sample = "[A-Za-z0-9_]+",
+    sample = "[A-Za-z0-9_-]+",
     chroms = "[A-Za-z0-9]+",
     i = "[0-9]+",
     out_dir = out_dir,
@@ -30,9 +31,9 @@ wildcard_constraints:
 rule all:
     input:
         expand("{out_dir}/bam/{sample}-sorted.bam.bai", out_dir = out_dir, sample = samples, donor = donors),
-        expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples, donor = donors),
-        expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", out_dir = out_dir, sample = samples, donor = donors, chroms = chroms, i = chunks),
-        expand("{out_dir}/vcf/{donor}-annotated-var.vcf.gz", out_dir = out_dir, donor = donors)
+        expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples, donor = donors)#,
+        #expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", out_dir = out_dir, sample = samples, donor = donors, chroms = chroms, i = chunks),
+       # expand("{out_dir}/vcf/{donor}-annotated-var.vcf.gz", out_dir = out_dir, donor = donors)
         #expand("{out_dir}/vcf/{donor}-var.vcf", out_dir = out_dir, donor = matches.keys()),
 
 def get_donor(sample, matches):
@@ -122,96 +123,96 @@ rule check_bam:
     input:
         bam_sort = rules.addrg.output.sort_bam_RG
     output:
-        stats = "{out_dir}/bam/{sample}-sorted.stats"
+        stats = "{out_dir}/bam/{sample}-sorted.stats",
     shell:
         """
         samtools stats {input.bam_sort} > {output.stats}
         """
 
-rule make_bam_list:
-    input:
-        bam_sort = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam", sample=samples, out_dir=out_dir),
-        bai = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam.bai", sample=samples, out_dir=out_dir)
-    params:
-        location = "{out_dir}/bam/"
-    output:
-        bam_file_list = temp("{out_dir}/bam_list_{donor}.txt")
-    shell:
-        """
-        python /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/create_bam_list.py {wildcards.donor} {params.location} {wildcards.out_dir}
-        """
+# rule make_bam_list:
+#     input:
+#         bam_sort = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam", sample=samples, out_dir=out_dir),
+#         bai = lambda wildcard: expand("{out_dir}/bam/{sample}-sorted.bam.bai", sample=samples, out_dir=out_dir),
+#     params:
+#         location = "{out_dir}/bam/"
+#     output:
+#         bam_file_list = temp("{out_dir}/bam/bam_list_{donor}.txt")
+#     shell:
+#         """
+#         python /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/create_bam_list.py {wildcards.donor} {params.location} {wildcards.out_dir}
+#         """
 
 # # Current filtering:
 # ### min-alternate-count 2
 ### qsum 40
-rule freebayes_variant_calling:
-    input:
-        bam_file_list = "{out_dir}/bam_list_{donor}.txt",
-        ref = reference,
-        regions = "{out_dir}/regions/chunk.{chroms}.region.{i}.bed"
-    output:
-        full = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf"),
-    resources:
-        mem_mb = 32000
-    shell:
-        """
-        mkdir -p {out_dir}/vcf/{chroms}
-        freebayes --min-alternate-count 2 --min-alternate-qsum 40 -f {input.ref} -t {input.regions} -L {input.bam_file_list} > {output.full}
-        """
+# rule freebayes_variant_calling:
+#     input:
+#         bam_file_list = "{out_dir}/bam/bam_list_{donor}.txt",
+#         ref = reference,
+#         regions = "{out_dir}/regions/chunk.{chroms}.region.{i}.bed"
+#     output:
+#         full = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf"),
+#     resources:
+#         mem_mb = 32000
+#     shell:
+#         """
+#         mkdir -p {out_dir}/vcf/{chroms}
+#         freebayes --min-alternate-count 2 --min-alternate-qsum 40 -f {input.ref} -t {input.regions} -L {input.bam_file_list} > {output.full}
+#         """
 
 
-rule compress_chunks:
-    input:
-        chunk_vcf = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf"
-    output:
-        chunk_zip = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz")
-    shell:
-        """
-        bgzip -f {input.chunk_vcf}
-        """
+# rule compress_chunks:
+#     input:
+#         chunk_vcf = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf"
+#     output:
+#         chunk_zip = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz")
+#     shell:
+#         """
+#         bgzip -f {input.chunk_vcf}
+#         """
 
-rule index_chunks:
-    input:
-        chunk_zip = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz"
-    output:
-        chunk_zip_index = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi")
-    shell:
-        """
-        tabix -f -p vcf {input.chunk_zip}
-        """
+# rule index_chunks:
+#     input:
+#         chunk_zip = "{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz"
+#     output:
+#         chunk_zip_index = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi")
+#     shell:
+#         """
+#         tabix -f -p vcf {input.chunk_zip}
+#         """
 
-rule ConcatVCFs:
-    input:
-        chunk_zip = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz", i = chunks, out_dir = wildcard.out_dir, donor = wildcard.donor, chroms = chroms),
-        chunk_vcf_index = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", i = chunks, out_dir = wildcard.out_dir, donor = wildcard.donor, chroms = chroms),
-    output:
-        vcf = "{out_dir}/vcf/{donor}-var.vcf.gz",
-        vcf_index = "{out_dir}/vcf/{donor}-var.vcf.gz.tbi"
-    shell:
-        """
-        bcftools concat -a {input.chunk_zip} -o {output.vcf}
-        tabix -f -p vcf {output.vcf}
-        """
+# rule ConcatVCFs:
+#     input:
+#         chunk_zip = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz", i = chunks, out_dir = wildcard.out_dir, donor = wildcard.donor, chroms = chroms),
+#         chunk_vcf_index = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", i = chunks, out_dir = wildcard.out_dir, donor = wildcard.donor, chroms = chroms),
+#     output:
+#         vcf = "{out_dir}/vcf/{donor}-var.vcf.gz",
+#         vcf_index = "{out_dir}/vcf/{donor}-var.vcf.gz.tbi"
+#     shell:
+#         """
+#         bcftools concat -a {input.chunk_zip} -o {output.vcf}
+#         tabix -f -p vcf {output.vcf}
+#         """
 
 
-rule decomposeVCFs:
-    input:
-        vcf = "{out_dir}/vcf/{donor}-var.vcf.gz",
-        fasta = reference
-    output:
-        clean_vcf = temp("{out_dir}/vcf/{donor}-clean-var.vcf.gz"),
-    shell:
-        """
-        bcftools norm -m - {input.vcf} -w 10000 -f {input.fasta} -O b -o {output.clean_vcf}
-        """
+# rule decomposeVCFs:
+#     input:
+#         vcf = "{out_dir}/vcf/{donor}-var.vcf.gz",
+#         fasta = reference
+#     output:
+#         clean_vcf = temp("{out_dir}/vcf/{donor}-clean-var.vcf.gz"),
+#     shell:
+#         """
+#         bcftools norm -m - {input.vcf} -w 10000 -f {input.fasta} -O b -o {output.clean_vcf}
+#         """
 
-rule annotateVCFs:
-    input:
-        clean_vcf = "{out_dir}/vcf/{donor}-clean-var.vcf.gz",
-    output:
-        annotated_vcf = "{out_dir}/vcf/{donor}-annotated-var.vcf.gz",
-    shell:
-        """
-        slivar expr -g /scratch/ucgd/lustre/common/data/Slivar/db/gnomad.hg38.genomes.v3.fix.zip -v {input.clean_vcf} -o {output.annotated_vcf}
-        """
+# rule annotateVCFs:
+#     input:
+#         clean_vcf = "{out_dir}/vcf/{donor}-clean-var.vcf.gz",
+#     output:
+#         annotated_vcf = "{out_dir}/vcf/{donor}-annotated-var.vcf.gz",
+#     shell:
+#         """
+#         slivar expr -g /scratch/ucgd/lustre/common/data/Slivar/db/gnomad.hg38.genomes.v3.fix.zip -v {input.clean_vcf} -o {output.annotated_vcf}
+#         """
 

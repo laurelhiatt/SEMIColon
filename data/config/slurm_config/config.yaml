@@ -11,4 +11,4 @@ default-resources:
 - mem_mb=8000*attempt
 software-deployment-method: conda
 rerun-incomplete: True
-configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/snakemake_config/SSconfig.yaml"
+configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/snakemake_config/CCconfig.yaml"
