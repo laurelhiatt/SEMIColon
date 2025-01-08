@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Define input and output directories
-input_dir="/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/SlideScrape/bam"
-output_dir="/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/SlideScrape/mosdepth"
+input_dir="/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/bam"
+output_dir="/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/mosdepth"
 
 # Create output directory if it doesn't exist
 mkdir -p "$output_dir"
