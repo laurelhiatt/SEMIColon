@@ -1,5 +1,5 @@
 # for stats_file in /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/bam/*-sorted.stats; do
-#     grep "^COV" "$stats_file" | cut -f 2- > "${stats_file%.stats}_coverage_distribution.txt"
+#     grep "^COV" "$stats_file" | sed 's/\[[^]]*\]//g' | cut -f 2- > "${stats_file%.stats}_coverage_distribution.txt"
 # done
 
 
@@ -13,14 +13,22 @@ directory = "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/da
 
 # Process each coverage distribution file
 for file in glob.glob(os.path.join(directory, "*_coverage_distribution.txt")):
+    print(f"Processing file: {file}")
+    coverage_data = []
+
     # Load coverage values
-    print(file)
     with open(file, 'r') as f:
-        coverage_data = []
         for line in f:
-            values = line.strip().split('\t')[1:]  # Exclude the first column
-            for i, count in enumerate(map(int, values)):
-                coverage_data.extend([i] * count)  # Repeat index `count` times
+            fields = line.strip().split('\t')
+            if len(fields) == 2:  # Ensure the line has expected columns
+                coverage = int(fields[0])  # Extract the coverage value
+                count = int(fields[1])     # Extract the count
+                coverage_data.extend([coverage] * count)  # Repeat `coverage` value `count` times
+
+    # Check if coverage data is populated
+    if not coverage_data:
+        print(f"No data found in {file}, skipping...")
+        continue
 
     # Compute statistics
     mean_coverage = np.mean(coverage_data)
@@ -31,7 +39,7 @@ for file in glob.glob(os.path.join(directory, "*_coverage_distribution.txt")):
     print(f"{os.path.basename(file)}: Mean={mean_coverage}, Median={median_coverage}, Max={max_coverage}")
 
     # Generate histogram
-    plt.hist(coverage_data, bins=50, color='green', alpha=0.7, log=True)
+    plt.hist(coverage_data, bins=50, color='blue', alpha=0.7, log=True)
     plt.title(f"Coverage Distribution for {os.path.basename(file)}")
     plt.xlabel("Coverage")
     plt.ylabel("Frequency (log scale)")
