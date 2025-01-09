@@ -58,7 +58,7 @@ def main():
       <style>
     div {
       width: 800px;
-      height: 420px;
+      height: 800px;
     }
     </style
     </head>
