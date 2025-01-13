@@ -1,0 +1,29 @@
+input_directory: "/scratch/ucgd/lustre-work/quinlan/data-shared/datasets/spermseq/wgs/19841R/Fastq/merged_fastq"
+output_directory: "../data/output"
+reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta"
+reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
+nchunks: 9
+
+samples:
+    - 19841X1
+    - 19841X2
+    - 19841X3
+    - 19841X4
+    - 19841X5
+    - 19841X6
+    - 19841X7
+    - 19841X8
+    - 19841X9
+    - 19841X10
+    - 19841X11
+    - 19841X12
+    - 19841X13
+    - 19841X14
+    - 19841X15
+
+donors:
+- D130_WN11-001
+- D127_V5ET001
+- D091_IX8Y012
+- D100_VG6U010
+- D212_92N8014
