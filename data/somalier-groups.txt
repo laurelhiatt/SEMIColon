@@ -1,0 +1,2 @@
+#D091_IX8Y012_19841X13.somalier,D091_IX8Y012_19841X3.somalier,D091_IX8Y012_19841X8.somalier
+data/output/CellCut/somalier/GB115_Laurel-1.somalier,data/output/CellCut/somalier/GB115_Laurel-2.somalier,data/output/CellCut/somalier/GB115_Laurel-3.somalier
