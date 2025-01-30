@@ -33,13 +33,13 @@ sample_files = {}
 
 # Assuming samples is a set of sample names and sample_files is a dictionary.
 for root, dirs, files in os.walk(top_dir):
-    print(f"root: {root}\ndirs: {dirs}\nfiles: {files}")
+    #print(f"root: {root}\ndirs: {dirs}\nfiles: {files}")
 
     # Find directories that match sample names
     matching_dirs = set(samples).intersection(set(dirs))
     if matching_dirs:
         for subdir in matching_dirs:
-            print(subdir)
+            #print(subdir)
 
             # List and filter for fastq.gz files
             subdir_files = [
@@ -48,7 +48,7 @@ for root, dirs, files in os.walk(top_dir):
                 if file.endswith(".fastq.gz")
             ]
 
-            print(subdir_files)
+            #print(subdir_files)
 
             # Separate R1 and R2 files
             r1_files = [f for f in subdir_files if "_R1" in f]
@@ -62,7 +62,7 @@ for root, dirs, files in os.walk(top_dir):
             sample_files[subdir]['R1'] = r1_files
             sample_files[subdir]['R2'] = r2_files
 
-    print()
+    #print()
 
 def get_donor(sample, matches):
     for donor, samples in matches.items():
@@ -77,7 +77,8 @@ rule all:
         expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", out_dir = out_dir, sample = samples, donor = donors, chroms = chroms, i = chunks),
         expand("{out_dir}/vcf/{donor}-annotated-var.vcf.gz", out_dir = out_dir, donor = donors),
         expand("{in_dir}/merged/{sample}_R1.fastq.gz", sample=samples, in_dir = in_dir),
-        expand("{in_dir}/merged/{sample}_R2.fastq.gz", sample=samples, in_dir = in_dir)
+        expand("{in_dir}/merged/{sample}_R2.fastq.gz", sample=samples, in_dir = in_dir),
+        expand("{out_dir}/reports/{sample}-fastp-report.json", sample=samples, out_dir=out_dir)
         #expand("{out_dir}/vcf/{donor}-var.vcf", out_dir = out_dir, donor = matches.keys())
 
 # Snakemake rule for merging fastq.gz files
@@ -86,8 +87,8 @@ rule merge_fastq:
         R1=lambda wildcards: sample_files.get(wildcards.sample, {}).get('R1', []),
         R2=lambda wildcards: sample_files.get(wildcards.sample, {}).get('R2', [])
     output:
-        R1_merged="{in_dir}/merged/{sample}_R1.fastq.gz",
-        R2_merged="{in_dir}/merged/{sample}_R2.fastq.gz"
+        R1_merged = "{in_dir}/merged/{sample}_R1.fastq.gz",
+        R2_merged ="{in_dir}/merged/{sample}_R2.fastq.gz"
     shell:
         """
         zcat {input.R1} | gzip > {output.R1_merged}
@@ -99,8 +100,8 @@ rule merge_fastq:
 # filtered fastq reads with preprocessing reports.
 rule fastp:
     input:
-        R1 = rules.output.merge_fastq.R1_merged
-        R2 = rules.output.merge_fastq.R2_merged
+        R1 = in_dir + "merged/{sample}_R1.fastq.gz",
+        R2 = in_dir + "merged/{sample}_R2.fastq.gz"
     output:
         r1_clean = "{out_dir}/fastq/{sample}_R1.clean.fastq",
         r2_clean = "{out_dir}/fastq/{sample}_R2.clean.fastq",
