@@ -1,4 +1,5 @@
 configfile: '/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/snakemake_config/CCconfig.yaml'
+top_dir = config["top_directory"]
 in_dir: str = config["input_directory"]
 out_dir: str = config["output_directory"]
 reference: str = config["reference_genome"]
@@ -27,14 +28,41 @@ wildcard_constraints:
     out_dir = out_dir,
     donor = "[A-Za-z0-9]+"
 
+# Ensure sample_files is initialized
+sample_files = {}
 
-rule all:
-    input:
-        expand("{out_dir}/bam/{sample}-sorted.bam.bai", out_dir = out_dir, sample = samples, donor = donors),
-        expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples, donor = donors),
-        expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", out_dir = out_dir, sample = samples, donor = donors, chroms = chroms, i = chunks),
-        expand("{out_dir}/vcf/{donor}-annotated-var.vcf.gz", out_dir = out_dir, donor = donors)
-        #expand("{out_dir}/vcf/{donor}-var.vcf", out_dir = out_dir, donor = matches.keys())
+# Assuming samples is a set of sample names and sample_files is a dictionary.
+for root, dirs, files in os.walk(top_dir):
+    print(f"root: {root}\ndirs: {dirs}\nfiles: {files}")
+
+    # Find directories that match sample names
+    matching_dirs = set(samples).intersection(set(dirs))
+    if matching_dirs:
+        for subdir in matching_dirs:
+            print(subdir)
+
+            # List and filter for fastq.gz files
+            subdir_files = [
+                f"{root}/{subdir}/{file}"
+                for file in os.listdir(f"{root}/{subdir}")
+                if file.endswith(".fastq.gz")
+            ]
+
+            print(subdir_files)
+
+            # Separate R1 and R2 files
+            r1_files = [f for f in subdir_files if "_R1" in f]
+            r2_files = [f for f in subdir_files if "_R2" in f]
+
+            # Ensure sample_files[subdir] is a dictionary
+            if subdir not in sample_files:
+                sample_files[subdir] = {'R1': [], 'R2': []}
+
+            # Store only fastq.gz files
+            sample_files[subdir]['R1'] = r1_files
+            sample_files[subdir]['R2'] = r2_files
+
+    print()
 
 def get_donor(sample, matches):
     for donor, samples in matches.items():
@@ -42,14 +70,37 @@ def get_donor(sample, matches):
             return donor
     raise KeyError(f"Sample {sample} not found in matches dictionary")
 
+rule all:
+    input:
+        expand("{out_dir}/bam/{sample}-sorted.bam.bai", out_dir = out_dir, sample = samples, donor = donors),
+        expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples, donor = donors),
+        expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", out_dir = out_dir, sample = samples, donor = donors, chroms = chroms, i = chunks),
+        expand("{out_dir}/vcf/{donor}-annotated-var.vcf.gz", out_dir = out_dir, donor = donors),
+        expand("{in_dir}/merged/{sample}_R1.fastq.gz", sample=samples, in_dir = in_dir),
+        expand("{in_dir}/merged/{sample}_R2.fastq.gz", sample=samples, in_dir = in_dir)
+        #expand("{out_dir}/vcf/{donor}-var.vcf", out_dir = out_dir, donor = matches.keys())
+
+# Snakemake rule for merging fastq.gz files
+rule merge_fastq:
+    input:
+        R1=lambda wildcards: sample_files.get(wildcards.sample, {}).get('R1', []),
+        R2=lambda wildcards: sample_files.get(wildcards.sample, {}).get('R2', [])
+    output:
+        R1_merged="{in_dir}/merged/{sample}_R1.fastq.gz",
+        R2_merged="{in_dir}/merged/{sample}_R2.fastq.gz"
+    shell:
+        """
+        zcat {input.R1} | gzip > {output.R1_merged}
+        zcat {input.R2} | gzip > {output.R2_merged}
+        """
 
 # Rule 'fastp' preprocesses the reads by detecting and removing adapters,
 # filtering reads with an average quality less than 20, and producing
 # filtered fastq reads with preprocessing reports.
 rule fastp:
     input:
-        R1 = in_dir + "/{sample}_R1.fastq.gz",
-        R2 = in_dir + "/{sample}_R2.fastq.gz"
+        R1 = rules.output.merge_fastq.R1_merged
+        R2 = rules.output.merge_fastq.R2_merged
     output:
         r1_clean = "{out_dir}/fastq/{sample}_R1.clean.fastq",
         r2_clean = "{out_dir}/fastq/{sample}_R2.clean.fastq",
@@ -65,7 +116,7 @@ rule fastp:
         --json {output.json_report}
         """
 
-rule generateregions:
+rule generate_regions:
     input:
         index = reference_index,
         out_dir = out_dir,
@@ -97,7 +148,7 @@ rule align_and_sort:
         bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} | samblaster | samtools view -b | samtools sort -o {output.bam_sort}
         """
 
-rule addrg:
+rule add_rg:
     input:
         bam_sort = rules.align_and_sort.output.bam_sort
     output:
@@ -112,7 +163,7 @@ rule addrg:
 
 rule index_bam:
     input:
-        bam_sort = rules.addrg.output.sort_bam_RG
+        bam_sort = rules.add_rg.output.sort_bam_RG
     output:
         bai = "{out_dir}/bam/{sample}-sorted.bam.bai"
     shell:
@@ -122,7 +173,7 @@ rule index_bam:
 
 rule check_bam:
     input:
-        bam_sort = rules.addrg.output.sort_bam_RG
+        bam_sort = rules.add_rg.output.sort_bam_RG
     output:
         stats = "{out_dir}/bam/{sample}-sorted.stats",
     shell:
@@ -182,7 +233,7 @@ rule index_chunks:
         tabix -f -p vcf {input.chunk_zip}
         """
 
-rule ConcatVCFs:
+rule concat_vcfs:
     input:
         chunk_zip = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz", i = chunks, out_dir = wildcard.out_dir, donor = wildcard.donor, chroms = chroms),
         chunk_vcf_index = lambda wildcard: expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", i = chunks, out_dir = wildcard.out_dir, donor = wildcard.donor, chroms = chroms),
@@ -196,7 +247,7 @@ rule ConcatVCFs:
         """
 
 
-rule decomposeVCFs:
+rule decompose_vcfs:
     input:
         vcf = "{out_dir}/vcf/{donor}-var.vcf.gz",
         fasta = reference
@@ -207,7 +258,7 @@ rule decomposeVCFs:
         bcftools norm -m - {input.vcf} -w 10000 -f {input.fasta} -O b -o {output.clean_vcf}
         """
 
-rule annotateVCFs:
+rule annotate_VCFs:
     input:
         clean_vcf = "{out_dir}/vcf/{donor}-clean-var.vcf.gz",
     output:
