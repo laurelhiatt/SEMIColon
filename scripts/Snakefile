@@ -73,7 +73,9 @@ def get_donor(sample, matches):
 rule all:
     input:
         expand("{out_dir}/bam/{sample}-sorted.bam.bai", out_dir = out_dir, sample = samples, donor = donors),
-        expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples, donor = donors),
+        expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples),
+        expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples),
+        expand("{out_dir}/mosdepth/{sample}.mosdepth.global.dist.txt", out_dir = out_dir, sample = samples),
         expand("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi", out_dir = out_dir, sample = samples, donor = donors, chroms = chroms, i = chunks),
         expand("{out_dir}/vcf/{donor}-annotated-var.vcf.gz", out_dir = out_dir, donor = donors),
         expand("{in_dir}/merged/{sample}_R1.fastq.gz", sample=samples, in_dir = in_dir),
@@ -100,8 +102,8 @@ rule merge_fastq:
 # filtered fastq reads with preprocessing reports.
 rule fastp:
     input:
-        R1 = in_dir + "merged/{sample}_R1.fastq.gz",
-        R2 = in_dir + "merged/{sample}_R2.fastq.gz"
+        R1 = in_dir + "/merged/{sample}_R1.fastq.gz",
+        R2 = in_dir + "/merged/{sample}_R2.fastq.gz"
     output:
         r1_clean = "{out_dir}/fastq/{sample}_R1.clean.fastq",
         r2_clean = "{out_dir}/fastq/{sample}_R2.clean.fastq",
@@ -172,7 +174,7 @@ rule index_bam:
         samtools index {input.bam_sort}
         """
 
-rule check_bam:
+rule samtools_stats:
     input:
         bam_sort = rules.add_rg.output.sort_bam_RG
     output:
@@ -180,6 +182,17 @@ rule check_bam:
     shell:
         """
         samtools stats {input.bam_sort} > {output.stats}
+        """
+
+rule mosdepth:
+    input:
+        bam_sort = rules.add_rg.output.sort_bam_RG
+    output:
+        "{out_dir}/mosdepth/{sample}.mosdepth.global.dist.txt",
+    shell:
+        """
+        module load mosdepth
+        bash quality_control/mosdepth.sh
         """
 
 rule make_bam_list:
@@ -192,7 +205,7 @@ rule make_bam_list:
         bam_file_list = temp("{out_dir}/bam_list_{donor}.txt")
     shell:
         """
-        python create_bam_list.py {wildcards.donor} {params.location} {wildcards.out_dir}
+        python variant_calling/create_bam_list.py {wildcards.donor} {params.location} {wildcards.out_dir}
         """
 
 # Current filtering:
