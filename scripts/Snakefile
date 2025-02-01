@@ -18,6 +18,7 @@ matches = {
 
 ### IMPORTS ###
 import os
+import glob
 import re
 
 # Wildcard constraints; should all be alphanumeric
@@ -31,38 +32,20 @@ wildcard_constraints:
 # Ensure sample_files is initialized
 sample_files = {}
 
-# Assuming samples is a set of sample names and sample_files is a dictionary.
-for root, dirs, files in os.walk(top_dir):
-    #print(f"root: {root}\ndirs: {dirs}\nfiles: {files}")
+for sample in samples:
+    matching_dirs = glob.glob(f"{top_dir}/**/{sample}", recursive=True)
 
-    # Find directories that match sample names
-    matching_dirs = set(samples).intersection(set(dirs))
-    if matching_dirs:
-        for subdir in matching_dirs:
-            #print(subdir)
+    for subdir in matching_dirs:
+        subdir_files = glob.glob(f"{subdir}/*.fastq.gz")
 
-            # List and filter for fastq.gz files
-            subdir_files = [
-                f"{root}/{subdir}/{file}"
-                for file in os.listdir(f"{root}/{subdir}")
-                if file.endswith(".fastq.gz")
-            ]
+        r1_files = [f for f in subdir_files if "_R1" in f]
+        r2_files = [f for f in subdir_files if "_R2" in f]
 
-            #print(subdir_files)
+        if sample not in sample_files:
+            sample_files[sample] = {'R1': [], 'R2': []}
 
-            # Separate R1 and R2 files
-            r1_files = [f for f in subdir_files if "_R1" in f]
-            r2_files = [f for f in subdir_files if "_R2" in f]
-
-            # Ensure sample_files[subdir] is a dictionary
-            if subdir not in sample_files:
-                sample_files[subdir] = {'R1': [], 'R2': []}
-
-            # Store only fastq.gz files
-            sample_files[subdir]['R1'] = r1_files
-            sample_files[subdir]['R2'] = r2_files
-
-    #print()
+        sample_files[sample]['R1'].extend(r1_files)
+        sample_files[sample]['R2'].extend(r2_files)
 
 def get_donor(sample, matches):
     for donor, samples in matches.items():
