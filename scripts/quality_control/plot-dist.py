@@ -49,8 +49,8 @@ def main():
                 'x': [round(x, 3) for x in xs],
                 'y': [round(y, 3) for y in ys],
                 'mode': 'lines',
-                'name': sample + (" (%.1f)" % float(v50))
-            })
+                'name': sample.rsplit("/", 1)[-1] + (" (%.1f)" % float(v50))  # Extract only the last part of sample
+                })
 
     tmpl = """<html>
     <head>

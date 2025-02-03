@@ -63,7 +63,8 @@ rule all:
         expand("{out_dir}/vcf/{donor}-annotated-var.vcf.gz", out_dir = out_dir, donor = donors),
         expand("{in_dir}/merged/{sample}_R1.fastq.gz", sample=samples, in_dir = in_dir),
         expand("{in_dir}/merged/{sample}_R2.fastq.gz", sample=samples, in_dir = in_dir),
-        expand("{out_dir}/reports/{sample}-fastp-report.json", sample=samples, out_dir=out_dir)
+        expand("{out_dir}/reports/{sample}-fastp-report.json", sample=samples, out_dir=out_dir),
+        expand("{out_dir}/mosdepth/mosdepth_coverage.html", out_dir = out_dir)
         #expand("{out_dir}/vcf/{donor}-var.vcf", out_dir = out_dir, donor = matches.keys())
 
 # Snakemake rule for merging fastq.gz files
@@ -177,6 +178,15 @@ rule mosdepth:
         module load mosdepth
         bash quality_control/mosdepth.sh
         """
+
+
+rule plot_mosdepth:
+    input:
+        rules.mosdepth.output
+    output:
+        html = '{out_dir}/mosdepth/mosdepth_coverage.html'
+    shell:
+        "python scripts/quality_control/plot-dist.py {out_dir}/mosdepth/*global.dist.txt --output {output.html}"
 
 rule make_bam_list:
     input:
