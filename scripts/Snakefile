@@ -216,7 +216,7 @@ rule freebayes_variant_calling:
     output:
         full = temp("{out_dir}/vcf/{chroms}/{donor}-variants.{i}.vcf"),
     resources:
-        mem_mb = 32000
+        mem_mb = 64000
     shell:
         """
         mkdir -p {wildcards.out_dir}/vcf/{wildcards.chroms}
