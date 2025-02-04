@@ -179,14 +179,18 @@ rule mosdepth:
         bash quality_control/mosdepth.sh
         """
 
-
 rule plot_mosdepth:
     input:
-        rules.mosdepth.output
+        mosdepth = expand("{out_dir}/mosdepth/{sample}.mosdepth.global.dist.txt", sample=samples, out_dir = out_dir)  # Collects all sample files
+
     output:
-        html = '{out_dir}/mosdepth/mosdepth_coverage.html'
+        html = "{out_dir}/mosdepth/mosdepth_coverage.html"
+
     shell:
-        "python scripts/quality_control/plot-dist.py {out_dir}/mosdepth/*global.dist.txt --output {output.html}"
+        """
+        python scripts/quality_control/plot-dist.py {input.mosdepth} --output {output.html}
+        """
+
 
 rule make_bam_list:
     input:
