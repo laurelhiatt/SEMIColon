@@ -65,7 +65,7 @@ rule all:
         expand("{out_dir}/reports/{sample}-fastp-report.json", sample=samples, out_dir=out_dir),
         expand("{out_dir}/mosdepth/mosdepth_coverage.html", out_dir = out_dir),
         expand("{out_dir}/alfred/{sample}.pdf", out_dir = out_dir, sample = samples),
-        expand("{out_dir}/vcf/{donor}-vcf_stats.txt", out_dir = out_dir, donor = donors)
+        expand("{out_dir}/vcf/{donor}-vcf_stats.txt", out_dir = out_dir, donor = donors),
         expand("{out_dir}/somalier/{donor}.samples.tsv", out_dir = out_dir, donor = donors)
         #expand("{out_dir}/vcf/{donor}-var.vcf", out_dir = out_dir, donor = matches.keys())
 
