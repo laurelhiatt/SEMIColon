@@ -193,7 +193,7 @@ rule plot_mosdepth:
 
     shell:
         """
-        python scripts/quality_control/plot-dist.py {input.mosdepth} --output {output.html}
+        python quality_control/plot-dist.py {input.mosdepth} --output {output.html}
         """
 
 rule alfred_qc:
