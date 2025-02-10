@@ -120,7 +120,7 @@ rule generate_regions:
     shell:
         """
         mkdir -p {input.out_dir}/regions
-        python /variant_calling/fasta_generate_regions.py --fai {input.index} --chunks 9  --bed {input.out_dir}/regions/chunk
+        python /variant_calling/fasta_generate_regions.py --fai {input.index} --chunks 9 --bed {input.out_dir}/regions/chunk.{wildcards.chroms}
         """
 
 # Aligns cleaned fastq reads to the defined reference genome
@@ -134,7 +134,7 @@ rule align_and_sort:
         ref = reference
     output:
         bam_sort = temp("{out_dir}/bam/{sample}-sortednoRG.bam")
-    threads: 8
+    threads: 16
     shell:
         """
         bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} | samblaster | samtools view -b | samtools sort -o {output.bam_sort}
