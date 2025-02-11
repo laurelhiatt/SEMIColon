@@ -10,10 +10,16 @@ def count_unique_snvs(vcf_path):
         if not variant.is_snp:
             continue  # Skip non-SNVs
 
-        genotypes = variant.gt_types  # List of genotypes per sample (0=hom-ref, 1=het, 2=hom-alt, 3=unknown)
+        genotypes = variant.gt_types  # 0=hom-ref, 1=het, 2=unknown, 3=hom-alt
 
-        # Find samples that have the variant uniquely (only one sample has non-ref alleles)
-        non_ref_samples = [i for i, gt in enumerate(genotypes) if gt in {1, 2}]
+        # Ensure no sample has an unknown genotype (2)
+        if 2 in genotypes:
+            continue
+
+        # Identify samples with non-ref alleles (het or hom-alt)
+        non_ref_samples = [i for i, gt in enumerate(genotypes) if gt in {1, 3}]
+
+        # Count as unique only if exactly one sample is non-ref
         if len(non_ref_samples) == 1:
             unique_snvs[sample_names[non_ref_samples[0]]] += 1
 
