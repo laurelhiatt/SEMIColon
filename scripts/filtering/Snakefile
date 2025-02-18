@@ -1,6 +1,12 @@
+configfile: '/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/snakemake_config/CCconfig.yaml'
+
+out_dir: str = config["output_directory"]
+samples: list[str] = config["samples"]
+
+
 rule all:
     input:
-        expand("{out_dir}/results/{donor}/depth_{dp}/alt_{ad}/{sample}_report.pdf", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10))
+        expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/mutation_spectrum.pdf", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10))
 
 
 ### filter all variants by a certain depth
