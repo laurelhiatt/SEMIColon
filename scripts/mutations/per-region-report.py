@@ -4,7 +4,7 @@ from cyvcf2 import VCF
 # Define regions and their corresponding samples
 REGIONS = {
     "ascending_colon": ["GB115_Laurel-1", "GB115_Laurel-2", "GB115_Laurel-3"],
-    "cecum": ["GB115_Laurel-5", "GB115_Laurel-6", "GB115_Laurel-7", "GB115_Laurel-8", "GB115_Laurel-10", "GB115_Laurel-11", "GB115_Laurel-12"]  # Replace with actual sample names
+    "cecum": ["GB115_Laurel-5", "GB115_Laurel-6", "GB115_Laurel-7", "GB115_Laurel-8", "GB115_Laurel-10", "GB115_Laurel-11", "GB115_Laurel-12"]
 }
 
 def count_unique_snvs_per_region(vcf_path):

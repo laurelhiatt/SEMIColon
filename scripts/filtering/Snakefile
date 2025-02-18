@@ -1,0 +1,52 @@
+rule all:
+    input:
+        expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/report.pdf", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10))
+
+rule filter_by_depth:
+    input:
+        vcf="input.vcf.gz" #will put file path later when stuff is running
+    output:
+        vcf="{out_dir}/results/depth_{dp}/filtered.vcf.gz"
+    shell:
+        "./vcfexpress filter -e 'return all(function (dp) return dp > {wildcards.dp} end, variant:format("DP"))' -o {output.vcf} {input.vcf}"
+
+rule filter_by_alt_depth:
+    input:
+        vcf="{out_dir}results/depth_{dp}/filtered.vcf.gz"
+        sample_string =
+    output:
+        temp(vcf="{out_dir}/results/depth_{dp}/{sample}_filtered.vcf.gz")
+    shell:
+        "./vcfexpress filter -p data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vcf}"
+
+rule filter_by_sample:
+    input:
+        vcf="{out_dir}/results/depth_{dp}/{sample}_filtered.vcf.gz"
+    output:
+        vcf="{out_dir}/results/depth_{dp}/alt_{ad}/{sample}_filtered.vcf"
+    shell:
+        "./vcfexpress filter -p data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > {wildcards.ad} end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vcf}"
+
+rule ts_tv_ratio:
+    input:
+        vcf="{out_dir}/results/depth_{dp}/alt_{ad}/{sample}_filtered.vcf"
+    output:
+        txt="{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/ts_tv_ratio.txt"
+    shell:
+        "bcftools stats {input.vcf} | grep 'ts/tv' > {output.txt}"
+
+rule count_snvs:
+    input:
+        vcf="{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/sample_filtered.vcf"
+    output:
+        txt="{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/snv_count.txt"
+    shell:
+        "bcftools view -v snps {input.vcf} | wc -l > {output.txt}"
+
+rule mutation_spectrum:
+    input:
+        vcf="{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/sample_filtered.vcf"
+    output:
+        pdf="{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/mutation_spectrum.pdf"
+    shell:
+        "mutation_spectrum_tool {input.vcf} -o {output.pdf}"

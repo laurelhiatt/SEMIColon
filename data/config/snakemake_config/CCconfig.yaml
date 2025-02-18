@@ -25,5 +25,25 @@ samples:
 # - Laurel-16
 # - Laurel-17
 
+matches:
+  GB115:
+    crypt_samples:
+      - Laurel-1
+      - Laurel-2
+      - Laurel-3
+      - Laurel-5
+      - Laurel-6
+      - Laurel-7
+      - Laurel-8
+      - Laurel-10
+      - Laurel-11
+      - Laurel-12
+      - Laurel-13
+      - Laurel-14
+      - Laurel-15
+      - Laurel-16
+      - Laurel-17
+
+
 donors:
 - GB115

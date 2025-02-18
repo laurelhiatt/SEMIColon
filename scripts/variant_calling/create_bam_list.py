@@ -1,14 +1,26 @@
 # create_bam_list.py
 import json
 import sys
+import yaml
+import os
+
+# Get the absolute path to config.yaml
+config_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../data/config/snakemake_config", "CCconfig.yaml"))
+
+# Load the YAML file
+with open(config_path, "r") as file:
+    config = yaml.safe_load(file)
+
+# Access matches
+matches = config["matches"]
+
+print(matches)  # Debugging: See the loaded dictionary
+
 
 donor = sys.argv[1]
 location = sys.argv[2]
 out_dir = sys.argv[3]
-matches = {
-    'GB115': {'crypt_samples': ['Laurel-1', 'Laurel-2', "Laurel-3", "Laurel-5", "Laurel-6", "Laurel-7",
-    "Laurel-8", "Laurel-10", "Laurel-11", "Laurel-12", "Laurel-13", "Laurel-14", "Laurel-15", "Laurel-16", "Laurel-17"]},
-}
+
 crypt_samples = matches[donor]["crypt_samples"]
 
 with open(f"{out_dir}/bam_list_{donor}.txt", "w") as f:

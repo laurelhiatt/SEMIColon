@@ -11,10 +11,7 @@ chunks = list(range(1,nchunks+1))
 chroms = ["chr1","chr2","chr3","chr4","chr6","chr7","chr8","chr9","chr10","chr11","chr12","chr13","chr14","chr15","chr16","chr17",
 "chr18","chr19","chr20","chr21","chr22","chrX","chrY"]
 
-matches = {
-    'GB115': {'crypt_samples': ['Laurel-1', 'Laurel-2', "Laurel-3", "Laurel-5", "Laurel-6", "Laurel-7",
-    "Laurel-8", "Laurel-10", "Laurel-11", "Laurel-12", "Laurel-13", "Laurel-14", "Laurel-15", "Laurel-16", "Laurel-17"]},
-}
+matches = config["matches"]
 
 ### IMPORTS ###
 import os
@@ -67,7 +64,7 @@ rule all:
         expand("{out_dir}/alfred/{sample}.pdf", out_dir = out_dir, sample = samples),
         expand("{out_dir}/vcf/{donor}-vcf_stats.txt", out_dir = out_dir, donor = donors),
         expand("{out_dir}/somalier/{donor}/relate.samples.tsv", out_dir = out_dir, donor = donors),
-        expand("{out_dir}/vcf/{donor}/summary.log", out_dir = out_dir, donor = donors),
+        expand("{out_dir}/vcf/{donor}/summary.pdf", out_dir = out_dir, donor = donors),
         expand("{out_dir}/vcf/{donor}-annotated-var-noLCR.vcf.gz", out_dir = out_dir, donor = donors)
 
         #expand("{out_dir}/vcf/{donor}-var.vcf", out_dir = out_dir, donor = matches.keys())
@@ -309,12 +306,14 @@ rule gnomad_VCFs:
 rule remove_lcr:
     input:
         annotated_vcf = "{out_dir}/vcf/{donor}-annotated-var.vcf.gz",
-        lcr_bed = "/scratch/ucgd/lustre-labs/quinlan/data-shared/annotations/LCR-hs38.bed.gz"
+        lcr_bed = "/scratch/ucgd/lustre-labs/quinlan/data-shared/annotations/LCR-hs38.bed.gz",
+        simplerepeats_bed = "/scratch/ucgd/lustre-labs/quinlan/data-shared/annotations/GRCh38.UCSC.SimpleRepeats.bed.gz"
     output:
         filtered_vcf = "{out_dir}/vcf/{donor}-annotated-var-noLCR.vcf.gz"
     shell:
         """
-        bedtools intersect -header -v -a {input.annotated_vcf} -b {input.lcr_bed} | bgzip -c > {output.filtered_vcf}
+        bedtools intersect -header -v -a {input.annotated_vcf} -b {input.lcr_bed} | \
+        bedtools intersect -header -v -a - -b {input.simplerepeats_bed} | bgzip -c > {output.filtered_vcf}
         tabix -p vcf {output.filtered_vcf}
         """
 
