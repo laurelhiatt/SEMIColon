@@ -3,7 +3,6 @@ configfile: '/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/da
 out_dir: str = config["output_directory"]
 samples: list[str] = config["samples"]
 
-
 rule all:
     input:
         expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/mutation_spectrum.pdf", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10))
@@ -12,21 +11,27 @@ rule all:
 ### filter all variants by a certain depth
 rule filter_by_depth:
     input:
-        vcf="input.vcf.gz" #will put file path later when stuff is running
+        vcf="/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/vcf/GB115-annotated-var-noLCR.vcf.gz"
     output:
         vcf="{out_dir}/results/depth_{dp}/filtered.vcf.gz"
     shell:
-        "./vcfexpress filter -e 'return all(function (dp) return dp > {wildcards.dp} end, variant:format("DP"))' -o {output.vcf} {input.vcf}"
+        """
+        mkdir -p {wildcards.out_dir}/results/depth_{wildcards.dp}
+        ./vcfexpress filter -e 'return all(function (dp) return dp > {wildcards.dp} end, variant:format("DP"))' -o {output.vcf} {input.vcf}
+        """
 
 ### all the other samples must have 0 alt alleles
 rule filter_by_alt_depth:
     input:
-        vcf="{out_dir}results/depth_{dp}/filtered.vcf.gz",
-        sample = "{sample}"
+        vcf="{out_dir}/results/depth_{dp}/filtered.vcf.gz"
     output:
-        temp(vcf="{out_dir}/results/depth_{dp}/{sample}_filtered.vcf.gz")
+        vcf="{out_dir}/results/depth_{dp}/{sample}_filtered.vcf.gz"
+    params:
+        sample = lambda wildcards: wildcards.sample
     shell:
-        "./vcfexpress filter -p data/config/sample-groups.lua '{input.sample}' -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vcf}"
+        """
+        ./vcfexpress filter -p data/config/sample-groups.lua '{params.sample}' -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vcf}
+        """
 
 ### this sample must have > # alternate allele
 rule filter_by_sample:
@@ -34,8 +39,13 @@ rule filter_by_sample:
         vcf="{out_dir}/results/depth_{dp}/{sample}_filtered.vcf.gz"
     output:
         vcf="{out_dir}/results/depth_{dp}/alt_{ad}/{sample}_filtered.vcf"
+    params:
+        sample = lambda wildcards: wildcards.sample
     shell:
-        "./vcfexpress filter -p data/config/sample-groups.lua '{input.sample}' -e 'return all_none(function(ad) return #ad > 1 and ad[2] > {wildcards.ad} end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vcf}"
+        """
+        mkdir -p {wildcards.out_dir}/results/depth_{wildcards.dp}/alt_{wildcards.ad}
+        ./vcfexpress filter -p data/config/sample-groups.lua '{params.sample}' -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vcf}
+        """
 
 rule ts_tv_ratio:
     input:
@@ -55,7 +65,7 @@ rule count_snvs:
 
 rule mutation_spectrum:
     input:
-        vcf="{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/sample_filtered.vcf"
+        vcf="{out_dir}/results/depth_{dp}/alt_{ad}/{sample}_filtered.vcf"
     output:
         pdf="{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/mutation_spectrum.pdf"
     shell:
