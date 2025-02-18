@@ -1,7 +1,9 @@
 rule all:
     input:
-        expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/report.pdf", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10))
+        expand("{out_dir}/results/{donor}/depth_{dp}/alt_{ad}/{sample}_report.pdf", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10))
 
+
+### filter all variants by a certain depth
 rule filter_by_depth:
     input:
         vcf="input.vcf.gz" #will put file path later when stuff is running
@@ -10,22 +12,24 @@ rule filter_by_depth:
     shell:
         "./vcfexpress filter -e 'return all(function (dp) return dp > {wildcards.dp} end, variant:format("DP"))' -o {output.vcf} {input.vcf}"
 
+### all the other samples must have 0 alt alleles
 rule filter_by_alt_depth:
     input:
-        vcf="{out_dir}results/depth_{dp}/filtered.vcf.gz"
-        sample_string =
+        vcf="{out_dir}results/depth_{dp}/filtered.vcf.gz",
+        sample = "{sample}"
     output:
         temp(vcf="{out_dir}/results/depth_{dp}/{sample}_filtered.vcf.gz")
     shell:
-        "./vcfexpress filter -p data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vcf}"
+        "./vcfexpress filter -p data/config/sample-groups.lua '{input.sample}' -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vcf}"
 
+### this sample must have > # alternate allele
 rule filter_by_sample:
     input:
         vcf="{out_dir}/results/depth_{dp}/{sample}_filtered.vcf.gz"
     output:
         vcf="{out_dir}/results/depth_{dp}/alt_{ad}/{sample}_filtered.vcf"
     shell:
-        "./vcfexpress filter -p data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > {wildcards.ad} end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vcf}"
+        "./vcfexpress filter -p data/config/sample-groups.lua '{input.sample}' -e 'return all_none(function(ad) return #ad > 1 and ad[2] > {wildcards.ad} end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vcf}"
 
 rule ts_tv_ratio:
     input:
@@ -50,3 +54,13 @@ rule mutation_spectrum:
         pdf="{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/mutation_spectrum.pdf"
     shell:
         "mutation_spectrum_tool {input.vcf} -o {output.pdf}"
+
+
+
+        ### SigProfilerMatrixGenerator install GRCh38
+
+
+###SigProfilerMatrixGenerator matrix_generator <project> <reference_genome> <path_to_input_files>
+
+
+### and then I will need to aggregate all the output into what, donor reports? sample reports?
