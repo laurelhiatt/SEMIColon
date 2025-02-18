@@ -3,6 +3,7 @@
 /scripts/LeeSixdata/.snakemake/
 /scripts/log.txt
 /scripts/cryptdata/.snakemake/*
+/scripts/filtering/.snakemake/*
 /scripts/LeeSixdata/.snakemake/*
 
 # Output directory
