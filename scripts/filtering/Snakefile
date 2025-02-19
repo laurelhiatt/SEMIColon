@@ -14,8 +14,9 @@ def get_donor(sample, matches):
 
 rule all:
     input:
-        expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/ts_tv_ratio.txt",out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10)),
-        expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/snv_count.txt", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10))
+        expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/ts_tv_ratio.txt", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10)),
+        expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/snv_count.txt", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10)),
+        expand("{out_dir}/results/summary/snp_summary.csv", out_dir = out_dir)
 
         #expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/mutation_spectrum.pdf", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10)),
 
@@ -80,6 +81,37 @@ rule count_snvs:
         txt="{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/snv_count.txt"
     shell:
         "bcftools view -v snps {input.vcf} | grep -v '^#' | wc -l > {output.txt} || echo 0 > {output.txt}"
+
+rule aggregate_results:
+    input:
+        snv_counts=expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/snv_count.txt", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10)),
+        ts_tv_ratios=expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/ts_tv_ratio.txt", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10))
+    output:
+        csv="{out_dir}/results/summary/snp_summary.csv"
+    shell:
+        """
+        echo "sample,depth,alt_depth,snp_count,ts_tv_ratio" > {output.csv}
+        for snv_file in {input.snv_counts}; do
+            # Extract sample, depth, and alt depth from the file path
+            sample=$(echo "$snv_file" | awk -F'/' '{{print $(NF-3)}}')  # Sample is 3 levels up
+            depth=$(echo "$snv_file" | awk -F'/' '{{print $(NF-2)}}' | sed 's/depth_//')  # Extract number after depth_
+            alt_depth=$(echo "$snv_file" | awk -F'/' '{{print $(NF-1)}}' | sed 's/alt_//')  # Extract number after alt_
+
+            # Read SNV count
+            snp_count=$(cat "$snv_file" 2>/dev/null || echo 0)
+
+            # Find matching ts_tv_ratio.txt
+            ts_tv_file=$(echo "{input.ts_tv_ratios}" | tr ' ' '\n' | grep "/$sample/depth_$depth/alt_$alt_depth/ts_tv_ratio.txt" || echo "NA")
+
+            # Extract ts/tv ratio (last column of the TSTV line)
+            ts_tv_ratio=$(grep "^TSTV" "$ts_tv_file" 2>/dev/null | awk '{{print $NF}}' || echo "NA")
+
+            echo "$sample,$depth,$alt_depth,$snp_count,$ts_tv_ratio" >> {output.csv}
+        done
+        """
+
+
+
 
 rule mutation_spectrum:
     input:
