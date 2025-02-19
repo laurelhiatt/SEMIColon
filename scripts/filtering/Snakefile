@@ -14,7 +14,10 @@ def get_donor(sample, matches):
 
 rule all:
     input:
-        expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/mutation_spectrum.pdf", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10))
+        expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/ts_tv_ratio.txt",out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10)),
+        expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/snv_count.txt", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10))
+
+        #expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/mutation_spectrum.pdf", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10)),
 
 
 ### filter all variants by a certain depth
@@ -64,19 +67,19 @@ rule filter_by_alt_depth:
 
 rule ts_tv_ratio:
     input:
-        vcf="{out_dir}/results/depth_{dp}/alt_{ad}/{sample}_filtered.vcf"
+        vcf="{out_dir}/results/depth_{dp}/alt_{ad}/{sample}_filtered.vcf",
     output:
         txt="{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/ts_tv_ratio.txt"
     shell:
-        "bcftools stats {input.vcf} | grep 'ts/tv' > {output.txt}"
+        "bcftools stats {input.vcf} | grep 'TSTV' > {output.txt}"
 
 rule count_snvs:
     input:
-        vcf="{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/sample_filtered.vcf"
+        vcf="{out_dir}/results/depth_{dp}/alt_{ad}/{sample}_filtered.vcf",
     output:
         txt="{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/snv_count.txt"
     shell:
-        "bcftools view -v snps {input.vcf} | wc -l > {output.txt}"
+        "bcftools view -v snps {input.vcf} | grep -v '^#' | wc -l > {output.txt} || echo 0 > {output.txt}"
 
 rule mutation_spectrum:
     input:
