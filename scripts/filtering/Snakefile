@@ -2,6 +2,15 @@ configfile: '/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/da
 
 out_dir: str = config["output_directory"]
 samples: list[str] = config["samples"]
+donors: list[str] = config["donors"]
+matches = config["matches"]
+
+def get_donor(sample, matches):
+    for donor, samples in matches.items():
+        if sample in samples['crypt_samples']:
+            return donor
+    raise KeyError(f"Sample {sample} not found in matches dictionary")
+
 
 rule all:
     input:
@@ -21,30 +30,36 @@ rule filter_by_depth:
         """
 
 ### all the other samples must have 0 alt alleles
-rule filter_by_alt_depth:
+rule filter_by_sample:
     input:
         vcf="{out_dir}/results/depth_{dp}/filtered.vcf.gz"
     output:
-        vcf="{out_dir}/results/depth_{dp}/{sample}_filtered.vcf.gz"
+        vcf="{out_dir}/results/depth_{dp}/{sample}_filtered.vcf.gz",
+        soi_lua=temp("{out_dir}/results/depth_{dp}/{sample}_soi.lua")
     params:
-        sample = lambda wildcards: wildcards.sample
+        sample = lambda wildcards: wildcards.sample,
+        donor = lambda wildcards: get_donor(wildcards.sample, matches)
     shell:
         """
-        ./vcfexpress filter -p data/config/sample-groups.lua '{params.sample}' -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vcf}
+        echo 'samplesOfInterest = {{"{params.donor}_{params.sample}"}}' > {output.soi_lua}
+        ./vcfexpress filter -p {wildcards.out_dir}/results/depth_{wildcards.dp}/{params.sample}_soi.lua -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vcf}
         """
 
 ### this sample must have > # alternate allele
-rule filter_by_sample:
+rule filter_by_alt_depth:
     input:
         vcf="{out_dir}/results/depth_{dp}/{sample}_filtered.vcf.gz"
     output:
-        vcf="{out_dir}/results/depth_{dp}/alt_{ad}/{sample}_filtered.vcf"
+        vcf="{out_dir}/results/depth_{dp}/alt_{ad}/{sample}_filtered.vcf",
+        soi_lua=temp("{out_dir}/results/depth_{dp}/alt_{ad}/{sample}_soi.lua")
     params:
-        sample = lambda wildcards: wildcards.sample
+        sample = lambda wildcards: wildcards.sample,
+        donor = lambda wildcards: get_donor(wildcards.sample, matches)
     shell:
         """
         mkdir -p {wildcards.out_dir}/results/depth_{wildcards.dp}/alt_{wildcards.ad}
-        ./vcfexpress filter -p data/config/sample-groups.lua '{params.sample}' -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vcf}
+        echo 'samplesOfInterest = {{"{params.donor}_{params.sample}"}}' > {output.soi_lua}
+        ./vcfexpress filter -p {wildcards.out_dir}/results/depth_{wildcards.dp}/alt_{wildcards.ad}/{params.sample}_soi.lua -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > {wildcards.ad} end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vcf}
         """
 
 rule ts_tv_ratio:

@@ -1,10 +1,6 @@
 --local samplesOfInterest = {"GB115_Laurel-1", "GB115_Laurel-2", "GB115_Laurel-3", "GB115_Laurel-5", "GB115_Laurel-6", "GB115_Laurel-7",
 --"GB115_Laurel-8", "GB115_Laurel-10", "GB115_Laurel-11", "GB115_Laurel-12"}
 
-local samplesOfInterest = {arg[1]}
-
-print(samplesOfInterest)
-
 samples = header.samples;
 sampleIndexes = {}
 otherSamples = {}
