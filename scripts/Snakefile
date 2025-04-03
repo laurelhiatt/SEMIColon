@@ -57,8 +57,6 @@ rule all:
         expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples),
         expand("{out_dir}/mosdepth/{sample}.mosdepth.global.dist.txt", out_dir = out_dir, sample = samples),
         expand("{out_dir}/vcf/{donor}-annotated-var.vcf.gz", out_dir = out_dir, donor = donors),
-        expand("{in_dir}/merged/{sample}_R1.fastq.gz", sample=samples, in_dir = in_dir),
-        expand("{in_dir}/merged/{sample}_R2.fastq.gz", sample=samples, in_dir = in_dir),
         expand("{out_dir}/reports/{sample}-fastp-report.json", sample=samples, out_dir=out_dir),
         expand("{out_dir}/mosdepth/mosdepth_coverage.html", out_dir = out_dir),
         expand("{out_dir}/alfred/{sample}.pdf", out_dir = out_dir, sample = samples),
@@ -66,21 +64,6 @@ rule all:
         expand("{out_dir}/somalier/{donor}/relate.samples.tsv", out_dir = out_dir, donor = donors),
         expand("{out_dir}/vcf/{donor}/summary.pdf", out_dir = out_dir, donor = donors),
         expand("{out_dir}/vcf/{donor}-annotated-var-noLCR.vcf.gz", out_dir = out_dir, donor = donors)
-
-
-rule lee_six_fastq:
-    input:
-        cram = "{sample}.cram",
-        reference_lee_six = config["reference_lee_six"]
-    output:
-        r1 = "{in_dir}/merged/{sample}_R1.fastq.gz",
-        r2 = "{in_dir}/merged/{sample}_R2.fastq.gz"
-    shell:
-        """
-        if [[ "{config[Lee-Six]}" == "TRUE" ]]; then
-            samtools fastq --reference {input.reference_lee_six} -1 {output.r1} -2 {output.r2} {input.cram}
-        fi
-        """
 
 # Snakemake rule for merging fastq.gz files
 rule merge_fastq:
