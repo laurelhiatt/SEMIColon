@@ -8,7 +8,7 @@ default-resources:
 - slurm_account="quinlan-rw"
 - slurm_partition="quinlan-shared-rw"
 - runtime=20160
-- mem_mb=8000*attempt
+- mem_mb=16000*attempt
 software-deployment-method: conda
 rerun-incomplete: True
 configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/snakemake_config/CCconfig.yaml"
