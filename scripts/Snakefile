@@ -1,22 +1,49 @@
-configfile: '/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/snakemake_config/CCconfig.yaml'
-top_dir = config["top_directory"]
-in_dir: str = config["input_directory"]
-out_dir: str = config["output_directory"]
-reference: str = config["reference_genome"]
-reference_index: str = config["reference_genome_index"]
-samples: list[str] = config["samples"]
-donors: list[str] = config["donors"]
-nchunks = config["nchunks"]
-chunks = list(range(1,nchunks+1))
-chroms = ["chr1","chr2","chr3","chr4","chr6","chr7","chr8","chr9","chr10","chr11","chr12","chr13","chr14","chr15","chr16","chr17",
-"chr18","chr19","chr20","chr21","chr22","chrX","chrY"]
+### SEMIColon Snakemake
+## This Snakemake Pipeline is the workflow for the
+## SEMIColon thesis project. The commands run are:
+## *RULES WILL GO HERE
+##
+# Laurel Hiatt 04/04/2025
 
-matches = config["matches"]
+#################
+### LIBRARIES ###
+#################
 
-### IMPORTS ###
 import os
 import glob
 import re
+
+##############
+### INPUTS ###
+##############
+# The input, output, genome fasta, and genome gtfs are specified in the
+# accompanying "CCconfig.yaml".
+
+configfile: '../data/config/snakemake_config/CCconfig.yaml'
+
+## directories
+top_dir = config["top_directory"]
+in_dir: str = config["input_directory"]
+out_dir: str = config["output_directory"]
+
+# reference data
+reference: str = config["reference_genome"]
+reference_index: str = config["reference_genome_index"]
+chroms = ["chr1","chr2","chr3","chr4","chr6","chr7","chr8","chr9","chr10","chr11","chr12",
+    "chr13","chr14","chr15","chr16","chr17", "chr18","chr19","chr20","chr21","chr22","chrX","chrY"]
+
+# study data
+samples: list[str] = config["samples"]
+donors: list[str] = config["donors"]
+matches = config["matches"]
+
+#parameters
+nchunks = config["nchunks"]
+chunks = list(range(1,nchunks+1))
+
+######################
+### INITIALIZATION ###
+######################
 
 # Wildcard constraints; should all be alphanumeric
 wildcard_constraints:
@@ -29,12 +56,35 @@ wildcard_constraints:
 # Ensure sample_files is initialized
 sample_files = {}
 
+# Create directories.
+if not os.path.exists(out_dir):
+    os.mkdir(out_dir)
+
+############################
+###       PIPELINE       ###
+############################
+
+# Define functions for memory during retries.
+def mem_xsmall(wildcards, attempt):
+    return attempt * 4000
+
+def mem_small(wildcards, attempt):
+    return attempt * 8000
+
+def mem_medium(wildcards, attempt):
+    return attempt * 16000
+
+def mem_large(wildcards, attempt):
+    return attempt * 32000
+
+def mem_xlarge(wildcards, attempt):
+    return attempt * 64000
+
+### find all fastq data for samples; useful for top-off sequencing
 for sample in samples:
     matching_dirs = glob.glob(f"{top_dir}/**/{sample}", recursive=True)
-
     for subdir in matching_dirs:
         subdir_files = glob.glob(f"{subdir}/*.fastq.gz")
-
         r1_files = [f for f in subdir_files if "_R1" in f]
         r2_files = [f for f in subdir_files if "_R2" in f]
 
@@ -50,111 +100,83 @@ def get_donor(sample, matches):
             return donor
     raise KeyError(f"Sample {sample} not found in matches dictionary")
 
+#############
+### RULES ###
+#############
+
+#############
+### RULES ###
+#############
+include: "rules/0_merge_fastq.smk"
+include: "rules/1_fastp.smk"
+include: "rules/2_make_bams.smk"
+#include: "rules/3_star_alignment.smk"
+# include: "rules/4_bam_postprocessing.smk"
+# include: "rules/5_qc_and_strand.smk"
+# include: "rules/6_annotation_and_statistics.smk"
+
 rule all:
+    # final output
     input:
-        expand("{out_dir}/bam/{sample}-sorted.bam.bai", out_dir = out_dir, sample = samples, donor = donors),
-        expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples),
-        expand("{out_dir}/bam/{sample}-sorted.stats", out_dir = out_dir, sample = samples),
-        expand("{out_dir}/mosdepth/{sample}.mosdepth.global.dist.txt", out_dir = out_dir, sample = samples),
-        expand("{out_dir}/vcf/{donor}-annotated-var.vcf.gz", out_dir = out_dir, donor = donors),
-        expand("{out_dir}/reports/{sample}-fastp-report.json", sample=samples, out_dir=out_dir),
-        expand("{out_dir}/mosdepth/mosdepth_coverage.html", out_dir = out_dir),
-        expand("{out_dir}/alfred/{sample}.pdf", out_dir = out_dir, sample = samples),
-        expand("{out_dir}/vcf/{donor}-vcf_stats.txt", out_dir = out_dir, donor = donors),
-        expand("{out_dir}/somalier/{donor}/relate.samples.tsv", out_dir = out_dir, donor = donors),
-        expand("{out_dir}/vcf/{donor}/summary.pdf", out_dir = out_dir, donor = donors),
-        expand("{out_dir}/vcf/{donor}-annotated-var-noLCR.vcf.gz", out_dir = out_dir, donor = donors)
-
-# Snakemake rule for merging fastq.gz files
-rule merge_fastq:
-    input:
-        R1=lambda wildcards: sample_files.get(wildcards.sample, {}).get('R1', []),
-        R2=lambda wildcards: sample_files.get(wildcards.sample, {}).get('R2', [])
-    output:
-        R1_merged = "{in_dir}/merged/{sample}_R1.fastq.gz",
-        R2_merged = "{in_dir}/merged/{sample}_R2.fastq.gz"
-    shell:
-        """
-        zcat {input.R1} | gzip > {output.R1_merged}
-        zcat {input.R2} | gzip > {output.R2_merged}
-        """
-
-# Rule 'fastp' preprocesses the reads by detecting and removing adapters,
-# filtering reads with an average quality less than 20, and producing
-# filtered fastq reads with preprocessing reports.
-rule fastp:
-    input:
-        R1 = in_dir + "/merged/{sample}_R1.fastq.gz",
-        R2 = in_dir + "/merged/{sample}_R2.fastq.gz"
-    output:
-        r1_clean = "{out_dir}/fastq/{sample}_R1.clean.fastq",
-        r2_clean = "{out_dir}/fastq/{sample}_R2.clean.fastq",
-        html_report = "{out_dir}/reports/{sample}-fastp-report.html",
-        json_report = "{out_dir}/reports/{sample}-fastp-report.json"
-    shell:
-        """
-        fastp --in1 {input.R1} --in2 {input.R2} \
-        --out1 {output.r1_clean} --out2 {output.r2_clean} \
-        --thread 16 \
-        --disable_quality_filtering --disable_adapter_trimming --disable_trim_poly_g \
-        --html {output.html_report} \
-        --json {output.json_report}
-        """
-
-rule generate_regions:
-    input:
-        index = reference_index,
-        out_dir = out_dir,
-        chroms = chroms
-    params:
-        chunks = chunks
-    output:
-        regions = "{out_dir}/regions/chunk.{chroms}.region.{i}.bed"
-    shell:
-        """
-        mkdir -p {input.out_dir}/regions
-        python /variant_calling/fasta_generate_regions.py --fai {input.index} --chunks 9 --bed {input.out_dir}/regions/chunk.{wildcards.chroms}
-        """
-
-# Aligns cleaned fastq reads to the defined reference genome
-# Mark duplicates and extract discordant and split reads from sam files
-# Convert to bam (exclude unmapped reads with -F 4)
-
-rule align_and_sort:
-    input:
-        r1_clean = rules.fastp.output.r1_clean,
-        r2_clean = rules.fastp.output.r2_clean,
-        ref = reference
-    output:
-        bam_sort = temp("{out_dir}/bam/{sample}-sortednoRG.bam")
-    threads: 16
-    shell:
-        """
-        bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} | samblaster | samtools view -b | samtools sort -o {output.bam_sort}
-        """
-
-rule add_rg:
-    input:
-        bam_sort = rules.align_and_sort.output.bam_sort
-    output:
-        sort_bam_RG = "{out_dir}/bam/{sample}-sorted.bam"
-    params:
-        donor = lambda wildcards: get_donor(wildcards.sample, matches)
-    shell:
-        """
-        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
-        samtools view -b > {output.sort_bam_RG}
-        """
-
-rule index_bam:
-    input:
-        bam_sort = rules.add_rg.output.sort_bam_RG
-    output:
-        bai = "{out_dir}/bam/{sample}-sorted.bam.bai"
-    shell:
-        """
-        samtools index {input.bam_sort}
-        """
+        expand(
+            "{out_dir}/bam/{sample}-sorted.bam.bai",
+            out_dir = out_dir,
+            sample = samples,
+        ),
+        expand(
+            "{out_dir}/bam/{sample}-sorted.stats",
+            out_dir = out_dir,
+            sample = samples
+        ),
+        expand(
+            "{out_dir}/bam/{sample}-sorted.stats",
+            out_dir = out_dir,
+            sample = samples
+        ),
+        expand(
+            "{out_dir}/mosdepth/{sample}.mosdepth.global.dist.txt",
+            out_dir = out_dir,
+            sample = samples
+        ),
+        expand(
+            "{out_dir}/vcf/{donor}-annotated-var.vcf.gz",
+            out_dir = out_dir,
+            donor = donors
+        ),
+        expand(
+            "{out_dir}/reports/{sample}-fastp-report.json",
+            sample=samples,
+            out_dir=out_dir
+        ),
+        expand(
+            "{out_dir}/mosdepth/mosdepth_coverage.html",
+            out_dir = out_dir
+        ),
+        expand(
+            "{out_dir}/alfred/{sample}.pdf",
+            out_dir = out_dir,
+            sample = samples
+        ),
+        expand(
+            "{out_dir}/vcf/{donor}-vcf_stats.txt",
+            out_dir = out_dir,
+            donor = donors
+        ),
+        expand(
+            "{out_dir}/somalier/{donor}/relate.samples.tsv",
+            out_dir = out_dir,
+            donor = donors
+        ),
+        expand(
+            "{out_dir}/vcf/{donor}/summary.pdf",
+            out_dir = out_dir,
+            donor = donors
+        ),
+        expand(
+            "{out_dir}/vcf/{donor}-annotated-var-noLCR.vcf.gz",
+            out_dir = out_dir,
+            donor = donors
+        )
 
 rule samtools_stats:
     input:
@@ -194,7 +216,6 @@ rule alfred_qc:
         bam = rules.add_rg.output.sort_bam_RG,  # Input is the sorted BAM from `add_rg`
         bai = rules.add_rg.output.sort_bam_RG + ".bai",
         ref = reference
-
     output:
         "{out_dir}/alfred/{sample}.alfred.qc.json.gz"  # Per-sample Alfred QC report
 
@@ -224,6 +245,20 @@ rule make_bam_list:
     shell:
         """
         python variant_calling/create_bam_list.py {wildcards.donor} {params.location} {wildcards.out_dir}
+        """
+rule generate_regions:
+    input:
+        index = reference_index,
+        out_dir = out_dir,
+        chroms = chroms
+    params:
+        chunks = chunks
+    output:
+        regions = "{out_dir}/regions/chunk.{chroms}.region.{i}.bed"
+    shell:
+        """
+        mkdir -p {input.out_dir}/regions
+        python /variant_calling/fasta_generate_regions.py --fai {input.index} --chunks 9 --bed {input.out_dir}/regions/chunk.{wildcards.chroms}
         """
 
 # Current filtering:
