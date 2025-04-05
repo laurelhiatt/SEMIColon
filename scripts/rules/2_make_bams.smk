@@ -11,7 +11,7 @@ rule align_and_sort:
         r2_clean = rules.fastp.output.r2_clean,
         ref = reference
     output:
-        bam_sort = temp("{out_dir}/bam/{sample}-sortednoRG.bam")
+        bam_sort = temp(out_dir + "/bam/{sample}-sortednoRG.bam")
     threads: 16
     shell:
         """
@@ -31,7 +31,7 @@ rule add_rg:
     input:
         bam_sort = rules.align_and_sort.output.bam_sort
     output:
-        sort_bam_RG = "{out_dir}/bam/{sample}-sorted.bam"
+        sort_bam_RG = out_dir + "/bam/{sample}-sorted.bam"
     params:
         donor = lambda wildcards: get_donor(wildcards.sample, matches)
     shell:
@@ -39,6 +39,7 @@ rule add_rg:
         samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
         samtools view -b > {output.sort_bam_RG}
         """
+    threads: 8
     resources:
         mem_mb = mem_medium
     log:
@@ -53,11 +54,12 @@ rule index_bam:
     input:
         bam_sort = rules.add_rg.output.sort_bam_RG
     output:
-        bai = "{out_dir}/bam/{sample}-sorted.bam.bai"
+        bai = out_dir + "/bam/{sample}-sorted.bam.bai"
     shell:
         """
         samtools index {input.bam_sort}
         """
+    threads: 4
     resources:
         mem_mb = mem_large
     log:

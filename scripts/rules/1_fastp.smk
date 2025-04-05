@@ -8,10 +8,10 @@ rule fastp:
         R1 = in_dir + "/merged/{sample}_R1.fastq.gz",
         R2 = in_dir + "/merged/{sample}_R2.fastq.gz"
     output:
-        r1_clean = "{out_dir}/fastq/{sample}_R1.clean.fastq",
-        r2_clean = "{out_dir}/fastq/{sample}_R2.clean.fastq",
-        html_report = "{out_dir}/reports/{sample}-fastp-report.html",
-        json_report = "{out_dir}/reports/{sample}-fastp-report.json"
+        r1_clean = out_dir + "/fastq/{sample}_R1.clean.fastq",
+        r2_clean = out_dir + "/fastq/{sample}_R2.clean.fastq",
+        html_report = out_dir + "/reports/{sample}-fastp-report.html",
+        json_report = out_dir + "/reports/{sample}-fastp-report.json"
     shell:
         """
         fastp --in1 {input.R1} --in2 {input.R2} \
