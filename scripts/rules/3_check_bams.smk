@@ -1,3 +1,5 @@
+# Laurel Hiatt 04/07/2025
+
 log_dir = out_dir + "/log/3_check_bams/"
 bench_dir = out_dir + "/benchmark/3_check_bams/"
 
@@ -116,6 +118,8 @@ rule alfred_qc:
     benchmark:
         bench_dir + "{sample}_alfred.tsv"
 
+# plotting the alfred results
+# This rule takes the output from the `alfred_qc` rule and generates a PDF report
 rule alfred_summary:
     input:
         reports = out_dir + "/alfred/{sample}.alfred.qc.json.gz"
