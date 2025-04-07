@@ -1,3 +1,5 @@
+# Laurel Hiatt 04/07/2025
+
 log_dir = out_dir + "/log/1_fastp/"
 bench_dir = out_dir + "/benchmark/1_fastp/"
 
@@ -8,8 +10,8 @@ rule fastp:
         R1 = in_dir + "/merged/{sample}_R1.fastq.gz",
         R2 = in_dir + "/merged/{sample}_R2.fastq.gz"
     output:
-        r1_clean = out_dir + "/fastq/{sample}_R1.clean.fastq",
-        r2_clean = out_dir + "/fastq/{sample}_R2.clean.fastq",
+        r1_clean = in_dir + "/clean/{sample}_R1.clean.fastq",
+        r2_clean = in_dir + "/clean/{sample}_R2.clean.fastq",
         html_report = out_dir + "/reports/{sample}-fastp-report.html",
         json_report = out_dir + "/reports/{sample}-fastp-report.json"
     shell:
