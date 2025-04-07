@@ -16,13 +16,12 @@ matches = config["matches"]
 
 print(matches)  # Debugging: See the loaded dictionary
 
-
 donor = sys.argv[1]
 location = sys.argv[2]
 out_dir = sys.argv[3]
 
 crypt_samples = matches[donor]["crypt_samples"]
 
-with open(f"{out_dir}/bam_list_{donor}.txt", "w") as f:
+with open(out_dir + "/bam_list_{donor}.txt", "w") as f:
     for sample in crypt_samples:
         f.write(f"{location}{sample}-sorted.bam\n")
