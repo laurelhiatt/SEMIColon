@@ -1,3 +1,5 @@
+# Laurel Hiatt 04/07/2025
+
 log_dir = out_dir + "/log/2_make_bams/"
 bench_dir = out_dir + "/benchmark/2_make_bams/"
 
