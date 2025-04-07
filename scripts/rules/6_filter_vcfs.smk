@@ -12,8 +12,16 @@ rule decompose_vcfs:
         clean_vcf = temp(out_dir + "/vcf/{donor}-clean-var.vcf.gz"),
     shell:
         """
+        module load bcftools
         bcftools norm -m - {input.vcf} -w 10000 -f {input.fasta} -O b -o {output.clean_vcf}
         """
+   resources:
+        mem_mb = mem_large
+    threads: 8
+    log:
+        log_dir + "{donor}_decompose.log"
+    benchmark:
+        bench_dir + "{donor}_decompose.tsv"
 
 # annotate the vcf with gnomAD
 rule gnomad_VCFs:
@@ -23,8 +31,16 @@ rule gnomad_VCFs:
         annotated_vcf = out_dir + "/vcf/{donor}-annotated-var.vcf.gz",
     shell:
         """
+        module load slivar
         slivar expr -g /scratch/ucgd/lustre/common/data/Slivar/db/gnomad.hg38.genomes.v3.fix.zip -v {input.clean_vcf} -o {output.annotated_vcf}
         """
+   resources:
+        mem_mb = mem_large
+    threads: 8
+    log:
+        log_dir + "{donor}_gnomad.log"
+    benchmark:
+        bench_dir + "{donor}_gnomad.tsv"
 
 rule remove_lcr:
     input:
@@ -35,7 +51,15 @@ rule remove_lcr:
         filtered_vcf = out_dir + "/vcf/{donor}-annotated-var-noLCR.vcf.gz"
     shell:
         """
+        module load bedtools
         bedtools intersect -header -v -a {input.annotated_vcf} -b {input.lcr_bed} | \
         bedtools intersect -header -v -a - -b {input.simplerepeats_bed} | bgzip -c > {output.filtered_vcf}
         tabix -p vcf {output.filtered_vcf}
         """
+   resources:
+        mem_mb = mem_xlarge
+    threads: 8
+    log:
+        log_dir + "{donor}_noLCR.log"
+    benchmark:
+        bench_dir + "{donor}_noLCR.tsv"
