@@ -1,7 +1,7 @@
 # Laurel Hiatt 04/07/2025
 
 log_dir = out_dir + "/log/4_make_vcfs/"
-bench_dir = out_dir + "/benchmark/4_make_vfcs/"
+bench_dir = out_dir + "/benchmark/4_make_vcfs/"
 
 rule make_bam_list:
     input:
@@ -87,6 +87,8 @@ rule compress_chunks:
         log_dir + "{chroms}_{i}_{donor}_compress.log"
     benchmark:
         bench_dir + "{chroms}_{i}_{donor}_compress.tsv"
+    resources:
+        mem_mb = mem_medium
 
 rule index_chunks:
     input:
@@ -102,6 +104,8 @@ rule index_chunks:
         log_dir + "{chroms}_{i}_{donor}_index.log"
     benchmark:
         bench_dir + "{chroms}_{i}_{donor}_index.tsv"
+    resources:
+        mem_mb = mem_medium
 
 rule concat_vcfs:
     input:
@@ -127,4 +131,6 @@ rule concat_vcfs:
         log_dir + "{chroms}_{i}_{donor}_concat.log"
     benchmark:
         bench_dir + "{chroms}_{i}_{donor}_concat.tsv"
+    resources:
+        mem_mb = mem_large
 
