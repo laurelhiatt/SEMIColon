@@ -3,6 +3,9 @@
 log_dir = out_dir + "/log/3_check_bams/"
 bench_dir = out_dir + "/benchmark/3_check_bams/"
 
+def get_samples_for_donor(donor, matches):
+    return [sample for sample, d in matches.items() if d == donor]
+
 # statistics from BAM files and outputs in a text format, summary below:
 # CHK	Checksum
 # SN	Summary numbers
@@ -41,10 +44,6 @@ rule samtools_stats:
         bam_sort = rules.add_rg.output.sort_bam_RG
     output:
         stats = out_dir + "/bam/{sample}-sorted.stats",
-    shell:
-        """
-        samtools stats {input.bam_sort} > {output.stats}
-        """
     resources:
         mem_mb = mem_medium
     threads: 4
@@ -54,6 +53,10 @@ rule samtools_stats:
         bench_dir + "{sample}_stats.tsv"
     conda:
          "../../envs/make_bams.yaml"
+    shell:
+        """
+        samtools stats {input.bam_sort} > {output.stats}
+        """
 
 # getting coverage across genome, chromosomes, etc
 rule mosdepth:
@@ -61,11 +64,6 @@ rule mosdepth:
         bam_sort = rules.add_rg.output.sort_bam_RG
     output:
         out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt",
-    shell:
-        """
-        module load mosdepth
-        bash ../quality_control/mosdepth.sh
-        """
     resources:
         mem_mb = mem_medium
     threads: 2
@@ -73,27 +71,34 @@ rule mosdepth:
         log_dir + "{sample}_mosdepth.log"
     benchmark:
         bench_dir + "{sample}_mosdepth.tsv"
+    shell:
+        """
+        module load mosdepth
+        bash ../quality_control/mosdepth.sh
+        """
 
 # plotting mosdepth results
 rule plot_mosdepth:
     input:
-        mosdepth = expand(out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt",
-            sample=samples)  # Collects all sample files
+        mosdepth = lambda wildcards: expand(
+            out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt",
+            sample=get_samples_for_donor(wildcards.donor, matches)
+        )
     output:
-        html = out_dir + "/mosdepth/mosdepth_coverage.html"
-    shell:
-        """
-        python ../quality_control/plot-dist.py {input.mosdepth} --output {output.html}
-        """
+        html = out_dir + "/mosdepth/{donor}_mosdepth_coverage.html"
     conda:
          "../../envs/plot_mosdepth.yaml"
     resources:
         mem_mb = mem_small
     threads: 2
     log:
-        log_dir + "{sample}_plot_mosdepth.log"
+        log_dir + "{donor}_plot_mosdepth.log"
     benchmark:
-        bench_dir + "{sample}_plot_mosdepth.tsv"
+        bench_dir + "{donor}_plot_mosdepth.tsv"
+    shell:
+        """
+        python ../quality_control/plot-dist.py {input.mosdepth} --output {output.html}
+        """
 
 # bam statistcs with downstream plotting of quality metrics
 rule alfred_qc:
@@ -103,11 +108,6 @@ rule alfred_qc:
         ref = reference
     output:
         out_dir + "/alfred/{sample}.alfred.qc.json.gz"  # Per-sample Alfred QC report
-
-    shell:
-        """
-        alfred qc {input.bam} -r {input.ref} -o {output}
-        """
     conda:
          "../../envs/alfred.yaml"
     resources:
@@ -117,6 +117,10 @@ rule alfred_qc:
         log_dir + "{sample}_alfred.log"
     benchmark:
         bench_dir + "{sample}_alfred.tsv"
+    shell:
+        """
+        alfred qc {input.bam} -r {input.ref} -o {output}
+        """
 
 # plotting the alfred results
 # This rule takes the output from the `alfred_qc` rule and generates a PDF report
@@ -125,11 +129,6 @@ rule alfred_summary:
         reports = out_dir + "/alfred/{sample}.alfred.qc.json.gz"
     output:
         pdfs = out_dir + "/alfred/{sample}.pdf"
-    shell:
-        """
-        module load R
-        Rscript quality_control/stats.R {input.reports} {output.pdfs}
-        """
     resources:
         mem_mb = mem_medium
     threads: 2
@@ -137,3 +136,8 @@ rule alfred_summary:
         log_dir + "{sample}_plot_alfred.log"
     benchmark:
         bench_dir + "{sample}_plot_alfred.tsv"
+    shell:
+        """
+        module load R
+        Rscript quality_control/stats.R {input.reports} {output.pdfs}
+        """

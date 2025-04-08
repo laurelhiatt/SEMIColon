@@ -6,22 +6,12 @@ bench_dir = out_dir + "/benchmark/5_check_vcfs/"
 # check relatedness
 rule somalier_extract:
     input:
-        vcf = expand(out_dir + "/vcf/{donor}-var.vcf.gz",
-            donor=donors)
+        vcf = lambda wildcards: (out_dir + "/vcf/{wildcards.donor}-var.vcf.gz")
     output:
-        somalier_dir = expand(out_dir + "/somalier/{donor}/extract/",
-            donor = donors),
-        samples = expand(out_dir + "/somalier/{donor}/extract/{donor}_{sample}.somalier",
-            donor = donors,
-            sample = samples)
+        somalier = out_dir + "/somalier/{{donor}}/extract/{{donor}}_{{sample}}.somalier"
     params:
         sites= "/uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/sites.hg38.vcf.gz",
         fasta = reference
-    shell:
-        """
-        mkdir -p {output.somalier_dir}
-        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier extract {input.vcf} --sites {params.sites} --fasta {params.fasta} -d {output.somalier_dir}
-        """
     resources:
         mem_mb = mem_medium
     threads: 4
@@ -29,6 +19,11 @@ rule somalier_extract:
         log_dir + "{donor}_{sample}_somalier.log"
     benchmark:
         bench_dir + "{donor}_{sample}_somalier.tsv"
+    shell:
+        """
+        mkdir -p {output.somalier_dir}
+        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier extract {input.vcf} --sites {params.sites} --fasta {params.fasta} -d {output.somalier_dir}
+        """
 
 #finish somalier analysis
 rule somalier_check:
@@ -42,10 +37,6 @@ rule somalier_check:
         samples = out_dir + "/somalier/{donor}/relate.samples.tsv"
     params:
         donor = "{donor}"
-    shell:
-        """
-        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier relate {input.somalier_dir}/*.somalier -o {out_dir}/somalier/{params.donor}/relate
-        """
     resources:
         mem_mb = mem_medium
     threads: 4
@@ -53,6 +44,10 @@ rule somalier_check:
         log_dir + "{donor}_somalier_check.log"
     benchmark:
         bench_dir + "{donor}_somalier_check.tsv"
+    shell:
+        """
+        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier relate {input.somalier_dir}/*.somalier -o {out_dir}/somalier/{params.donor}/relate
+        """
 
 #code for the bcftools stats
 rule bcftools_stats:
@@ -60,11 +55,7 @@ rule bcftools_stats:
         vcf = out_dir + "/vcf/{donor}-annotated-var.vcf.gz"
     output:
         stats = out_dir + "/vcf/{donor}-vcf_stats.txt"
-    shell:
-        """
-        module load bcftools
-        bcftools stats -s - --verbose {input.vcf} > {output.stats}
-        """
+
     resources:
         mem_mb = mem_small
     threads: 4
@@ -72,6 +63,11 @@ rule bcftools_stats:
         log_dir + "{donor}_bcftools_stats.log"
     benchmark:
         bench_dir + "{donor}_bcftools_stat.tsv"
+    shell:
+        """
+        module load bcftools
+        bcftools stats -s - --verbose {input.vcf} > {output.stats}
+        """
 
 # plot the bcftools stats output
 rule plot_stats:
@@ -82,10 +78,6 @@ rule plot_stats:
          summaries = out_dir + "/vcf/{donor}/summary.pdf"
     conda:
         "/uufs/chpc.utah.edu/common/HIPAA/u1264408/software/pkg/miniconda3/envs/vcfstats"
-    shell:
-        """
-        plot-vcfstats -p {output.outdir} {input.stats}
-        """
     resources:
         mem_mb = mem_medium
     threads: 4
@@ -93,3 +85,7 @@ rule plot_stats:
         log_dir + "{donor}_bcftools_plot.log"
     benchmark:
         bench_dir + "{donor}_bcftools_plot.tsv"
+    shell:
+        """
+        plot-vcfstats -p {output.outdir} {input.stats}
+        """

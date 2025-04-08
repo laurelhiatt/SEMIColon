@@ -12,11 +12,6 @@ rule merge_fastq:
     output:
         R1_merged = in_dir + "/merged/{sample}_R1.fastq.gz",
         R2_merged = in_dir + "/merged/{sample}_R2.fastq.gz"
-    shell:
-        """
-        zcat {input.R1} | gzip > {output.R1_merged}
-        zcat {input.R2} | gzip > {output.R2_merged}
-        """
     resources:
         mem_mb = mem_small
     threads:
@@ -25,6 +20,11 @@ rule merge_fastq:
         log_dir + "{sample}.log"
     benchmark:
         bench_dir + "{sample}.tsv"
+    shell:
+        """
+        zcat {input.R1} | gzip > {output.R1_merged}
+        zcat {input.R2} | gzip > {output.R2_merged}
+        """
 
 
 

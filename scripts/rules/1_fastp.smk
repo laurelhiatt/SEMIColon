@@ -14,14 +14,6 @@ rule fastp:
         r2_clean = in_dir + "/clean/{sample}_R2.clean.fastq",
         html_report = out_dir + "/reports/{sample}-fastp-report.html",
         json_report = out_dir + "/reports/{sample}-fastp-report.json"
-    shell:
-        """
-        fastp --in1 {input.R1} --in2 {input.R2} \
-        --out1 {output.r1_clean} --out2 {output.r2_clean} \
-        --disable_quality_filtering --disable_adapter_trimming --disable_trim_poly_g \
-        --html {output.html_report} \
-        --json {output.json_report}
-        """
     resources:
         mem_mb = mem_medium
     threads:
@@ -32,4 +24,11 @@ rule fastp:
         bench_dir + "{sample}.tsv"
     conda:
         "../../envs/fastp.yaml"
-
+    shell:
+        """
+        fastp --in1 {input.R1} --in2 {input.R2} \
+        --out1 {output.r1_clean} --out2 {output.r2_clean} \
+        --disable_quality_filtering --disable_adapter_trimming --disable_trim_poly_g \
+        --html {output.html_report} \
+        --json {output.json_report}
+        """

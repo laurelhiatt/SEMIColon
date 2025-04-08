@@ -15,10 +15,6 @@ rule align_and_sort:
     output:
         bam_sort = temp(out_dir + "/bam/{sample}-sortednoRG.bam")
     threads: 16
-    shell:
-        """
-        bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} | samblaster | samtools view -b | samtools sort -o {output.bam_sort}
-        """
     resources:
         mem_mb = mem_large
     log:
@@ -27,6 +23,10 @@ rule align_and_sort:
         bench_dir + "{sample}_align_sort.tsv"
     conda:
          "../../envs/make_bams.yaml"
+    shell:
+        """
+        bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} | samblaster | samtools view -b | samtools sort -o {output.bam_sort}
+        """
 
 # read groups are necessary for joint calling so we're gonna make sure they're there
 rule add_rg:
@@ -36,11 +36,6 @@ rule add_rg:
         sort_bam_RG = out_dir + "/bam/{sample}-sorted.bam"
     params:
         donor = lambda wildcards: get_donor(wildcards.sample, matches)
-    shell:
-        """
-        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
-        samtools view -b > {output.sort_bam_RG}
-        """
     threads: 8
     resources:
         mem_mb = mem_medium
@@ -50,6 +45,11 @@ rule add_rg:
         bench_dir + "{sample}_rg.tsv"
     conda:
          "../../envs/make_bams.yaml"
+    shell:
+        """
+        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
+        samtools view -b > {output.sort_bam_RG}
+        """
 
 # an index helps
 rule index_bam:
@@ -57,10 +57,6 @@ rule index_bam:
         bam_sort = rules.add_rg.output.sort_bam_RG
     output:
         bai = out_dir + "/bam/{sample}-sorted.bam.bai"
-    shell:
-        """
-        samtools index {input.bam_sort}
-        """
     threads: 4
     resources:
         mem_mb = mem_large
@@ -70,3 +66,7 @@ rule index_bam:
         bench_dir + "{sample}_index.tsv"
     conda:
          "../../envs/make_bams.yaml"
+    shell:
+        """
+        samtools index {input.bam_sort}
+        """

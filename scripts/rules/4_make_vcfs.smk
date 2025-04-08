@@ -13,10 +13,6 @@ rule make_bam_list:
         location = out_dir + "/bam/"
     output:
         bam_file_list = temp(out_dir + "/bam/bam_list_{donor}.txt")
-    shell:
-        """
-        python ../variant_calling/create_bam_list.py {wildcards.donor} {params.location} {wildcards.out_dir}
-        """
     resources:
         mem_mb = mem_small
     threads: 4
@@ -24,6 +20,10 @@ rule make_bam_list:
         log_dir + "{donor}_bamlist.log"
     benchmark:
         bench_dir + "{donor}_bamlist.tsv"
+    shell:
+        """
+        python ../variant_calling/create_bam_list.py {wildcards.donor} {params.location} {wildcards.out_dir}
+        """
 
 rule generate_regions:
     input:
@@ -34,11 +34,6 @@ rule generate_regions:
         out_dir = out_dir
     output:
         regions = out_dir + "/regions/chunk.{chroms}.region.{i}.bed"
-    shell:
-        """
-        mkdir -p {input.out_dir}/regions
-        python ../variant_calling/fasta_generate_regions.py --fai {input.index} --chunks {params.chunks} --bed {params.out_dir}/regions/chunk.{wildcards.chroms}
-        """
     resources:
         mem_mb = mem_small
     threads: 2
@@ -48,6 +43,11 @@ rule generate_regions:
         log_dir + "{chroms}_{i}_generateregions.log"
     benchmark:
         bench_dir + "{chroms}_{i}_generateregions.tsv"
+    shell:
+        """
+        mkdir -p {input.out_dir}/regions
+        python ../variant_calling/fasta_generate_regions.py --fai {input.index} --chunks {params.chunks} --bed {params.out_dir}/regions/chunk.{wildcards.chroms}
+        """
 
 # Current filtering:
 ### min-alternate-count 2
@@ -61,27 +61,23 @@ rule freebayes_variant_calling:
         full = temp(out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf"),
     resources:
         mem_mb = mem_xlarge
+    threads: 8
+    log:
+        log_dir + "{chroms}_{i}_{donor}_freebayes.log"
+    benchmark:
+        bench_dir + "{chroms}_{i}_{donor}_freebayes.tsv"
     shell:
         """
         mkdir -p {wildcards.out_dir}/vcf/{wildcards.chroms}
         module load freebayes
         freebayes --min-alternate-count 2 --min-alternate-qsum 40 -f {input.ref} -t {input.regions} -L {input.bam_file_list} > {output.full}
         """
-    threads: 8
-    log:
-        log_dir + "{chroms}_{i}_{donor}_freebayes.log"
-    benchmark:
-        bench_dir + "{chroms}_{i}_{donor}_freebayes.tsv"
 
 rule compress_chunks:
     input:
         chunk_vcf = out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf"
     output:
         chunk_zip = temp(out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf.gz")
-    shell:
-        """
-        bgzip -f {input.chunk_vcf}
-        """
     threads: 8
     log:
         log_dir + "{chroms}_{i}_{donor}_compress.log"
@@ -89,16 +85,16 @@ rule compress_chunks:
         bench_dir + "{chroms}_{i}_{donor}_compress.tsv"
     resources:
         mem_mb = mem_medium
+    shell:
+        """
+        bgzip -f {input.chunk_vcf}
+        """
 
 rule index_chunks:
     input:
         chunk_zip = out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf.gz"
     output:
         chunk_zip_index = temp(out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi")
-    shell:
-        """
-        tabix -f -p vcf {input.chunk_zip}
-        """
     threads: 8
     log:
         log_dir + "{chroms}_{i}_{donor}_index.log"
@@ -106,6 +102,10 @@ rule index_chunks:
         bench_dir + "{chroms}_{i}_{donor}_index.tsv"
     resources:
         mem_mb = mem_medium
+    shell:
+        """
+        tabix -f -p vcf {input.chunk_zip}
+        """
 
 rule concat_vcfs:
     input:
@@ -120,17 +120,16 @@ rule concat_vcfs:
     output:
         vcf = out_dir + "/vcf/{donor}-var.vcf.gz",
         vcf_index = out_dir + "/vcf/{donor}-var.vcf.gz.tbi"
+    threads: 16
+    log:
+        log_dir + "{donor}_concat.log"
+    benchmark:
+        bench_dir + "{donor}_concat.tsv"
+    resources:
+        mem_mb = mem_large
     shell:
         """
         module load bcftools
         bcftools concat -a {input.chunk_zip} -o {output.vcf}
         tabix -f -p vcf {output.vcf}
         """
-    threads: 16
-    log:
-        log_dir + "{chroms}_{i}_{donor}_concat.log"
-    benchmark:
-        bench_dir + "{chroms}_{i}_{donor}_concat.tsv"
-    resources:
-        mem_mb = mem_large
-
