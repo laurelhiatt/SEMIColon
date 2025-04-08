@@ -10,7 +10,7 @@ rule decompose_vcfs:
         fasta = reference
     output:
         clean_vcf = temp(out_dir + "/vcf/{donor}-clean-var.vcf.gz")
-   resources:
+    resources:
         mem_mb = mem_large
     threads: 8
     log:
@@ -29,7 +29,7 @@ rule gnomad_VCFs:
         clean_vcf = out_dir + "/vcf/{donor}-clean-var.vcf.gz",
     output:
         annotated_vcf = out_dir + "/vcf/{donor}-annotated-var.vcf.gz",
-   resources:
+    resources:
         mem_mb = mem_large
     threads: 8
     log:
@@ -49,7 +49,7 @@ rule remove_lcr:
         simplerepeats_bed = "/scratch/ucgd/lustre-labs/quinlan/data-shared/annotations/GRCh38.UCSC.SimpleRepeats.bed.gz"
     output:
         filtered_vcf = out_dir + "/vcf/{donor}-annotated-var-noLCR.vcf.gz"
-   resources:
+    resources:
         mem_mb = mem_xlarge
     threads: 8
     log:

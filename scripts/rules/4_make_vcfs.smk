@@ -10,7 +10,8 @@ rule make_bam_list:
         bai = lambda wildcard: expand(out_dir + "/bam/{sample}-sorted.bam.bai",
             sample=samples),
     params:
-        location = out_dir + "/bam/"
+        location = out_dir + "/bam/",
+        out_dir = out_dir
     output:
         bam_file_list = temp(out_dir + "/bam/bam_list_{donor}.txt")
     resources:
@@ -22,7 +23,7 @@ rule make_bam_list:
         bench_dir + "{donor}_bamlist.tsv"
     shell:
         """
-        python ../variant_calling/create_bam_list.py {wildcards.donor} {params.location} {wildcards.out_dir}
+        python ../variant_calling/create_bam_list.py {wildcards.donor} {params.location} {params.out_dir}
         """
 
 rule generate_regions:
@@ -58,7 +59,9 @@ rule freebayes_variant_calling:
         ref = reference,
         regions = rules.generate_regions.output.regions
     output:
-        full = temp(out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf"),
+        full = temp(out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf")
+    params:
+        out_dir = out_dir
     resources:
         mem_mb = mem_xlarge
     threads: 8
@@ -68,7 +71,7 @@ rule freebayes_variant_calling:
         bench_dir + "{chroms}_{i}_{donor}_freebayes.tsv"
     shell:
         """
-        mkdir -p {wildcards.out_dir}/vcf/{wildcards.chroms}
+        mkdir -p {params.out_dir}/vcf/{wildcards.chroms}
         module load freebayes
         freebayes --min-alternate-count 2 --min-alternate-qsum 40 -f {input.ref} -t {input.regions} -L {input.bam_file_list} > {output.full}
         """

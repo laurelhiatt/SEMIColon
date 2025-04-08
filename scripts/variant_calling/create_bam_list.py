@@ -22,6 +22,6 @@ out_dir = sys.argv[3]
 
 crypt_samples = matches[donor]["crypt_samples"]
 
-with open(out_dir + "/bam_list_{donor}.txt", "w") as f:
+with open(out_dir + "/bam/bam_list_{donor}.txt", "w") as f:
     for sample in crypt_samples:
         f.write(f"{location}{sample}-sorted.bam\n")

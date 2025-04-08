@@ -6,11 +6,12 @@ bench_dir = out_dir + "/benchmark/5_check_vcfs/"
 # check relatedness
 rule somalier_extract:
     input:
-        vcf = lambda wildcards: (out_dir + "/vcf/{wildcards.donor}-var.vcf.gz")
+        vcf = out_dir + "/vcf/{donor}-var.vcf.gz"
     output:
-        somalier = out_dir + "/somalier/{{donor}}/extract/{{donor}}_{{sample}}.somalier"
+        somalier = out_dir + "/somalier/{donor}/extract/{donor}_{sample}.somalier"
     params:
         sites= "/uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/sites.hg38.vcf.gz",
+        somalier_dir = out_dir + "/somalier/{donor}/extract/",
         fasta = reference
     resources:
         mem_mb = mem_medium
@@ -21,15 +22,18 @@ rule somalier_extract:
         bench_dir + "{donor}_{sample}_somalier.tsv"
     shell:
         """
-        mkdir -p {output.somalier_dir}
-        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier extract {input.vcf} --sites {params.sites} --fasta {params.fasta} -d {output.somalier_dir}
+        mkdir -p {params.somalier_dir}
+        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier extract {input.vcf} --sites {params.sites} --fasta {params.fasta} -d {params.somalier_dir}
         """
 
 #finish somalier analysis
 rule somalier_check:
     input:
-        somalier_dir = expand(out_dir + "/somalier/{donor}/extract/",
-            donor = donors)
+        somalier_files = lambda wildcards: expand(
+            out_dir + "/somalier/{donor}/extract/{donor}_{sample}.somalier",
+            donor=wildcards.donor,
+            sample=matches[wildcards.donor]
+        )
     output:
         html = out_dir + "/somalier/{donor}/relate.html",
         pairs = out_dir + "/somalier/{donor}/relate.pairs.tsv",
