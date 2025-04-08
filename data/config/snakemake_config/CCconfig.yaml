@@ -389,6 +389,7 @@ samples:
 - PD34201a_t46
 - PD34201a_t8
 - PD34202a_s41
+- PD34202a_s43
 - PD34202a_s9
 - PD37266b_lo0004
 - PD37266b_lo0005
@@ -934,6 +935,7 @@ matches:
       - PD34202a_s27
       - PD34202a_s15
       - PD34202a_s12
+      - PD34202a_s43
   PD37266:
     crypt_samples:
       - PD37266b_lo0004

@@ -8,6 +8,7 @@ samples:
 - PD37510b4
 - PD37510b7
 - PD37510b8
+- PD34202a_s43
 - PD34202a_s27
 - PD34202a_s15
 - HLS_1C_30_B5
@@ -898,6 +899,7 @@ matches:
       - PD34202a_s27
       - PD34202a_s15
       - PD34202a_s12
+      - PD34202a_s43
   PD37266:
     crypt_samples:
       - PD37266b_lo0004
