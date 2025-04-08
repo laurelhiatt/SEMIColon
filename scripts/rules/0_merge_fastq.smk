@@ -22,6 +22,7 @@ rule merge_fastq:
         bench_dir + "{sample}.tsv"
     shell:
         """
+        echo "merging {input.R1} and {input.R2} into {output.R1_merged} and {output.R2_merged}" > {log}
         zcat {input.R1} | gzip > {output.R1_merged}
         zcat {input.R2} | gzip > {output.R2_merged}
         """

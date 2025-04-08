@@ -1,4 +1,4 @@
-output_directory: "/scratch/ucgd/lustre-labs/quinlan/u1264408/SEMIColon"
+output_directory: "/scratch/ucgd/lustre-labs/quinlan/data-shared/datasets/SEMIColon/CellCut/merged"
 reference_lee_six: "/scratch/ucgd/lustre/common/data/Reference/GRCh37/human_g1k_v37_decoy_phix.fasta"
 input_directory: "/scratch/ucgd/lustre-labs/quinlan/data-shared/datasets/SEMIColon/EGAD00001004192"
 
