@@ -25,6 +25,7 @@ rule align_and_sort:
          "../../envs/make_bams.yaml"
     shell:
         """
+        module load bwa
         bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} | samblaster | samtools view -b | samtools sort -o {output.bam_sort}
         """
 
