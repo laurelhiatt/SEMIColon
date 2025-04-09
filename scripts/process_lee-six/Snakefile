@@ -29,8 +29,10 @@ def get_donor(sample, matches):
 
 rule all:
     input:
-        expand("{out_dir}/lee-six/{sample}_R1.fastq.gz", out_dir = out_dir, sample = samples),
-        expand("{out_dir}/lee-six/{sample}_R2.fastq.gz", out_dir = out_dir, sample = samples)
+        expand(out_dir + "/{sample}_R1.fastq.gz",
+            sample = samples),
+        expand(out_dir + "/{sample}_R2.fastq.gz",
+            sample = samples)
 
 rule lee_six_fastq:
     input:
