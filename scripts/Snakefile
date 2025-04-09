@@ -116,61 +116,49 @@ rule all:
     # final output
     input:
         expand(
-            "{out_dir}/bam/{sample}-sorted.bam.bai",
-            out_dir = out_dir,
+            out_dir + "/bam/{sample}-sorted.bam.bai",
             sample = samples,
         ),
         expand(
-            "{out_dir}/bam/{sample}-sorted.stats",
-            out_dir = out_dir,
+            out_dir + "/bam/{sample}-sorted.stats",
             sample = samples
         ),
         expand(
-            "{out_dir}/bam/{sample}-sorted.stats",
-            out_dir = out_dir,
+            out_dir + "/bam/{sample}-sorted.stats",
             sample = samples
         ),
         expand(
-            "{out_dir}/mosdepth/{sample}.mosdepth.global.dist.txt",
-            out_dir = out_dir,
+            out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt",
             sample = samples
         ),
         expand(
-            "{out_dir}/vcf/{donor}-annotated-var.vcf.gz",
-            out_dir = out_dir,
+            out_dir + "/vcf/{donor}-annotated-var.vcf.gz",
             donor = donors
         ),
         expand(
-            "{out_dir}/reports/{sample}-fastp-report.json",
+            out_dir + "/reports/{sample}-fastp-report.json",
             sample=samples,
-            out_dir=out_dir
         ),
         expand(
-            "{out_dir}/mosdepth/mosdepth_coverage.html",
-            out_dir = out_dir
+            out_dir + "/mosdepth/mosdepth_coverage.html",
         ),
         expand(
             "{out_dir}/alfred/{sample}.pdf",
-            out_dir = out_dir,
             sample = samples
         ),
         expand(
-            "{out_dir}/vcf/{donor}-vcf_stats.txt",
-            out_dir = out_dir,
+            out_dir + "/vcf/{donor}-vcf_stats.txt",
             donor = donors
         ),
         expand(
-            "{out_dir}/somalier/{donor}/relate.samples.tsv",
-            out_dir = out_dir,
+            out_dir + "/somalier/{donor}/relate.samples.tsv",
             donor = donors
         ),
         expand(
-            "{out_dir}/vcf/{donor}/summary.pdf",
-            out_dir = out_dir,
+            out_dir + "/vcf/{donor}/summary.pdf",
             donor = donors
         ),
         expand(
-            "{out_dir}/vcf/{donor}-annotated-var-noLCR.vcf.gz",
-            out_dir = out_dir,
+            out_dir + "/vcf/{donor}-annotated-var-noLCR.vcf.gz",
             donor = donors
         )
