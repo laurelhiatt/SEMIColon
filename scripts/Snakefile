@@ -116,6 +116,10 @@ rule all:
     # final output
     input:
         expand(
+            out_dir + "/fastq/{sample}_R1.clean.fastq.gz",
+            sample = samples,
+        ),
+        expand(
             out_dir + "/bam/{sample}-sorted.bam.bai",
             sample = samples,
         ),
@@ -143,7 +147,7 @@ rule all:
             out_dir + "/mosdepth/mosdepth_coverage.html",
         ),
         expand(
-            "{out_dir}/alfred/{sample}.pdf",
+            out_dir + "/alfred/{sample}.pdf",
             sample = samples
         ),
         expand(

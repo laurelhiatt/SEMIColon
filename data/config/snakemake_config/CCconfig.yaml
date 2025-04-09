@@ -8,9 +8,6 @@ reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human
 
 nchunks: 9
 
-Lee-Six: TRUE
-reference_lee_six: "/scratch/ucgd/lustre/common/data/Reference/GRCh37/human_g1k_v37_decoy_phix.fasta"
-
 samples:
 - Laurel-1
 - Laurel-2
