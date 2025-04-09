@@ -26,6 +26,8 @@ rule align_and_sort:
     shell:
         """
         module load bwa
+        module load samblaster
+        module load samtools
         bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} | samblaster | samtools view -b | samtools sort -o {output.bam_sort}
         """
 

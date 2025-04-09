@@ -10,14 +10,14 @@ rule fastp:
         R1 = in_dir + "/merged/{sample}_R1.fastq.gz",
         R2 = in_dir + "/merged/{sample}_R2.fastq.gz"
     output:
-        r1_clean = in_dir + "/clean/{sample}_R1.clean.fastq",
-        r2_clean = in_dir + "/clean/{sample}_R2.clean.fastq",
+        r1_clean = out_dir + "/fastq/{sample}_R1.clean.fastq.gz",
+        r2_clean = out_dir + "/fastq/{sample}_R2.clean.fastq.gz",
         html_report = out_dir + "/reports/{sample}-fastp-report.html",
         json_report = out_dir + "/reports/{sample}-fastp-report.json"
     resources:
         mem_mb = mem_medium
     threads:
-        16
+        8
     log:
         log_dir + "{sample}.log"
     benchmark:
@@ -30,5 +30,6 @@ rule fastp:
         --out1 {output.r1_clean} --out2 {output.r2_clean} \
         --disable_quality_filtering --disable_adapter_trimming --disable_trim_poly_g \
         --html {output.html_report} \
-        --json {output.json_report}
+        --json {output.json_report} \
+        --thread {threads}
         """
