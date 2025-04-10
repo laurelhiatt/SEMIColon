@@ -46,16 +46,15 @@ rule samtools_stats:
         stats = out_dir + "/bam/{sample}-sorted.stats",
     resources:
         mem_mb = mem_medium
-    threads: 4
+    threads:
+        4
     log:
         log_dir + "{sample}_stats.log"
-    benchmark:
-        bench_dir + "{sample}_stats.tsv"
     conda:
          "../../envs/make_bams.yaml"
     shell:
         """
-        samtools stats {input.bam_sort} > {output.stats}
+        samtools stats --threads {threads} {input.bam_sort} > {output.stats} 2> {log}
         """
 
 # getting coverage across genome, chromosomes, etc
@@ -66,16 +65,16 @@ rule mosdepth:
         out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt",
     resources:
         mem_mb = mem_medium
-    threads: 2
+    threads:
+        2
+    envmodules:
+        "mosdepth/0.3.1"
     log:
         log_dir + "{sample}_mosdepth.log"
     benchmark:
         bench_dir + "{sample}_mosdepth.tsv"
-    shell:
-        """
-        module load mosdepth
-        bash ../quality_control/mosdepth.sh
-        """
+    script:
+        "../quality_control/mosdepth.sh"
 
 # plotting mosdepth results
 rule plot_mosdepth:
@@ -90,11 +89,10 @@ rule plot_mosdepth:
          "../../envs/plot_mosdepth.yaml"
     resources:
         mem_mb = mem_small
-    threads: 2
+    threads:
+        2
     log:
         log_dir + "{donor}_plot_mosdepth.log"
-    benchmark:
-        bench_dir + "{donor}_plot_mosdepth.tsv"
     shell:
         """
         python ../quality_control/plot-dist.py {input.mosdepth} --output {output.html}
@@ -104,10 +102,10 @@ rule plot_mosdepth:
 rule alfred_qc:
     input:
         bam = rules.add_rg.output.sort_bam_RG,  # Input is the sorted BAM from `add_rg`
-        bai = rules.add_rg.output.sort_bam_RG + ".bai",
+        bai = rules.index_bam.output.bai,
         ref = reference
     output:
-        out_dir + "/alfred/{sample}.alfred.qc.json.gz"  # Per-sample Alfred QC report
+        temp(out_dir + "/alfred/{sample}.alfred.qc.json.gz")  # Per-sample Alfred QC report
     conda:
          "../../envs/alfred.yaml"
     resources:
@@ -119,7 +117,7 @@ rule alfred_qc:
         bench_dir + "{sample}_alfred.tsv"
     shell:
         """
-        alfred qc {input.bam} -r {input.ref} -o {output}
+        alfred qc {input.bam} -r {input.ref} -o {output} > {log} 2>&1
         """
 
 # plotting the alfred results
@@ -134,10 +132,9 @@ rule alfred_summary:
     threads: 2
     log:
         log_dir + "{sample}_plot_alfred.log"
-    benchmark:
-        bench_dir + "{sample}_plot_alfred.tsv"
+    envmodules:
+        "R/4.4.0-bioconductor"
     shell:
         """
-        module load R
         Rscript quality_control/stats.R {input.reports} {output.pdfs}
         """

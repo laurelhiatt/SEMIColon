@@ -14,9 +14,10 @@ rule align_and_sort:
         ref = reference
     output:
         bam_sort = temp(out_dir + "/bam/{sample}-sortednoRG.bam")
-    threads: 16
+    threads:
+        16
     resources:
-        mem_mb = mem_large
+        mem_mb = mem_xlarge
     log:
         log_dir + "{sample}_align_sort.log"
     benchmark:
@@ -25,10 +26,10 @@ rule align_and_sort:
          "../../envs/make_bams.yaml"
     shell:
         """
-        module load bwa
-        module load samblaster
-        module load samtools
-        bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} | samblaster | samtools view -b | samtools sort -o {output.bam_sort} &> {log}
+        bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} | \
+        samblaster | \
+        samtools view -b -@ {threads} | \
+        samtools sort -@ {threads} -o {output.bam_sort} > {log} 2>&1
         """
 
 # read groups are necessary for joint calling so we're gonna make sure they're there
@@ -39,7 +40,8 @@ rule add_rg:
         sort_bam_RG = out_dir + "/bam/{sample}-sorted.bam"
     params:
         donor = lambda wildcards: get_donor(wildcards.sample, matches)
-    threads: 8
+    threads:
+        8
     resources:
         mem_mb = mem_medium
     log:
@@ -50,8 +52,10 @@ rule add_rg:
          "../../envs/make_bams.yaml"
     shell:
         """
-        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" {input.bam_sort} | \
-        samtools view -b > {output.sort_bam_RG}
+        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" \
+        --threads {threads} \
+        -o {output.sort_bam_RG} \
+        {input.bam_sort} > {log} 2>&1
         """
 
 # an index helps
@@ -60,17 +64,16 @@ rule index_bam:
         bam_sort = rules.add_rg.output.sort_bam_RG
     output:
         bai = out_dir + "/bam/{sample}-sorted.bam.bai"
-    threads: 4
+    threads:
+        2
     resources:
-        mem_mb = mem_large
+        mem_mb = mem_small
     log:
         log_dir + "{sample}_index.log"
-    benchmark:
-        bench_dir + "{sample}_index.tsv"
     conda:
          "../../envs/make_bams.yaml"
     localrule: True
     shell:
         """
-        samtools index {input.bam_sort}  &> {log}
+        samtools index --threads {threads} {input.bam_sort} > {log} 2>&1
         """

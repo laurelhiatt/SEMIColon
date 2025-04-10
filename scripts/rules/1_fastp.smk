@@ -20,8 +20,6 @@ rule fastp:
         8
     log:
         log_dir + "{sample}.log"
-    benchmark:
-        bench_dir + "{sample}.tsv"
     conda:
         "../../envs/fastp.yaml"
     shell:
@@ -31,6 +29,6 @@ rule fastp:
         --disable_quality_filtering --disable_adapter_trimming --disable_trim_poly_g \
         --html {output.html_report} \
         --json {output.json_report} \
-        --thread {threads} &> {log} \
+        --thread {threads} > {log} 2>&1 \
         && echo "fastp completed for {wildcards.sample}" \
         """

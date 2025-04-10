@@ -15,15 +15,16 @@ rule somalier_extract:
         fasta = reference
     resources:
         mem_mb = mem_medium
-    threads: 4
     log:
         log_dir + "{donor}_{sample}_somalier.log"
     benchmark:
         bench_dir + "{donor}_{sample}_somalier.tsv"
+    threads:
+        1
     shell:
         """
         mkdir -p {params.somalier_dir}
-        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier extract {input.vcf} --sites {params.sites} --fasta {params.fasta} -d {params.somalier_dir}
+        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier extract {input.vcf} --sites {params.sites} --fasta {params.fasta} -d {params.somalier_dir} > {log} 2>&1
         """
 
 #finish somalier analysis
@@ -40,7 +41,7 @@ rule somalier_check:
         groups = out_dir + "/somalier/{donor}/relate.groups.tsv",
         samples = out_dir + "/somalier/{donor}/relate.samples.tsv"
     params:
-        donor = "{donor}"
+
     resources:
         mem_mb = mem_medium
     threads: 4
@@ -50,7 +51,7 @@ rule somalier_check:
         bench_dir + "{donor}_somalier_check.tsv"
     shell:
         """
-        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier relate {input.somalier_dir}/*.somalier -o {out_dir}/somalier/{params.donor}/relate
+        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier relate {input.somalier_files} -o {out_dir}/somalier/{wildcards.donor}/relate
         """
 
 #code for the bcftools stats

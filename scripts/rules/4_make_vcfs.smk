@@ -5,9 +5,9 @@ bench_dir = out_dir + "/benchmark/4_make_vcfs/"
 
 rule make_bam_list:
     input:
-        bam_sort = lambda wildcard: expand(out_dir + "/bam/{sample}-sorted.bam",
+        bam_sort = expand(out_dir + "/bam/{sample}-sorted.bam",
             sample=samples),
-        bai = lambda wildcard: expand(out_dir + "/bam/{sample}-sorted.bam.bai",
+        bai = expand(out_dir + "/bam/{sample}-sorted.bam.bai",
             sample=samples),
     params:
         location = out_dir + "/bam/",
@@ -15,16 +15,13 @@ rule make_bam_list:
     output:
         bam_file_list = temp(out_dir + "/bam/bam_list_{donor}.txt")
     resources:
-        mem_mb = mem_small
-    threads: 4
+        mem_mb = mem_xsmall
+    threads: 2
+    localrule: True
     log:
         log_dir + "{donor}_bamlist.log"
-    benchmark:
-        bench_dir + "{donor}_bamlist.tsv"
-    shell:
-        """
-        python ../variant_calling/create_bam_list.py {wildcards.donor} {params.location} {params.out_dir}
-        """
+    script:
+        "../variant_calling/create_bam_list.py"
 
 rule generate_regions:
     input:
@@ -42,8 +39,6 @@ rule generate_regions:
          "../../envs/plot_mosdepth.yaml"
     log:
         log_dir + "{chroms}_{i}_generateregions.log"
-    benchmark:
-        bench_dir + "{chroms}_{i}_generateregions.tsv"
     shell:
         """
         mkdir -p {input.out_dir}/regions
@@ -56,24 +51,26 @@ rule generate_regions:
 rule freebayes_variant_calling:
     input:
         bam_file_list = rules.make_bam_list.output.bam_file_list,
+        regions = rules.generate_regions.output.regions,
         ref = reference,
-        regions = rules.generate_regions.output.regions
     output:
         full = temp(out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf")
     params:
         out_dir = out_dir
     resources:
         mem_mb = mem_xlarge
-    threads: 8
+    threads:
+        8
     log:
         log_dir + "{chroms}_{i}_{donor}_freebayes.log"
     benchmark:
         bench_dir + "{chroms}_{i}_{donor}_freebayes.tsv"
+    envmodules:
+        "freebayes/1.3.9"
     shell:
         """
         mkdir -p {params.out_dir}/vcf/{wildcards.chroms}
-        module load freebayes
-        freebayes --min-alternate-count 2 --min-alternate-qsum 40 -f {input.ref} -t {input.regions} -L {input.bam_file_list} > {output.full}
+        freebayes --min-alternate-count 2 --min-alternate-qsum 40 -f {input.ref} -t {input.regions} -L {input.bam_file_list} > {output.full} 2> {log}
         """
 
 rule compress_chunks:
@@ -81,16 +78,12 @@ rule compress_chunks:
         chunk_vcf = out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf"
     output:
         chunk_zip = temp(out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf.gz")
-    threads: 8
-    log:
-        log_dir + "{chroms}_{i}_{donor}_compress.log"
-    benchmark:
-        bench_dir + "{chroms}_{i}_{donor}_compress.tsv"
     resources:
         mem_mb = mem_medium
+    threads: 4
     shell:
         """
-        bgzip -f {input.chunk_vcf}
+        bgzip -f {input.chunk_vcf} --threads {threads}
         """
 
 rule index_chunks:
@@ -98,16 +91,12 @@ rule index_chunks:
         chunk_zip = out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf.gz"
     output:
         chunk_zip_index = temp(out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi")
-    threads: 8
-    log:
-        log_dir + "{chroms}_{i}_{donor}_index.log"
-    benchmark:
-        bench_dir + "{chroms}_{i}_{donor}_index.tsv"
+    threads: 4
     resources:
         mem_mb = mem_medium
     shell:
         """
-        tabix -f -p vcf {input.chunk_zip}
+        tabix -f -p vcf {input.chunk_zip} --threads {threads}
         """
 
 rule concat_vcfs:
@@ -130,9 +119,10 @@ rule concat_vcfs:
         bench_dir + "{donor}_concat.tsv"
     resources:
         mem_mb = mem_large
+    envmodules:
+        "bcftools/1.21"
     shell:
         """
-        module load bcftools
-        bcftools concat -a {input.chunk_zip} -o {output.vcf}
+        bcftools concat -a {input.chunk_zip} -o {output.vcf} --threads {threads} > {log} 2>&1
         tabix -f -p vcf {output.vcf}
         """

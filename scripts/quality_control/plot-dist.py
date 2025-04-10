@@ -6,7 +6,6 @@ from operator import itemgetter
 import collections
 from argparse import ArgumentParser
 
-
 def main():
     args = get_args()
     traces = collections.defaultdict(list)

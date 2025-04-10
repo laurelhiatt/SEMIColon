@@ -13,18 +13,16 @@ rule merge_fastq:
         R1_merged = in_dir + "/merged/{sample}_R1.fastq.gz",
         R2_merged = in_dir + "/merged/{sample}_R2.fastq.gz"
     resources:
-        mem_mb = mem_small
+        mem_mb = mem_xsmall
     threads:
-        8
+        2
     log:
         log_dir + "{sample}.log"
-    benchmark:
-        bench_dir + "{sample}.tsv"
     shell:
         """
         echo "merging {input.R1} and {input.R2} into {output.R1_merged} and {output.R2_merged}" > {log}
-        zcat {input.R1} | gzip > {output.R1_merged}
-        zcat {input.R2} | gzip > {output.R2_merged}
+        zcat {input.R1} | gzip > {output.R1_merged} 2>> {log}
+        zcat {input.R2} | gzip > {output.R2_merged} 2>> {log}
         """
 
 
