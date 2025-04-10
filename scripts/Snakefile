@@ -3,7 +3,7 @@
 ## SEMIColon thesis project. The commands run are:
 ## *RULES WILL GO HERE
 ##
-# Laurel Hiatt 04/05/2025
+# Laurel Hiatt 04/10/2025
 
 #################
 ### LIBRARIES ###
@@ -19,7 +19,7 @@ import re
 # The input, output, genome fasta, etc are specified in the
 # accompanying "CCconfig.yaml".
 
-configfile: '../data/config/snakemake_config/toyconfig.yaml'
+configfile: '../data/config/snakemake_config/CCconfig.yaml'
 
 ## directories
 top_dir = config["top_directory"]

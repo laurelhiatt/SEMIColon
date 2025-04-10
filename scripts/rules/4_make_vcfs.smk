@@ -1,4 +1,4 @@
-# Laurel Hiatt 04/07/2025
+# Laurel Hiatt 04/10/2025
 
 log_dir = out_dir + "/log/4_make_vcfs/"
 bench_dir = out_dir + "/benchmark/4_make_vcfs/"
@@ -124,5 +124,5 @@ rule concat_vcfs:
     shell:
         """
         bcftools concat -a {input.chunk_zip} -o {output.vcf} --threads {threads} > {log} 2>&1
-        tabix -f -p vcf {output.vcf}
+        tabix -f -p vcf {output.vcf} --threads {threads}
         """

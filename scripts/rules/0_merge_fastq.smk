@@ -1,4 +1,4 @@
-# Laurel Hiatt 04/07/2025
+# Laurel Hiatt 04/10/2025
 
 log_dir = out_dir + "/log/0_merge_fastq/"
 bench_dir = out_dir + "/benchmark/0_merge_fastq/"

@@ -1,57 +1,51 @@
-# Laurel Hiatt 04/07/2025
+# Laurel Hiatt 04/10/2025
 
 log_dir = out_dir + "/log/5_check_vcfs/"
 bench_dir = out_dir + "/benchmark/5_check_vcfs/"
 
 # check relatedness
+# check relatedness
 rule somalier_extract:
     input:
         vcf = out_dir + "/vcf/{donor}-var.vcf.gz"
     output:
-        somalier = out_dir + "/somalier/{donor}/extract/{donor}_{sample}.somalier"
+        somalier_dir = directory(out_dir + "/somalier/{donor}/extract/")
     params:
         sites= "/uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/sites.hg38.vcf.gz",
-        somalier_dir = out_dir + "/somalier/{donor}/extract/",
         fasta = reference
     resources:
         mem_mb = mem_medium
     log:
-        log_dir + "{donor}_{sample}_somalier.log"
+        log_dir + "{donor}_somalier.log"
     benchmark:
-        bench_dir + "{donor}_{sample}_somalier.tsv"
+        bench_dir + "{donor}_somalier.tsv"
     threads:
         1
     shell:
         """
-        mkdir -p {params.somalier_dir}
-        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier extract {input.vcf} --sites {params.sites} --fasta {params.fasta} -d {params.somalier_dir} > {log} 2>&1
+        mkdir -p {output.somalier_dir}
+        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier extract {input.vcf} --sites {params.sites} --fasta {params.fasta} -d {output.somalier_dir} > {log} 2>&1
         """
 
 #finish somalier analysis
 rule somalier_check:
     input:
-        somalier_files = lambda wildcards: expand(
-            out_dir + "/somalier/{donor}/extract/{donor}_{sample}.somalier",
-            donor=wildcards.donor,
-            sample=matches[wildcards.donor]
-        )
+        somalier_dir = rules.somalier_extract.output.somalier_dir
     output:
         html = out_dir + "/somalier/{donor}/relate.html",
         pairs = out_dir + "/somalier/{donor}/relate.pairs.tsv",
         groups = out_dir + "/somalier/{donor}/relate.groups.tsv",
         samples = out_dir + "/somalier/{donor}/relate.samples.tsv"
-    params:
-
     resources:
         mem_mb = mem_medium
-    threads: 4
+    threads: 1
     log:
         log_dir + "{donor}_somalier_check.log"
     benchmark:
         bench_dir + "{donor}_somalier_check.tsv"
     shell:
         """
-        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier relate {input.somalier_files} -o {out_dir}/somalier/{wildcards.donor}/relate
+        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier relate {input.somalier_dir}/*.somalier -o {out_dir}/somalier/{wildcards.donor}/relate
         """
 
 #code for the bcftools stats
@@ -60,18 +54,16 @@ rule bcftools_stats:
         vcf = out_dir + "/vcf/{donor}-annotated-var.vcf.gz"
     output:
         stats = out_dir + "/vcf/{donor}-vcf_stats.txt"
-
     resources:
         mem_mb = mem_small
     threads: 4
     log:
         log_dir + "{donor}_bcftools_stats.log"
-    benchmark:
-        bench_dir + "{donor}_bcftools_stat.tsv"
+    envmodules:
+        "bcftools/1.21"
     shell:
         """
-        module load bcftools
-        bcftools stats -s - --verbose {input.vcf} > {output.stats}
+        bcftools stats -s - --verbose --threads {threads} {input.vcf} > {output.stats} 2> {log}
         """
 
 # plot the bcftools stats output
@@ -85,7 +77,7 @@ rule plot_stats:
         "/uufs/chpc.utah.edu/common/HIPAA/u1264408/software/pkg/miniconda3/envs/vcfstats"
     resources:
         mem_mb = mem_medium
-    threads: 4
+    threads: 2
     log:
         log_dir + "{donor}_bcftools_plot.log"
     benchmark:

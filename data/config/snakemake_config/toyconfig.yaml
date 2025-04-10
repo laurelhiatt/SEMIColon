@@ -10,10 +10,17 @@ nchunks: 9
 
 samples:
 - PD37509b8
+- PD37510b4
+- PD37510b7
+
 matches:
   O300:
     crypt_samples:
       - PD37509b8
-
+  O312:
+    crypt_samples:
+      - PD37510b4
+      - PD37510b7
 donors:
 - O300
+- O312
