@@ -29,9 +29,9 @@ def get_donor(sample, matches):
 
 rule all:
     input:
-        expand(out_dir + "/{sample}_R1.fastq.gz",
+        expand(out_dir + "/sam_sorted/{sample}_R1.fastq.gz",
             sample = samples),
-        expand(out_dir + "/{sample}_R2.fastq.gz",
+        expand(out_dir + "/sam_sorted/{sample}_R2.fastq.gz",
             sample = samples)
 
 rule lee_six_fastq:
@@ -40,10 +40,14 @@ rule lee_six_fastq:
     params:
         reference_lee_six = config["reference_lee_six"]
     output:
-        r1 = out_dir + "/{sample}_R1.fastq.gz",
-        r2 = out_dir + "/{sample}_R2.fastq.gz"
+        r1 = out_dir + "/sam_sorted/{sample}_R1.fastq.gz",
+        r2 = out_dir + "/sam_sorted/{sample}_R2.fastq.gz"
+    threads: 8
+    envmodules:
+        "samtools/1.16"
     shell:
         """
-        echo "Converting {input.cram} to fastq for {wildcards.sample}"
-        samtools fastq --reference {params.reference_lee_six} -1 {output.r1} -2 {output.r2} {input.cram}
+        echo "Sorting and converting {input.cram} to fastq for {wildcards.sample}"
+        samtools sort -n -@ {threads} {input.cram} \
+            | samtools fastq --reference {params.reference_lee_six} -1 {output.r1} -2 {output.r2} -
         """
