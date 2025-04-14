@@ -92,10 +92,3 @@ rule plot_stats:
         mv ${tmpdir}/summary.pdf {output.summary}
         rm -r $tmpdir
         """
-
-
-
-
-
-
-        """
