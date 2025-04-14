@@ -1,7 +1,4 @@
-# Laurel Hiatt 04/10/2025
-
-log_dir = out_dir + "/log/1_fastp/"
-bench_dir = out_dir + "/benchmark/1_fastp/"
+# Laurel Hiatt 04/14/2025
 
 # Rule 'fastp' preprocesses the reads and creates
 # filtered fastq reads with preprocessing reports.
@@ -18,8 +15,6 @@ rule fastp:
         mem_mb = mem_medium
     threads:
         8
-    log:
-        log_dir + "{sample}.log"
     conda:
         "../../envs/fastp.yaml"
     shell:
