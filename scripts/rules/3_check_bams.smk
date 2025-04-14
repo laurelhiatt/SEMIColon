@@ -126,9 +126,9 @@ rule alfred_qc:
 # This rule takes the output from the `alfred_qc` rule and generates a PDF report
 rule alfred_summary:
     input:
-        reports = out_dir + "/alfred/{sample}.alfred.qc.json.gz"
+        report = out_dir + "/alfred/{sample}.alfred.qc.json.gz"
     output:
-        pdfs = out_dir + "/alfred/{sample}.pdf"
+        pdf = out_dir + "/alfred/{sample}.pdf"
     resources:
         mem_mb = mem_medium
     threads: 2
@@ -138,5 +138,11 @@ rule alfred_summary:
         "R/4.4.0-bioconductor"
     shell:
         """
-        Rscript quality_control/stats.R {input.reports} {output.pdfs}
+        tmpdir=$(mktemp -d)
+        tmppdf=$tmpdir/{wildcards.sample}.pdf
+
+        Rscript quality_control/stats.R {input.report} $tmppdf
+
+        mv $tmppdf {output.pdf}
+        rm -r $tmpdir
         """
