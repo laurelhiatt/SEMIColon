@@ -1,7 +1,7 @@
-# Laurel Hiatt 04/10/2025
+# Laurel Hiatt 04/14/2025
 
-log_dir = out_dir + "/log/4_make_vcfs/"
-bench_dir = out_dir + "/benchmark/4_make_vcfs/"
+log_dir = out_dir + "/log/4_make_vcfs"
+bench_dir = out_dir + "/benchmark/4_make_vcfs"
 
 rule make_bam_list:
     input:
@@ -20,7 +20,7 @@ rule make_bam_list:
     threads: 2
     localrule: True
     log:
-        log_dir + "{donor}_bamlist.log"
+        log_dir + "/{donor}_bamlist.log"
     script:
         "../variant_calling/create_bam_list.py"
 
@@ -40,7 +40,7 @@ rule generate_regions:
     conda:
          "../../envs/plot_mosdepth.yaml"
     log:
-        log_dir + "{chroms}_{i}_generateregions.log"
+        log_dir + "/{chroms}_{i}_generateregions.log"
     script:
         """
         ../variant_calling/fasta_generate_regions.py
@@ -63,9 +63,9 @@ rule freebayes_variant_calling:
     threads:
         8
     log:
-        log_dir + "{chroms}_{i}_{donor}_freebayes.log"
+        log_dir + "/{chroms}_{i}_{donor}_freebayes.log"
     benchmark:
-        bench_dir + "{chroms}_{i}_{donor}_freebayes.tsv"
+        bench_dir + "/{chroms}_{i}_{donor}_freebayes.tsv"
     envmodules:
         "freebayes/1.3.9"
     shell:
@@ -115,9 +115,9 @@ rule concat_vcfs:
         vcf_index = out_dir + "/vcf/{donor}-var.vcf.gz.tbi"
     threads: 16
     log:
-        log_dir + "{donor}_concat.log"
+        log_dir + "/{donor}_concat.log"
     benchmark:
-        bench_dir + "{donor}_concat.tsv"
+        bench_dir + "/{donor}_concat.tsv"
     resources:
         mem_mb = mem_large
     envmodules:

@@ -1,6 +1,6 @@
-# Laurel Hiatt 04/10/2025
-log_dir = out_dir + "/log/6_filter_vcfs/"
-bench_dir = out_dir + "/benchmark/6_filter_vcfs/"
+# Laurel Hiatt 04/14/2025
+log_dir = out_dir + "/log/6_filter_vcfs"
+bench_dir = out_dir + "/benchmark/6_filter_vcfs"
 
 # decompose the vcf for downstream
 rule decompose_vcfs:
@@ -15,9 +15,9 @@ rule decompose_vcfs:
     envmodules:
         "bcftools/1.21"
     log:
-        log_dir + "{donor}_decompose.log"
+        log_dir + "/{donor}_decompose.log"
     benchmark:
-        bench_dir + "{donor}_decompose.tsv"
+        bench_dir + "/{donor}_decompose.tsv"
     shell:
         """
         bcftools norm -m - {input.vcf} --threads {threads} -w 10000 -f {input.fasta} -O b -o {output.clean_vcf} > {log} 2>&1
@@ -28,12 +28,12 @@ rule gnomad_VCFs:
     input:
         clean_vcf = out_dir + "/vcf/{donor}-clean-var.vcf.gz",
     output:
-        annotated_vcf = out_dir + "/vcf/{donor}-annotated-var.vcf.gz",
+        annotated_vcf = temp(out_dir + "/vcf/{donor}-annotated-var.vcf.gz"),
     resources:
         mem_mb = mem_large
     threads: 2
     log:
-        log_dir + "{donor}_gnomad.log"
+        log_dir + "/{donor}_gnomad.log"
     envmodules:
         "slivar/0.3.1"
     shell:
@@ -52,9 +52,9 @@ rule remove_lcr:
         mem_mb = mem_xlarge
     threads: 4
     log:
-        log_dir + "{donor}_noLCR.log"
+        log_dir + "/{donor}_noLCR.log"
     benchmark:
-        bench_dir + "{donor}_noLCR.tsv"
+        bench_dir + "/{donor}_noLCR.tsv"
     envmodules:
         "bedtools/2.30.0"
     shell:

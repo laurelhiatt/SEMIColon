@@ -1,7 +1,7 @@
-# Laurel Hiatt 04/10/2025
+# Laurel Hiatt 04/14/2025
 
-log_dir = out_dir + "/log/2_make_bams/"
-bench_dir = out_dir + "/benchmark/2_make_bams/"
+log_dir = out_dir + "/log/2_make_bams"
+bench_dir = out_dir + "/benchmark/2_make_bams"
 
 # Aligns cleaned fastq reads to the defined reference genome
 # Mark duplicates and extract discordant and split reads from sam files
@@ -18,9 +18,9 @@ rule bwa_mem:
     resources:
         mem_mb = mem_xlarge
     log:
-        log_dir + "{sample}_bwa_mem.log"
+        log_dir + "/{sample}_bwa_mem.log"
     benchmark:
-        bench_dir + "{sample}_bwa_mem.tsv"
+        bench_dir + "/{sample}_bwa_mem.tsv"
     conda:
         "../../envs/make_bams.yaml"
     shell:

@@ -1,7 +1,6 @@
-# Laurel Hiatt 04/10/2025
+# Laurel Hiatt 04/14/2025
 
-log_dir = out_dir + "/log/0_merge_fastq/"
-bench_dir = out_dir + "/benchmark/0_merge_fastq/"
+log_dir = out_dir + "/log/0_merge_fastq"
 
 # Snakemake rule for merging initial input fastq.gz files to one R1 and one R2
 # necessary for top off sequencing or samples split across flow cells
@@ -13,11 +12,11 @@ rule merge_fastq:
         R1_merged = in_dir + "/merged/{sample}_R1.fastq.gz",
         R2_merged = in_dir + "/merged/{sample}_R2.fastq.gz"
     resources:
-        mem_mb = mem_xsmall
+        mem_mb = mem_small
     threads:
         2
     log:
-        log_dir + "{sample}.log"
+        log_dir + "/{sample}.log"
     shell:
         """
         echo "merging {input.R1} and {input.R2} into {output.R1_merged} and {output.R2_merged}" > {log}

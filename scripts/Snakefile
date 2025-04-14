@@ -3,7 +3,7 @@
 ## SEMIColon thesis project. The commands run are:
 ## *RULES WILL GO HERE
 ##
-# Laurel Hiatt 04/10/2025
+# Laurel Hiatt 04/14/2025
 
 #################
 ### LIBRARIES ###
@@ -21,10 +21,18 @@ import re
 
 configfile: '../data/config/snakemake_config/toyconfig.yaml'
 
+# configfile: '../data/config/snakemake_config/CCconfig.yaml'
+
+
 ## directories
-top_dir = config["top_directory"]
+top_dir: str = config["top_directory"]
 in_dir: str = config["input_directory"]
 out_dir: str = config["output_directory"]
+
+# Ensure directories are formatted correctly
+top_dir = top_dir.rstrip("/")
+in_dir = in_dir.rstrip("/")
+out_dir = out_dir.rstrip("/")
 
 # reference data
 reference: str = config["reference_genome"]
@@ -100,6 +108,9 @@ def get_donor(sample, matches):
             return donor
     raise KeyError(f"Sample {sample} not found in matches dictionary")
 
+def get_samples_for_donor(donor, matches):
+    return [sample for sample, d in matches.items() if d == donor]
+
 #############
 ### RULES ###
 #############
@@ -116,8 +127,8 @@ rule all:
     # final output
     input:
         expand(
-            out_dir + "/fastq/{sample}_R1.clean.fastq.gz",
-            sample = samples,
+            out_dir + "/reports/{sample}-fastp-report.json",
+            sample=samples,
         ),
         expand(
             out_dir + "/bam/{sample}-sorted.bam.bai",
@@ -128,27 +139,12 @@ rule all:
             sample = samples
         ),
         expand(
-            out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt",
-            sample = samples
-        ),
-        expand(
-            out_dir + "/vcf/{donor}-annotated-var.vcf.gz",
+            out_dir + "/mosdepth/{donor}_mosdepth_coverage.html",
             donor = donors
-        ),
-        expand(
-            out_dir + "/reports/{sample}-fastp-report.json",
-            sample=samples,
-        ),
-        expand(
-            out_dir + "/mosdepth/mosdepth_coverage.html",
         ),
         expand(
             out_dir + "/alfred/{sample}.pdf",
             sample = samples
-        ),
-        expand(
-            out_dir + "/vcf/{donor}-vcf_stats.txt",
-            donor = donors
         ),
         expand(
             out_dir + "/somalier/{donor}/relate.samples.tsv",

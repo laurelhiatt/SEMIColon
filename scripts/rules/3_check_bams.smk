@@ -1,10 +1,7 @@
-# Laurel Hiatt 04/10/2025
+# Laurel Hiatt 04/14/2025
 
-log_dir = out_dir + "/log/3_check_bams/"
-bench_dir = out_dir + "/benchmark/3_check_bams/"
-
-def get_samples_for_donor(donor, matches):
-    return [sample for sample, d in matches.items() if d == donor]
+log_dir = out_dir + "/log/3_check_bams"
+bench_dir = out_dir + "/benchmark/3_check_bams"
 
 # statistics from BAM files and outputs in a text format, summary below:
 # CHK	Checksum
@@ -49,7 +46,7 @@ rule samtools_stats:
     threads:
         4
     log:
-        log_dir + "{sample}_stats.log"
+        log_dir + "/{sample}_stats.log"
     conda:
          "../../envs/make_bams.yaml"
     shell:
@@ -62,7 +59,7 @@ rule mosdepth:
     input:
         bam_sort = rules.add_rg.output.sort_bam_RG
     output:
-        out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt",
+        temp(out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt"),
     resources:
         mem_mb = mem_medium
     params:
@@ -72,9 +69,7 @@ rule mosdepth:
     envmodules:
         "mosdepth/0.3.1"
     log:
-        log_dir + "{sample}_mosdepth.log"
-    benchmark:
-        bench_dir + "{sample}_mosdepth.tsv"
+        log_dir + "/{sample}_mosdepth.log"
     script:
         "../quality_control/mosdepth.sh"
 
@@ -94,7 +89,7 @@ rule plot_mosdepth:
     threads:
         2
     log:
-        log_dir + "{donor}_plot_mosdepth.log"
+        log_dir + "/{donor}_plot_mosdepth.log"
     shell:
         """
         python ../quality_control/plot-dist.py {input.mosdepth} --output {output.html}
@@ -114,9 +109,9 @@ rule alfred_qc:
         mem_mb = mem_small
     threads: 2
     log:
-        log_dir + "{sample}_alfred.log"
+        log_dir + "/{sample}_alfred.log"
     benchmark:
-        bench_dir + "{sample}_alfred.tsv"
+        bench_dir + "/{sample}_alfred.tsv"
     shell:
         """
         alfred qc {input.bam} -r {input.ref} -o {output} > {log} 2>&1
@@ -133,7 +128,7 @@ rule alfred_summary:
         mem_mb = mem_medium
     threads: 2
     log:
-        log_dir + "{sample}_plot_alfred.log"
+        log_dir + "/{sample}_plot_alfred.log"
     envmodules:
         "R/4.4.0-bioconductor"
     shell:
