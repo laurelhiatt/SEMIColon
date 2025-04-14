@@ -138,11 +138,5 @@ rule alfred_summary:
         "R/4.4.0-bioconductor"
     shell:
         """
-        tmpdir=$(mktemp -d)
-        tmppdf=$tmpdir/{wildcards.sample}.pdf
-
-        Rscript quality_control/stats.R {input.report} $tmppdf
-
-        mv $tmppdf {output.pdf}
-        rm -r $tmpdir
+        Rscript quality_control/stats.R {input.report} {output.pdf}
         """

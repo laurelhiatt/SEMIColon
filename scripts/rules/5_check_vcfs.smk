@@ -72,7 +72,7 @@ rule plot_stats:
         stats = out_dir + "/vcf/{donor}-vcf_stats.txt"
     output:
          outdir = out_dir + "/vcf/{donor}",
-         summaries = out_dir + "/vcf/{donor}/summary.pdf"
+         summary = out_dir + "/vcf/{donor}/summary.pdf"
     conda:
         "/uufs/chpc.utah.edu/common/HIPAA/u1264408/software/pkg/miniconda3/envs/vcfstats"
     resources:
@@ -84,5 +84,18 @@ rule plot_stats:
         bench_dir + "{donor}_bcftools_plot.tsv"
     shell:
         """
-        plot-vcfstats -p {output.outdir} {input.stats}
+        mkdir -p {output.outdir}
+        tmpdir=$(mktemp -d)
+
+        plot-vcfstats -p tmpdir {input.stats}
+
+        mv ${tmpdir}/summary.pdf {output.summary}
+        rm -r $tmpdir
+        """
+
+
+
+
+
+
         """
