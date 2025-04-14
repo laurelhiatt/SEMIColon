@@ -26,9 +26,9 @@ rule make_bam_list:
 
 rule generate_regions:
     input:
-        index = reference_index,
         chroms = chroms
     params:
+        index = reference_index,
         chunks = chunks,
         out_dir = out_dir
     output:
@@ -36,14 +36,14 @@ rule generate_regions:
     resources:
         mem_mb = mem_small
     threads: 2
+    localrule: True
     conda:
          "../../envs/plot_mosdepth.yaml"
     log:
         log_dir + "{chroms}_{i}_generateregions.log"
-    shell:
+    script:
         """
-        mkdir -p {input.out_dir}/regions
-        python ../variant_calling/fasta_generate_regions.py --fai {input.index} --chunks {params.chunks} --bed {params.out_dir}/regions/chunk.{wildcards.chroms}
+        ../variant_calling/fasta_generate_regions.py
         """
 
 # Current filtering:
