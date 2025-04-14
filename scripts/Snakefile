@@ -19,7 +19,7 @@ import re
 # The input, output, genome fasta, etc are specified in the
 # accompanying "CCconfig.yaml".
 
-configfile: '../data/config/snakemake_config/CCconfig.yaml'
+configfile: '../data/config/snakemake_config/toyconfig.yaml'
 
 ## directories
 top_dir = config["top_directory"]

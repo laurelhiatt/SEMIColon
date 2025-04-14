@@ -42,12 +42,11 @@ rule lee_six_fastq:
     output:
         r1 = out_dir + "/sam_sorted/{sample}_R1.fastq.gz",
         r2 = out_dir + "/sam_sorted/{sample}_R2.fastq.gz"
-    threads: 8
+    threads: 16
     envmodules:
         "samtools/1.16"
     shell:
         """
         echo "Sorting and converting {input.cram} to fastq for {wildcards.sample}"
-        samtools sort -n -@ {threads} {input.cram} \
-            | samtools fastq --reference {params.reference_lee_six} -1 {output.r1} -2 {output.r2} -
+        samtools sort -n -@ {threads} {input.cram} | samtools fastq --reference {params.reference_lee_six} -1 {output.r1} -2 {output.r2} -
         """

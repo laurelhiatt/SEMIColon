@@ -7,35 +7,69 @@ bench_dir = out_dir + "/benchmark/2_make_bams/"
 # Mark duplicates and extract discordant and split reads from sam files
 # Convert to bam (exclude unmapped reads with -F 4)
 
-rule align_and_sort:
+rule bwa_mem:
     input:
         r1_clean = rules.fastp.output.r1_clean,
         r2_clean = rules.fastp.output.r2_clean,
         ref = reference
     output:
-        bam_sort = temp(out_dir + "/bam/{sample}-sortednoRG.bam")
-    threads:
-        16
+        temp(out_dir + "/bam/{sample}.sam")
+    threads: 16
     resources:
         mem_mb = mem_xlarge
     log:
-        log_dir + "{sample}_align_sort.log"
+        log_dir + "{sample}_bwa_mem.log"
     benchmark:
-        bench_dir + "{sample}_align_sort.tsv"
+        bench_dir + "{sample}_bwa_mem.tsv"
     conda:
-         "../../envs/make_bams.yaml"
+        "../../envs/make_bams.yaml"
     shell:
         """
-        bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} | \
-        samblaster | \
-        samtools view -b -@ {threads} | \
-        samtools sort -@ {threads} -o {output.bam_sort} > {log} 2>&1
+        bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} > {output} 2> {log}
+        """
+
+rule samblaster:
+    input:
+        sam = rules.bwa_mem.output
+    output:
+        temp(out_dir + "/bam/{sample}.samblaster.sam")
+    threads: 16
+    resources:
+        mem_mb = mem_xlarge
+    log:
+        log_dir + "{sample}_samblaster.log"
+    benchmark:
+        bench_dir + "{sample}_samblaster.tsv"
+    conda:
+        "../../envs/make_bams.yaml"
+    shell:
+        """
+        samblaster {input.sam} | samtools view -b -@ {threads} {input.sam} > {output} 2> {log}
+        """
+
+rule samtools_sort:
+    input:
+        bam = rules.samblaster.output
+    output:
+        bam_sort = out_dir + "/bam/{sample}-sortednoRG.bam"
+    threads: 16
+    resources:
+        mem_mb = mem_xlarge
+    log:
+        log_dir + "{sample}_samtools_sort.log"
+    benchmark:
+        bench_dir + "{sample}_samtools_sort.tsv"
+    conda:
+        "../../envs/make_bams.yaml"
+    shell:
+        """
+        samtools sort -@ {threads} -o {output.bam_sort} {input.bam} 2> {log}
         """
 
 # read groups are necessary for joint calling so we're gonna make sure they're there
 rule add_rg:
     input:
-        bam_sort = rules.align_and_sort.output.bam_sort
+        bam_sort = rules.samtools_sort.output.bam_sort
     output:
         sort_bam_RG = out_dir + "/bam/{sample}-sorted.bam"
     params:
