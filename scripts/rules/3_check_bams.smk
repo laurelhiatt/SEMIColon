@@ -65,6 +65,8 @@ rule mosdepth:
         out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt",
     resources:
         mem_mb = mem_medium
+    params:
+        out_dir = out_dir
     threads:
         2
     envmodules:

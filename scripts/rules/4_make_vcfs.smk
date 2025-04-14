@@ -9,9 +9,10 @@ rule make_bam_list:
             sample=samples),
         bai = expand(out_dir + "/bam/{sample}-sorted.bam.bai",
             sample=samples),
+        donor = "{donor}"
     params:
-        location = out_dir + "/bam/",
-        out_dir = out_dir
+        out_dir = out_dir,
+        matches = matches
     output:
         bam_file_list = temp(out_dir + "/bam/bam_list_{donor}.txt")
     resources:
