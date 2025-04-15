@@ -37,14 +37,14 @@ rule samblaster:
     resources:
         mem_mb = mem_xlarge
     log:
-        log_dir + "{sample}_samblaster.log"
+        log_dir + "/{sample}_samblaster.log"
     benchmark:
-        bench_dir + "{sample}_samblaster.tsv"
+        bench_dir + "/{sample}_samblaster.tsv"
     conda:
         "../../envs/make_bams.yaml"
     shell:
         """
-        samblaster {input.sam} | samtools view -b -@ {threads} {input.sam} > {output} 2> {log}
+        samblaster -i {input.sam} | samtools view -b -@ {threads} - > {output} 2> {log}
         """
 
 rule samtools_sort:
@@ -56,9 +56,9 @@ rule samtools_sort:
     resources:
         mem_mb = mem_xlarge
     log:
-        log_dir + "{sample}_samtools_sort.log"
+        log_dir + "/{sample}_samtools_sort.log"
     benchmark:
-        bench_dir + "{sample}_samtools_sort.tsv"
+        bench_dir + "/{sample}_samtools_sort.tsv"
     conda:
         "../../envs/make_bams.yaml"
     shell:
@@ -79,9 +79,9 @@ rule add_rg:
     resources:
         mem_mb = mem_medium
     log:
-        log_dir + "{sample}_rg.log"
+        log_dir + "/{sample}_rg.log"
     benchmark:
-        bench_dir + "{sample}_rg.tsv"
+        bench_dir + "/{sample}_rg.tsv"
     conda:
          "../../envs/make_bams.yaml"
     shell:
@@ -103,7 +103,7 @@ rule index_bam:
     resources:
         mem_mb = mem_small
     log:
-        log_dir + "{sample}_index.log"
+        log_dir + "/{sample}_index.log"
     conda:
          "../../envs/make_bams.yaml"
     localrule: True

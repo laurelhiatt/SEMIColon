@@ -3,13 +3,23 @@
 log_dir = out_dir + "/log/4_make_vcfs"
 bench_dir = out_dir + "/benchmark/4_make_vcfs"
 
+def get_bam_inputs(wildcards):
+    donor_samples = matches.get(wildcards.donor, {}).get("crypt_samples", [])
+    return [
+        os.path.join(out_dir, "bam", f"{s}-sorted.bam") for s in donor_samples
+    ]
+
+def get_bai_inputs(wildcards):
+    donor_samples = matches.get(wildcards.donor, {}).get("crypt_samples", [])
+    return [
+        os.path.join(out_dir, "bam", f"{s}-sorted.bam.bai") for s in donor_samples
+    ]
+
+
 rule make_bam_list:
     input:
-        bam_sort = expand(out_dir + "/bam/{sample}-sorted.bam",
-            sample=samples),
-        bai = expand(out_dir + "/bam/{sample}-sorted.bam.bai",
-            sample=samples),
-        donor = "{donor}"
+        bam_sort = get_bam_inputs,
+        bai = get_bai_inputs,
     params:
         out_dir = out_dir,
         matches = matches
