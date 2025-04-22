@@ -1,0 +1,27 @@
+#metadata_file: "/scratch/general/pe-nfs1/u1264408/EGAD00001004192/LeeSixMetadata.csv"
+
+input_directory: "/scratch/ucgd/lustre-labs/quinlan/data-shared/datasets/SEMIColon/CellCut"
+top_directory: "/scratch/ucgd/lustre-labs/quinlan/u1264408/SEMIColon"
+output_directory: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut"
+reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta"
+reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
+
+nchunks: 9
+
+samples:
+- PD37509b8
+- PD37510b4
+- PD37510b7
+
+matches:
+  O300:
+    crypt_samples:
+      - PD37509b8
+  O312:
+    crypt_samples:
+      - PD37510b4
+      - PD37510b7
+
+donors:
+- O300
+- O312

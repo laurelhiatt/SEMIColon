@@ -1,29 +1,31 @@
-#metadata_file: "/scratch/general/pe-nfs1/u1264408/EGAD00001004192/LeeSixMetadata.csv"
+output_directory: "/scratch/ucgd/lustre-labs/quinlan/data-shared/datasets/SEMIColon/CellCut/merged"
+reference_lee_six: "/scratch/ucgd/lustre/common/data/Reference/GRCh37/human_g1k_v37_decoy_phix.fasta"
+input_directory: "/scratch/ucgd/lustre-labs/quinlan/data-shared/datasets/SEMIColon/EGAD00001004192"
 
-input_directory: "/scratch/ucgd/lustre-labs/quinlan/data-shared/datasets/SEMIColon/CellCut"
-top_directory: "/scratch/ucgd/lustre-labs/quinlan/u1264408/SEMIColon"
-output_directory: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut"
-reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta"
-reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
+# samples:
+# - PD37509b8
+# # - PD37510b4
+# # - PD37510b7
 
-nchunks: 9
+# matches:
+#   O300:
+#     crypt_samples:
+#       - PD37509b8
+#   # O312:
+#   #   crypt_samples:
+#   #     - PD37510b4
+#   #     - PD37510b7
+# donors:
+# - O300
+# # - O312
 
 samples:
-- Laurel-1
-- Laurel-2
-- Laurel-3
-- Laurel-5
-- Laurel-6
-- Laurel-7
-- Laurel-8
-- Laurel-10
-- Laurel-11
-- Laurel-12
 - PD37509b8
 - PD37509b9
 - PD37510b4
 - PD37510b7
 - PD37510b8
+- PD34202a_s43
 - PD34202a_s27
 - PD34202a_s15
 - HLS_1C_30_B5
@@ -386,7 +388,6 @@ samples:
 - PD34201a_t46
 - PD34201a_t8
 - PD34202a_s41
-- PD34202a_s43
 - PD34202a_s9
 - PD37266b_lo0004
 - PD37266b_lo0005
@@ -468,23 +469,6 @@ samples:
 - PD37590d_lo0012
 
 matches:
-  GB115:
-    crypt_samples:
-      - Laurel-1
-      - Laurel-2
-      - Laurel-3
-      - Laurel-5
-      - Laurel-6
-      - Laurel-7
-      - Laurel-8
-      - Laurel-10
-      - Laurel-11
-      - Laurel-12
-      - Laurel-13
-      - Laurel-14
-      - Laurel-15
-      - Laurel-16
-      - Laurel-17
   O300:
     crypt_samples:
       - PD37509b8
@@ -1018,7 +1002,6 @@ matches:
       - PD37590d_lo0012
 
 donors:
-- GB115
 - O300
 - O312
 - HLS

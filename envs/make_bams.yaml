@@ -1,0 +1,33 @@
+name: align_sort
+channels:
+  - defaults
+  - conda-forge
+  - bioconda
+dependencies:
+  - _libgcc_mutex=0.1=main
+  - _openmp_mutex=5.1=1_gnu
+  - bwa=0.7.19=h577a1d6_0
+  - bzip2=1.0.8=h5eee18b_6
+  - c-ares=1.34.4=hb9d3cd8_0
+  - ca-certificates=2025.2.25=h06a4308_0
+  - htslib=1.21=h566b1c6_1
+  - krb5=1.21.3=h143b758_0
+  - libcurl=8.13.0=h332b0f4_0
+  - libdeflate=1.22=h5eee18b_0
+  - libedit=3.1.20230828=h5eee18b_0
+  - libev=4.33=h7f8727e_1
+  - libgcc=14.2.0=h767d61c_2
+  - libgcc-ng=14.2.0=h69a702a_2
+  - libgomp=14.2.0=h767d61c_2
+  - liblzma=5.8.1=hb9d3cd8_0
+  - libnghttp2=1.64.0=h161d5f1_0
+  - libssh2=1.11.1=hf672d98_0
+  - libstdcxx=14.2.0=h8f9b012_2
+  - libzlib=1.3.1=hb9d3cd8_2
+  - ncurses=6.5=h2d0b736_3
+  - openssl=3.4.1=h7b32b05_0
+  - perl=5.38.2=0_h5eee18b_perl5
+  - samblaster=0.1.26=h9948957_6
+  - samtools=1.21=h96c455f_1
+  - zstd=1.5.7=hb8e6e7a_2
+prefix: /uufs/chpc.utah.edu/common/HIPAA/u1264408/software/pkg/miniconda3/envs/align_sort
