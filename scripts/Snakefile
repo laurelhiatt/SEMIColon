@@ -19,9 +19,9 @@ import re
 # The input, output, genome fasta, etc are specified in the
 # accompanying "CCconfig.yaml".
 
-configfile: '../data/config/snakemake_config/toyconfig.yaml'
+# configfile: '../data/config/snakemake_config/toyconfig.yaml'
 
-# configfile: '../data/config/snakemake_config/CCconfig.yaml'
+configfile: '../data/config/snakemake_config/CCconfig.yaml'
 
 
 ## directories
