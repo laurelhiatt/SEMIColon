@@ -12,9 +12,9 @@ rule fastp:
         html_report = out_dir + "/reports/{sample}-fastp-report.html",
         json_report = out_dir + "/reports/{sample}-fastp-report.json"
     resources:
-        mem_mb = mem_medium
+        mem_mb = mem_xsmall
     threads:
-        8
+        4
     conda:
         "../../envs/fastp.yaml"
     shell:
