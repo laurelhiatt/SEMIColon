@@ -16,7 +16,7 @@ rule bwa_mem:
         temp(out_dir + "/bam/{sample}.sam")
     threads: 16
     resources:
-        mem_mb = mem_xlarge
+        mem_mb = mem_medium
     log:
         log_dir + "/{sample}_bwa_mem.log"
     benchmark:
@@ -33,9 +33,9 @@ rule samblaster:
         sam = rules.bwa_mem.output
     output:
         temp(out_dir + "/bam/{sample}.samblaster.sam")
-    threads: 16
+    threads: 8
     resources:
-        mem_mb = mem_xlarge
+        mem_mb = mem_small
     log:
         log_dir + "/{sample}_samblaster.log"
     benchmark:
@@ -52,9 +52,9 @@ rule samtools_sort:
         bam = rules.samblaster.output
     output:
         bam_sort = out_dir + "/bam/{sample}-sortednoRG.bam"
-    threads: 16
+    threads: 8
     resources:
-        mem_mb = mem_xlarge
+        mem_mb = mem_medium
     log:
         log_dir + "/{sample}_samtools_sort.log"
     benchmark:
