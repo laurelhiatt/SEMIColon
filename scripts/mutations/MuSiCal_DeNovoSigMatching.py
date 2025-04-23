@@ -10,7 +10,7 @@ import scipy as sp
 import pickle
 
 
-import argparse 
+import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-pcklein', '-p', help='pickle input, the output from de novo signature discovery', required=True)
 parser.add_argument('-H_Sout', '-H', help='H_S output, signature assignments', required=True)
@@ -21,13 +21,13 @@ parser.add_argument('--no-clean', dest='clean', action='store_false')
 parser.set_defaults(feature=True)
 
 args = parser.parse_args()
-pcklein = args.pcklein 
+pcklein = args.pcklein
 H_Sout = args.H_Sout
 W_Sout = args.W_Sout
 clean_Ws = args.clean
 
 # print(clean_Ws)
-# optional, used when I was checking to make sure that the Boolean argument was functioning 
+# optional, used when I was checking to make sure that the Boolean argument was functioning
 
 with open(pcklein, 'rb') as f:
     model = pickle.load(f)
@@ -41,12 +41,12 @@ thresh_grid = np.array([
     1., 2., 5.
 ])
 
-catalog = musical.load_catalog('/uufs/chpc.utah.edu/common/HIPAA/u1264408/lustre/u1264408/MuSiCal/MuSiCal/musical/data/COSMIC-MuSiCal_v3p2_SBS_WGS.csv')
+catalog = musical.load_catalog('/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/MuSiCal/musical/data/COSMIC_v3p2_SBS_WGS.csv')
 W_catalog = catalog.W
 print(W_catalog.shape[1])
 # when/if we decide to work with restricted signatures, we want to make sure we have the right number being input as the catalog
 
-model.assign_grid(W_catalog, 
+model.assign_grid(W_catalog,
                   method_assign='likelihood_bidirectional', # Method for performing matching and refitting
                   thresh_match_grid=thresh_grid, # Grid of threshold for matchinng
                   thresh_refit_grid=thresh_grid, # Grid of threshold for refitting
