@@ -1,15 +1,15 @@
 #import sys
 #print(sys.path)
 #'/uufs/chpc.utah.edu/common/HIPAA/u1264408/lustre/u1264408/tools/ENTER/envs/python37_musical/lib/python3.7
-# 
+#
 
-import argparse 
+import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-matrix', '-m', help='The Mutation Count Matrix for the data set', required=True)
 parser.add_argument('-pckle', '-p', help='pickle output, please use data name and date', required=True)
 args = parser.parse_args()
 matrix = args.matrix
-pckle = args.pckle 
+pckle = args.pckle
 
 #conda activate python37_musical
 import musical
@@ -28,10 +28,10 @@ import pickle
 #%load_ext autoreload
 #%autoreload 2
 
-x = pd.read_csv(matrix, index_col=0)
+x = pd.read_csv(matrix, index_col=0, sep='\t', header=0)
 # print(x.head())
 
-model = musical.DenovoSig(x, 
+model = musical.DenovoSig(x,
                           min_n_components=1, # Minimum number of signatures to test
                           max_n_components=20, # Maximum number of signatures to test
                           init='random', # Initialization method
