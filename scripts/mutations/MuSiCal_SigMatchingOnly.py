@@ -1,4 +1,4 @@
-import argparse 
+import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-matrix', '-m', help='The Mutation Count Matrix for the data set', required=True)
 args = parser.parse_args()
@@ -18,7 +18,7 @@ import pickle
 X = pd.read_csv(matrix, index_col=0)
 
 
-catalog = musical.load_catalog('/uufs/chpc.utah.edu/common/HIPAA/u1264408/lustre/u1264408/MuSiCal/MuSiCal/musical/data/COSMIC-MuSiCal_v3p2_SBS_WGS.csv')
+catalog = musical.load_catalog('/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/MuSiCal/musical/data/COSMIC_v3p2_SBS_WGS.csv')
 W_catalog = catalog.W
 W = catalog.W
 print(W_catalog.shape[1])
@@ -28,7 +28,7 @@ print(W_catalog.shape[1])
 # print(catalog.show_tumor_type_options().tolist())
 ##this will let us see the tumor type options, like ColoRec.AdenoCA and so forth
 
-## this is how we actually restrict tumor type 
+## this is how we actually restrict tumor type
 #catalog.restrict_catalog(tumor_type='Skin.Melanoma')
 #print(catalog.W.shape[1])
 
