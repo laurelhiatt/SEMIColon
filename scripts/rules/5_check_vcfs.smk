@@ -87,8 +87,8 @@ rule plot_stats:
         mkdir -p {output.outdir}
         tmpdir=$(mktemp -d)
 
-        plot-vcfstats -p tmpdir {input.stats}
+        plot-vcfstats -p $tmpdir {input.stats}
 
-        mv ${tmpdir}/summary.pdf {output.summary}
+        mv ${{tmpdir}}/summary.pdf {output.summary}
         rm -r $tmpdir
         """
