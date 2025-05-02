@@ -80,6 +80,7 @@ rule freebayes_variant_calling:
         "freebayes/1.3.4"
     shell:
         """
+        module load freebayes/1.3.4
         mkdir -p {params.out_dir}/vcf/{wildcards.chroms}
         freebayes --min-alternate-count 2 --min-alternate-qsum 40 -f {input.ref} -t {input.regions} -L {input.bam_file_list} > {output.full} 2> {log}
         """
