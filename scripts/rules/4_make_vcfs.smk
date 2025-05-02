@@ -30,9 +30,9 @@ rule make_bam_list:
     threads: 2
     localrule: True
     log:
-        log_dir + "/{donor}_bamlist.log"
+        stdio = log_dir + "/{donor}_bamlist.log"
     script:
-        "../variant_calling/create_bam_list.py"
+        "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/variant_calling/create_bam_list.py"
 
 rule generate_regions:
     input:
