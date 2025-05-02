@@ -77,7 +77,7 @@ rule freebayes_variant_calling:
     benchmark:
         bench_dir + "/{chroms}_{i}_{donor}_freebayes.tsv"
     envmodules:
-        "freebayes/1.3.9"
+        "freebayes/1.3.4"
     shell:
         """
         mkdir -p {params.out_dir}/vcf/{wildcards.chroms}
