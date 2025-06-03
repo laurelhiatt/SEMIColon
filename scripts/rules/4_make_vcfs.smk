@@ -71,7 +71,7 @@ rule freebayes_variant_calling:
     resources:
         mem_mb = mem_xlarge
     threads:
-        8
+        1
     log:
         log_dir + "/{chroms}_{i}_{donor}_freebayes.log"
     benchmark:
