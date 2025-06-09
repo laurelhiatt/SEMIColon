@@ -1,4 +1,4 @@
-# Laurel Hiatt 04/14/2025
+# Laurel Hiatt 06/09/2025
 
 log_dir = out_dir + "/log/4_make_vcfs"
 bench_dir = out_dir + "/benchmark/4_make_vcfs"
@@ -15,6 +15,30 @@ def get_bai_inputs(wildcards):
         os.path.join(out_dir, "bam", f"{s}-sorted.bam.bai") for s in donor_samples
     ]
 
+def make_chroms_dict(directory_path, chroms):
+    chrom_chunks = {}
+    try:
+        for chrom in chroms:
+            for filename in os.listdir(directory_path):
+                match = re.search(rf"chunk\.{re.escape(chrom)}\.region\.(\d+)\.bed", filename)
+                if match:
+                    chunk_number = int(match.group(1))
+                    if chrom not in chrom_chunks:
+                        chrom_chunks[chrom] = []
+                    chrom_chunks[chrom].append(chunk_number)
+
+        # Optional: sort the chunk numbers for each chrom
+        for chrom in chrom_chunks:
+            chrom_chunks[chrom].sort()
+
+    except FileNotFoundError:
+        print(f"Error: Directory not found at {directory_path}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+    return chrom_chunks
+
+chromosome_chunks_dict = make_chroms_dict("/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/regions", chroms = chroms)
 
 rule make_bam_list:
     input:
@@ -39,7 +63,6 @@ rule generate_regions:
         chroms = chroms
     params:
         index = reference_index,
-        chunks = chunks,
         out_dir = out_dir
     output:
         regions = out_dir + "/regions/chunk.{chroms}.region.{i}.bed"
@@ -114,13 +137,13 @@ rule index_chunks:
 rule concat_vcfs:
     input:
         chunk_zip = lambda wildcard: expand(out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf.gz",
-            i = chunks,
             donor = wildcard.donor,
-            chroms = chroms),
+            chroms = chroms,
+            i = chromosome_chunks_dict[wildcard.chroms]),
         chunk_vcf_index = lambda wildcard: expand(out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi",
-            i = chunks,
             donor = wildcard.donor,
-            chroms = chroms),
+            chroms = chroms,
+            i = chromosome_chunks_dict[wildcard.chroms]),
     output:
         vcf = out_dir + "/vcf/{donor}-var.vcf.gz",
         vcf_index = out_dir + "/vcf/{donor}-var.vcf.gz.tbi"
@@ -132,9 +155,10 @@ rule concat_vcfs:
     resources:
         mem_mb = mem_large
     envmodules:
-        "bcftools/1.21"
+        "bcftools/1.16"
     shell:
         """
+        module load bcftools/1.16
         bcftools concat -a {input.chunk_zip} -o {output.vcf} --threads {threads} > {log} 2>&1
         tabix -f -p vcf {output.vcf} --threads {threads}
         """
