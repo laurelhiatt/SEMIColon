@@ -1,4 +1,5 @@
 # Laurel Hiatt 06/09/2025
+from itertools import product
 
 log_dir = out_dir + "/log/4_make_vcfs"
 bench_dir = out_dir + "/benchmark/4_make_vcfs"
@@ -37,6 +38,20 @@ def make_chroms_dict(directory_path, chroms):
         print(f"An error occurred: {e}")
 
     return chrom_chunks
+
+def chunks_n_chroms(*iterables):
+    chroms = [i for i in iterables if i[0][0] == "chroms"][0]
+    chunks = [i for i in iterables if i[0][0] == "i"][0]
+    donor = [i for i in iterables if i[0][0] == "donor"][0] * len(chroms)
+    assert len(chroms) == len(chunks)
+
+    combos = list(zip(donor, chroms, chunks))
+    ret_list = []
+    for combo in combos:
+        chunks = list(product([combo[2][0]], combo[2][1]))
+        ret_list.extend(product([combo[0]], [combo[1]], chunks))
+
+    return ret_list
 
 chromosome_chunks_dict = make_chroms_dict("/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/regions", chroms = chroms)
 
@@ -136,14 +151,20 @@ rule index_chunks:
 
 rule concat_vcfs:
     input:
-        chunk_zip = lambda wildcard: expand(out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf.gz",
+        chunk_zip = lambda wildcard: expand(
+            out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf.gz",
+            chunks_n_chroms,
             donor = wildcard.donor,
-            chroms = chroms,
-            i = chromosome_chunks_dict[wildcard.chroms]),
-        chunk_vcf_index = lambda wildcard: expand(out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi",
+            chroms = chromosome_chunks_dict.keys(),
+            i = chromosome_chunks_dict.values()
+        ),
+        chunk_vcf_index = lambda wildcard: expand(
+            out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi",
+            chunks_n_chroms,
             donor = wildcard.donor,
-            chroms = chroms,
-            i = chromosome_chunks_dict[wildcard.chroms]),
+            chroms = chromosome_chunks_dict.keys(),
+            i = chromosome_chunks_dict.values()
+        ),
     output:
         vcf = out_dir + "/vcf/{donor}-var.vcf.gz",
         vcf_index = out_dir + "/vcf/{donor}-var.vcf.gz.tbi"

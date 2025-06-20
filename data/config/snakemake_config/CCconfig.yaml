@@ -7,6 +7,22 @@ reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v
 reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
 
 samples:
+- 30_TR
+- 27_DC
+- 74_DC
+- 93_CE
+- 029_DC_T
+- 031_RE_T
+- 116_RE_T
+- 030_CE_T
+- 058_RE_T
+- 084_SI_T
+- 27_CE
+- 29_CE
+- 103_RE
+- 116_TR
+- 148_SI
+- 40_AS
 - Laurel-1
 - Laurel-2
 - Laurel-3
@@ -466,6 +482,46 @@ samples:
 - PD37590d_lo0012
 
 matches:
+  O93:
+    crypt_samples:
+      - 93_CE
+  O74:
+    crypt_samples:
+      - 74_DC
+  O31:
+    crypt_samples:
+      - 031_RE_T
+  O30:
+    crypt_samples:
+      - 030_CE_T
+      - 30_TR
+  O58:
+    crypt_samples:
+      - 058_RE_T
+  O84:
+    crypt_samples:
+      - 084_SI_T
+  O27:
+    crypt_samples:
+      - 27_CE
+      - 27_DC
+  O29:
+    crypt_samples:
+      - 29_CE
+      - 029_DC_T
+  O103:
+    crypt_samples:
+      - 103_RE
+  O116:
+    crypt_samples:
+      - 116_TR
+      - 116_RE_T
+  O148:
+    crypt_samples:
+      - 148_SI
+  O40:
+    crypt_samples:
+      - 40_AS
   GB115:
     crypt_samples:
       - Laurel-1
@@ -1016,6 +1072,18 @@ matches:
       - PD37590d_lo0012
 
 donors:
+- O74
+- O93
+- O31
+- O30
+- O58
+- O84
+- O27
+- O29
+- O103
+- O116
+- O148
+- O40
 - GB115
 - O300
 - O312
