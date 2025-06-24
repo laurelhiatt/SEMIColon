@@ -7,6 +7,14 @@ reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v
 reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
 
 samples:
+- 18_27RE
+- 29_74TR
+- 32_29TR
+- 17_27AS
+- 19_27TR
+- 20_40DC
+- 58_DC
+- 58_TR
 - 30_TR
 - 27_DC
 - 74_DC
@@ -16,7 +24,7 @@ samples:
 - 116_RE_T
 - 030_CE_T
 - 058_RE_T
-- 084_SI_T
+#- 084_SI_T too low coverage
 - 27_CE
 - 29_CE
 - 103_RE
@@ -488,6 +496,7 @@ matches:
   O74:
     crypt_samples:
       - 74_DC
+      - 29_74TR
   O31:
     crypt_samples:
       - 031_RE_T
@@ -498,6 +507,8 @@ matches:
   O58:
     crypt_samples:
       - 058_RE_T
+      - 58_TR
+      - 58_DC
   O84:
     crypt_samples:
       - 084_SI_T
@@ -505,10 +516,14 @@ matches:
     crypt_samples:
       - 27_CE
       - 27_DC
+      - 19_27TR
+      - 17_27AS
+      - 18_27RE
   O29:
     crypt_samples:
       - 29_CE
       - 029_DC_T
+      - 32_29TR
   O103:
     crypt_samples:
       - 103_RE
@@ -522,6 +537,7 @@ matches:
   O40:
     crypt_samples:
       - 40_AS
+      - 20_40DC
   GB115:
     crypt_samples:
       - Laurel-1

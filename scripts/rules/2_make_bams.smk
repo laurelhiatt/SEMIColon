@@ -35,7 +35,7 @@ rule samblaster:
         temp(out_dir + "/bam/{sample}.samblaster.sam")
     threads: 8
     resources:
-        mem_mb = mem_small
+        mem_mb = mem_medium
     log:
         log_dir + "/{sample}_samblaster.log"
     benchmark:
