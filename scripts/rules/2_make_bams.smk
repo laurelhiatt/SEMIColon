@@ -21,10 +21,9 @@ rule bwa_mem:
         log_dir + "/{sample}_bwa_mem.log"
     benchmark:
         bench_dir + "/{sample}_bwa_mem.tsv"
-    conda:
-        "../../envs/make_bams.yaml"
     shell:
         """
+        module load bwa
         bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} > {output} 2> {log}
         """
 
