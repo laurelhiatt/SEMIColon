@@ -7,46 +7,6 @@ reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v
 reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
 
 samples:
-- 30_130RE
-- 21_116CE
-- 76_DC
-- 22_76TR
-- 23_180RE
-- 24_130DC
-- 18_27RE
-- 29_74TR
-- 32_29TR
-- 17_27AS
-- 19_27TR
-- 20_40DC
-- 58_DC
-- 58_TR
-- 30_TR
-- 27_DC
-- 74_DC
-- 93_CE
-- 029_DC_T
-- 031_RE_T
-- 116_RE_T
-- 030_CE_T
-- 058_RE_T
-#- 084_SI_T too low coverage
-- 27_CE
-- 29_CE
-- 103_RE
-- 116_TR
-- 148_SI
-- 40_AS
-- Laurel-1
-- Laurel-2
-- Laurel-3
-- Laurel-5
-- Laurel-6
-- Laurel-7
-- Laurel-8
-- Laurel-10
-- Laurel-11
-- Laurel-12
 # - PD37509b8
 # - PD37509b9
 # - PD37510b4
@@ -66,10 +26,10 @@ samples:
 # - PD36813r12
 # - PD36813r14
 # - PD36813u2
-# - PD36813g2
-# - PD36813g4
-# - PD36813s12
-# - PD36813v4
+- PD36813g2
+- PD36813g4
+- PD36813s12
+- PD36813v4
 # - PD36814e5
 # - PD36814e6
 # - PD36814e7
@@ -234,10 +194,10 @@ samples:
 # - PD36813l7
 # - PD36813l8
 # - PD36813l
-# - PD36813y13
-# - PD36813y15
-# - PD36813y6
-# - PD36813y7
+- PD36813y13
+- PD36813y15
+- PD36813y6
+- PD36813y7
 # - PD36813k3
 # - PD36813k5
 # - PD36813k
@@ -267,10 +227,10 @@ samples:
 # - PD36813i
 # - PD36813q11
 # - PD36813q14
-# - PD36814b2
-# - PD36814b7
-# - PD37265b7
-# - PD37265b
+- PD36814b2
+- PD36814b7
+- PD37265b7
+- PD37265b
 # - PD36814c2
 # - PD36814c3
 # - PD36814c4
@@ -496,83 +456,6 @@ samples:
 # - PD37590d_lo0012
 
 matches:
-  O130:
-    crypt_samples:
-      - 24_130DC
-      - 30_130RE
-  O180:
-    crypt_samples:
-      - 23_180RE
-  O93:
-    crypt_samples:
-      - 93_CE
-  O74:
-    crypt_samples:
-      - 74_DC
-      - 29_74TR
-  O76:
-    crypt_samples:
-      - 22_76TR
-      - 76_DC
-  O31:
-    crypt_samples:
-      - 031_RE_T
-  O30:
-    crypt_samples:
-      - 030_CE_T
-      - 30_TR
-  O58:
-    crypt_samples:
-      - 058_RE_T
-      - 58_TR
-      - 58_DC
-  O84:
-    crypt_samples:
-      - 084_SI_T
-  O27:
-    crypt_samples:
-      - 27_CE
-      - 27_DC
-      - 19_27TR
-      - 17_27AS
-      - 18_27RE
-  O29:
-    crypt_samples:
-      - 29_CE
-      - 029_DC_T
-      - 32_29TR
-  O103:
-    crypt_samples:
-      - 103_RE
-  O116:
-    crypt_samples:
-      - 116_TR
-      - 116_RE_T
-      - 21_116CE
-  O148:
-    crypt_samples:
-      - 148_SI
-  O40:
-    crypt_samples:
-      - 40_AS
-      - 20_40DC
-  GB115:
-    crypt_samples:
-      - Laurel-1
-      - Laurel-2
-      - Laurel-3
-      - Laurel-5
-      - Laurel-6
-      - Laurel-7
-      - Laurel-8
-      - Laurel-10
-      - Laurel-11
-      - Laurel-12
-      - Laurel-13
-      - Laurel-14
-      - Laurel-15
-      - Laurel-16
-      - Laurel-17
   # O300:
   #   crypt_samples:
   #     - PD37509b8
@@ -598,12 +481,12 @@ matches:
   #     - PD36813r12
   #     - PD36813r14
   #     - PD36813u2
-  # O162:
-  #   crypt_samples:
-  #     - PD36813g2
-  #     - PD36813g4
-  #     - PD36813s12
-  #     - PD36813v4
+  O162:
+    crypt_samples:
+      - PD36813g2
+      - PD36813g4
+      - PD36813s12
+      - PD36813v4
   # O174:
   #   crypt_samples:
   #     - PD36814e5
@@ -814,12 +697,12 @@ matches:
   #     - PD36813l7
   #     - PD36813l8
   #     - PD36813l
-  # OO39:
-  #   crypt_samples:
-  #     - PD36813y13
-  #     - PD36813y15
-  #     - PD36813y6
-  #     - PD36813y7
+  OO39:
+    crypt_samples:
+      - PD36813y13
+      - PD36813y15
+      - PD36813y6
+      - PD36813y7
   # OO82:
   #   crypt_samples:
   #     - PD36813k3
@@ -855,12 +738,12 @@ matches:
   #     - PD36813i
   #     - PD36813q11
   #     - PD36813q14
-  # OOO7:
-  #   crypt_samples:
-  #     - PD36814b2
-  #     - PD36814b7
-  #     - PD37265b7
-  #     - PD37265b
+  OOO7:
+    crypt_samples:
+      - PD36814b2
+      - PD36814b7
+      - PD37265b7
+      - PD37265b
   # OOO8:
   #   crypt_samples:
   #     - PD36814c2
@@ -1106,27 +989,11 @@ matches:
   #     - PD37590d_lo0012
 
 donors:
-- O130
-- O180
-- O76
-- O74
-- O93
-- O31
-- O30
-- O58
-- O84
-- O27
-- O29
-- O103
-- O116
-- O148
-- O40
-- GB115
 # - O300
 # - O312
 # - HLS
 # - O132
-# - O162
+- O162
 # - O174
 # - O176
 # - O187
@@ -1150,11 +1017,11 @@ donors:
 # - OO13
 # - OO23
 # - OO35
-# - OO39
+- OO39
 # - OO82
 # - OO94
 # - OO99
-# - OOO7
+- OOO7
 # - OOO8
 # - PD28690
 # - PD34199

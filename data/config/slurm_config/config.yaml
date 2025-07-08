@@ -1,6 +1,6 @@
 executor: slurm
-retries: 2
-jobs: 30
+retries: 1
+jobs: 100
 resources:
 - threads=100
 - mem_mb=200000
