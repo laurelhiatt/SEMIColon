@@ -60,9 +60,10 @@ rule bcftools_stats:
     log:
         log_dir + "/{donor}_bcftools_stats.log"
     envmodules:
-        "bcftools/1.21"
+        "bcftools/1.16"
     shell:
         """
+        module load bcftools/1.16
         bcftools stats -s - --verbose --threads {threads} {input.vcf} > {output.stats} 2> {log}
         """
 
@@ -74,7 +75,7 @@ rule plot_stats:
          outdir = out_dir + "/vcf/{donor}",
          summary = out_dir + "/vcf/{donor}/summary.pdf"
     conda:
-        "/uufs/chpc.utah.edu/common/HIPAA/u1264408/software/pkg/miniconda3/envs/vcfstats"
+        "../../envs/vcfstats.yaml"
     resources:
         mem_mb = mem_medium
     threads: 2
