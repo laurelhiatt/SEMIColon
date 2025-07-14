@@ -58,7 +58,8 @@ rule filter_by_gnomad:
         gnomad_vcf= temp(out_dir + "/results/{donor}-gnomad-filtered.vcf.gz")
     shell:
         """
-        bcftools filter -i (gnomad_popmax_af <= 0 || gnomad_popmax_af = "." )' {input.depth_vcf} -o -Oz {output.gnomad_vcf}
+        module load bcftools
+        bcftools filter -i '(gnomad_popmax_af <= 0 || gnomad_popmax_af == ".")' {input.depth_vcf} -o -Oz {output.gnomad_vcf}
         """
 
 ### all the other samples must have 0 alt alleles
