@@ -29,15 +29,23 @@ def get_sample(donor, sample_to_donor):
         if d == donor:
             return sample
 
-donor_sample_pairs = [(get_donor(sample, matches), sample) for sample in samples]
+pairs = [
+    (get_donor(sample, matches), sample)
+    for sample in samples
+    if get_donor(sample, matches) != "GB84"
+]
 
-donor_sample_pairs[:] = [pair for pair in donor_sample_pairs if pair[0] != "GB84"]
+if pairs:
+    donors, filtered_samples = zip(*pairs)
+else:
+    donors, filtered_samples = [], []
 
 rule all:
     input:
-        expand(out_dir + "/results/{donor}/{sample}_snv_count.txt", donor = [pair[0] for pair in donor_sample_pairs],
-               sample = [pair[1] for pair in donor_sample_pairs])
-        # expand(out_dir + "/results/{donor}/{sample}_filtered.vcf.gz", out_dir = out_dir, donor = donors, sample= s in get_samples_for_donor(donor, matches))
+        [
+            f"{out_dir}/results/{donor}/{sample}_snv_count.txt"
+            for donor, sample in zip(donors, filtered_samples)
+        ]
 
 ### filter all variants by depth > 5
 rule filter_by_depth:
@@ -50,55 +58,76 @@ rule filter_by_depth:
         ./vcfexpress filter -e 'return all(function (dp) return dp > 5 end, variant:format("DP"))' -o {output.depth_vcf} {input.filtered_vcf}
         """
 
-### it shouldn't exist in gnomad (at this point, pre-blood)
-rule filter_by_gnomad:
+rule index_depth:
     input:
         depth_vcf= out_dir + "/results/{donor}-depth-filtered.vcf.gz"
     output:
-        gnomad_vcf= temp(out_dir + "/results/{donor}-gnomad-filtered.vcf.gz")
+        indexed_vcf= temp(out_dir + "/results/{donor}-depth-filtered.vcf.gz.tbi")
+    threads:
+        8
+    shell:
+        """
+        tabix -f -p vcf {input.depth_vcf} --threads {threads}
+        """
+
+### it shouldn't exist in gnomad (at this point, pre-blood)
+rule filter_by_gnomad:
+    input:
+        depth_vcf= out_dir + "/results/{donor}-depth-filtered.vcf.gz",
+        indexed_vcf= out_dir + "/results/{donor}-depth-filtered.vcf.gz.tbi"
+    output:
+        gnomad_vcf= temp(out_dir + "/results/{donor}-gnomad-filtered.vcf.gz"),
+        done = temp(out_dir + "/results/{donor}/gnomad.done")
     shell:
         """
         module load bcftools
-        bcftools filter -i '(gnomad_popmax_af <= 0 || gnomad_popmax_af == ".")' {input.depth_vcf} -o -Oz {output.gnomad_vcf}
+        bcftools filter -i '(gnomad_popmax_af <= 0 || gnomad_popmax_af == ".")' -Oz -o {output.gnomad_vcf} {input.depth_vcf}
+        touch {output.done}
         """
+
+def donor_done_input(wildcards):
+    donor = wildcards.donor
+    sample = wildcards.sample
+    crypt_samples = matches.get(donor, {}).get("crypt_samples", [])
+    if sample not in crypt_samples:
+        pass
+    return os.path.join(out_dir, "results", donor, "gnomad.done")
+
+rule make_lua:
+    input:
+        gnomad_done = donor_done_input,
+    output:
+        lua = out_dir + "/results/{donor}/{sample}_soi.lua"
+    run:
+        with open(output.lua, "w") as f:
+            f.write(f'samplesOfInterest = {{"{wildcards.donor}_{wildcards.sample}"}}\n')
 
 ### all the other samples must have 0 alt alleles
 rule filter_by_sample:
     input:
-        gnomad_vcf = out_dir + "/results/{donor}-gnomad-filtered.vcf.gz"
+        lua = rules.make_lua.output.lua,
     output:
-        done = temp(out_dir + "/results/{donor}/{sample}_filtered.done")
+        sample_vcf = temp(out_dir + "/results/{donor}/{sample}_filtered_noAD.vcf.gz")
     params:
-        sample_vcf = lambda wildcards: out_dir + f"/results/{wildcards.donor}/{wildcards.sample}_filtered_noAD.vcf.gz",
-        soi_lua = lambda wildcards: temp(out_dir + f"/results/{wildcards.sample}_soi.lua"),
-        soi = lambda wildcards: f'samplesOfInterest = {{"{wildcards.donor}_{wildcards.sample}"}}'
+        gnomad_vcf = out_dir + "/results/{donor}-gnomad-filtered.vcf.gz"
     shell:
         """
-        mkdir -p {out_dir}/results/{wildcards.donor}/
-        echo '{params.soi}' > {params.soi_lua}
-        ./vcfexpress filter \
-            -p {params.soi_lua} \
-            -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua \
+        mkdir -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/results/{wildcards.donor}
+        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua \
             -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' \
-            -o {params.sample_vcf} {input.gnomad_vcf}
-        touch {output.done}
+            -o {output.sample_vcf} {params.gnomad_vcf}
         """
 
 ### this sample must have > # alternate allele
 rule filter_by_alt_depth:
     input:
-        out_dir + "/results/{donor}/{sample}_filtered.done"
-    output:
-        vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz"
-    params:
         sample_vcf= out_dir + "/results/{donor}/{sample}_filtered_noAD.vcf.gz",
-        sample = lambda wildcards: wildcards.sample,
-        soi_lua= temp(out_dir + "results/{sample}_soi.lua"),
-        donor = lambda wildcards: get_donor(wildcards.sample, matches)
+        lua = rules.make_lua.output.lua,
+    output:
+        vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz",
     shell:
         """
-        echo 'samplesOfInterest = {{"{params.donor}_{params.sample}"}}' > {params.soi_lua}
-        ./vcfexpress filter -p {params.soi_lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 2 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {params.sample_vcf}
+        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 2 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.sample_vcf}
         """
 
 rule count_snvs:
