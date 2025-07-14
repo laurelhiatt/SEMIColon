@@ -1,14 +1,21 @@
 executor: slurm
-retries: 2
-jobs: 30
+retries: 1
+jobs: 100
 resources:
 - threads=100
 - mem_mb=200000
 default-resources:
-- slurm_account="quinlan-rw"
-- slurm_partition="quinlan-shared-rw"
-- runtime=20160
+- slurm_account="ucgd-rw"
+- slurm_partition="ucgd-shared-rw"
+- runtime=1440
 - mem_mb=16000*attempt
 software-deployment-method: conda
 rerun-incomplete: True
+rerun-triggers:
+- "mtime"
 configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/snakemake_config/CCconfig.yaml"
+set-resources:
+  freebayes_variant_calling:
+    slurm_account: "quinlan-rw"
+    slurm_partition: "quinlan-shared-rw"
+    runtime: 20160

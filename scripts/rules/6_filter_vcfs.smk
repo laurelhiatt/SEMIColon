@@ -13,13 +13,14 @@ rule decompose_vcfs:
         mem_mb = mem_large
     threads: 8
     envmodules:
-        "bcftools/1.21"
+        "bcftools/1.16"
     log:
         log_dir + "/{donor}_decompose.log"
     benchmark:
         bench_dir + "/{donor}_decompose.tsv"
     shell:
         """
+        module load bcftools/1.16
         bcftools norm -m - {input.vcf} --threads {threads} -w 10000 -f {input.fasta} -O b -o {output.clean_vcf} > {log} 2>&1
         """
 
@@ -55,10 +56,9 @@ rule remove_lcr:
         log_dir + "/{donor}_noLCR.log"
     benchmark:
         bench_dir + "/{donor}_noLCR.tsv"
-    envmodules:
-        "bedtools/2.30.0"
     shell:
         """
+        module load bedtools
         bedtools intersect -header -v -a {input.annotated_vcf} -b {input.lcr_bed} | \
         bedtools intersect -header -v -a - -b {input.simplerepeats_bed} | bgzip -c > {output.filtered_vcf}
         tabix -p vcf {output.filtered_vcf}

@@ -21,10 +21,9 @@ rule bwa_mem:
         log_dir + "/{sample}_bwa_mem.log"
     benchmark:
         bench_dir + "/{sample}_bwa_mem.tsv"
-    conda:
-        "../../envs/make_bams.yaml"
     shell:
         """
+        module load bwa
         bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} > {output} 2> {log}
         """
 
@@ -35,7 +34,7 @@ rule samblaster:
         temp(out_dir + "/bam/{sample}.samblaster.sam")
     threads: 8
     resources:
-        mem_mb = mem_small
+        mem_mb = mem_medium
     log:
         log_dir + "/{sample}_samblaster.log"
     benchmark:

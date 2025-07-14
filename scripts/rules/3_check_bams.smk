@@ -130,8 +130,9 @@ rule alfred_summary:
     log:
         log_dir + "/{sample}_plot_alfred.log"
     envmodules:
-        "R/4.4.0-bioconductor"
+        "R/4.4.2"
     shell:
         """
+        module load R
         Rscript quality_control/stats.R {input.report} {output.pdf}
         """

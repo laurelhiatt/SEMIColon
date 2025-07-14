@@ -1,0 +1,16 @@
+executor: slurm
+retries: 1
+jobs: 100
+resources:
+- threads=100
+- mem_mb=200000
+default-resources:
+- slurm_account="owner-guest"
+- slurm_partition="redwood-shared-guest"
+- runtime=1440
+- mem_mb=16000*attempt
+software-deployment-method: conda
+rerun-incomplete: True
+rerun-triggers:
+- "mtime"
+configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/test_config/testconfig.yaml"

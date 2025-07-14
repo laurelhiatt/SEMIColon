@@ -51,7 +51,7 @@ rule somalier_check:
 #code for the bcftools stats
 rule bcftools_stats:
     input:
-        vcf = out_dir + "/vcf/{donor}-annotated-var.vcf.gz"
+        vcf = out_dir + "/vcf/{donor}-annotated-var-noLCR.vcf.gz"
     output:
         stats = temp(out_dir + "/vcf/{donor}-vcf_stats.txt")
     resources:
@@ -60,9 +60,10 @@ rule bcftools_stats:
     log:
         log_dir + "/{donor}_bcftools_stats.log"
     envmodules:
-        "bcftools/1.21"
+        "bcftools/1.16"
     shell:
         """
+        module load bcftools/1.16
         bcftools stats -s - --verbose --threads {threads} {input.vcf} > {output.stats} 2> {log}
         """
 
@@ -71,10 +72,10 @@ rule plot_stats:
     input:
         stats = out_dir + "/vcf/{donor}-vcf_stats.txt"
     output:
-         outdir = out_dir + "/vcf/{donor}",
+         outdir = directory(out_dir + "/vcf/{donor}"),
          summary = out_dir + "/vcf/{donor}/summary.pdf"
     conda:
-        "/uufs/chpc.utah.edu/common/HIPAA/u1264408/software/pkg/miniconda3/envs/vcfstats"
+        "../../envs/vcfstats.yaml"
     resources:
         mem_mb = mem_medium
     threads: 2
@@ -87,8 +88,8 @@ rule plot_stats:
         mkdir -p {output.outdir}
         tmpdir=$(mktemp -d)
 
-        plot-vcfstats -p tmpdir {input.stats}
+        plot-vcfstats -p $tmpdir {input.stats}
 
-        mv ${tmpdir}/summary.pdf {output.summary}
+        mv ${{tmpdir}}/summary.pdf {output.summary}
         rm -r $tmpdir
         """

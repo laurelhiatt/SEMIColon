@@ -45,9 +45,7 @@ samples: list[str] = config["samples"]
 donors: list[str] = config["donors"]
 matches = config["matches"]
 
-#parameters
-nchunks = config["nchunks"]
-chunks = list(range(1,nchunks+1))
+#donors = ["PD34201"] # For testing, only use one donor
 
 ######################
 ### INITIALIZATION ###
