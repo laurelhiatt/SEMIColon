@@ -51,7 +51,7 @@ rule somalier_check:
 #code for the bcftools stats
 rule bcftools_stats:
     input:
-        vcf = out_dir + "/vcf/{donor}-annotated-var.vcf.gz"
+        vcf = out_dir + "/vcf/{donor}-annotated-var-noLCR.vcf.gz"
     output:
         stats = temp(out_dir + "/vcf/{donor}-vcf_stats.txt")
     resources:
@@ -72,7 +72,7 @@ rule plot_stats:
     input:
         stats = out_dir + "/vcf/{donor}-vcf_stats.txt"
     output:
-         outdir = out_dir + "/vcf/{donor}",
+         outdir = directory(out_dir + "/vcf/{donor}"),
          summary = out_dir + "/vcf/{donor}/summary.pdf"
     conda:
         "../../envs/vcfstats.yaml"

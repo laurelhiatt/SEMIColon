@@ -1,9 +1,20 @@
-configfile: '/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/snakemake_config/CCconfig.yaml'
+import os
+import glob
+import re
 
-out_dir: str = config["output_directory"]
+configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/snakemake_config/CCconfig.yaml"
 samples: list[str] = config["samples"]
+out_dir: str = config["output_directory"]
 donors: list[str] = config["donors"]
 matches = config["matches"]
+
+# Wildcard constraints; should all be alphanumeric
+wildcard_constraints:
+    sample = "[A-Za-z0-9_-]+",
+    chroms = "[A-Za-z0-9]+",
+    i = "[0-9]+",
+    out_dir = out_dir,
+    donor = "[A-Za-z0-9]+"
 
 def get_donor(sample, matches):
     for donor, samples in matches.items():
@@ -11,122 +22,88 @@ def get_donor(sample, matches):
             return donor
     raise KeyError(f"Sample {sample} not found in matches dictionary")
 
+sample_to_donor = {sample: donor for donor, data in matches.items() for sample in data['crypt_samples']}
+
+def get_sample(donor, sample_to_donor):
+    for sample, d in sample_to_donor.items():
+        if d == donor:
+            return sample
+
+donor_sample_pairs = [(get_donor(sample, matches), sample) for sample in samples]
+
+donor_sample_pairs[:] = [pair for pair in donor_sample_pairs if pair[0] != "GB84"]
 
 rule all:
     input:
-        expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/ts_tv_ratio.txt", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10)),
-        expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/snv_count.txt", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10)),
-        expand("{out_dir}/results/summary/snp_summary.csv", out_dir = out_dir)
+        expand(out_dir + "/results/{donor}/{sample}_snv_count.txt", donor = [pair[0] for pair in donor_sample_pairs],
+               sample = [pair[1] for pair in donor_sample_pairs])
+        # expand(out_dir + "/results/{donor}/{sample}_filtered.vcf.gz", out_dir = out_dir, donor = donors, sample= s in get_samples_for_donor(donor, matches))
 
-        #expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/mutation_spectrum.pdf", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10)),
-
-
-### filter all variants by a certain depth
+### filter all variants by depth > 5
 rule filter_by_depth:
     input:
-        vcf="/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/vcf/GB115-annotated-var-noLCR.vcf.gz"
+        filtered_vcf= out_dir + "/vcf/{donor}-annotated-var-noLCR.vcf.gz"
     output:
-        vcf="{out_dir}/results/depth_{dp}/filtered.vcf.gz"
+        depth_vcf= temp(out_dir + "/results/{donor}-depth-filtered.vcf.gz")
     shell:
         """
-        mkdir -p {wildcards.out_dir}/results/depth_{wildcards.dp}
-        ./vcfexpress filter -e 'return all(function (dp) return dp > {wildcards.dp} end, variant:format("DP"))' -o {output.vcf} {input.vcf}
+        ./vcfexpress filter -e 'return all(function (dp) return dp > 5 end, variant:format("DP"))' -o {output.depth_vcf} {input.filtered_vcf}
+        """
+
+### it shouldn't exist in gnomad (at this point, pre-blood)
+rule filter_by_gnomad:
+    input:
+        depth_vcf= out_dir + "/results/{donor}-depth-filtered.vcf.gz"
+    output:
+        gnomad_vcf= temp(out_dir + "/results/{donor}-gnomad-filtered.vcf.gz")
+    shell:
+        """
+        bcftools filter -i (gnomad_popmax_af <= 0 || gnomad_popmax_af = "." )' {input.depth_vcf} -o -Oz {output.gnomad_vcf}
         """
 
 ### all the other samples must have 0 alt alleles
 rule filter_by_sample:
     input:
-        vcf="{out_dir}/results/depth_{dp}/filtered.vcf.gz"
+        gnomad_vcf = out_dir + "/results/{donor}-gnomad-filtered.vcf.gz"
     output:
-        vcf="{out_dir}/results/depth_{dp}/{sample}_filtered.vcf.gz",
-        soi_lua=temp("{out_dir}/results/depth_{dp}/{sample}_soi.lua")
+        done = temp(out_dir + "/results/{donor}/{sample}_filtered.done")
     params:
-        sample = lambda wildcards: wildcards.sample,
-        donor = lambda wildcards: get_donor(wildcards.sample, matches)
+        sample_vcf = lambda wildcards: out_dir + f"/results/{wildcards.donor}/{wildcards.sample}_filtered_noAD.vcf.gz",
+        soi_lua = lambda wildcards: temp(out_dir + f"/results/{wildcards.sample}_soi.lua"),
+        soi = lambda wildcards: f'samplesOfInterest = {{"{wildcards.donor}_{wildcards.sample}"}}'
     shell:
         """
-        echo 'samplesOfInterest = {{"{params.donor}_{params.sample}"}}' > {output.soi_lua}
-        ./vcfexpress filter -p {wildcards.out_dir}/results/depth_{wildcards.dp}/{params.sample}_soi.lua -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vcf}
+        mkdir -p {out_dir}/results/{wildcards.donor}/
+        echo '{params.soi}' > {params.soi_lua}
+        ./vcfexpress filter \
+            -p {params.soi_lua} \
+            -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua \
+            -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' \
+            -o {params.sample_vcf} {input.gnomad_vcf}
+        touch {output.done}
         """
 
 ### this sample must have > # alternate allele
 rule filter_by_alt_depth:
     input:
-        vcf="{out_dir}/results/depth_{dp}/{sample}_filtered.vcf.gz"
+        out_dir + "/results/{donor}/{sample}_filtered.done"
     output:
-        vcf="{out_dir}/results/depth_{dp}/alt_{ad}/{sample}_filtered.vcf",
-        soi_lua=temp("{out_dir}/results/depth_{dp}/alt_{ad}/{sample}_soi.lua")
+        vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz"
     params:
+        sample_vcf= out_dir + "/results/{donor}/{sample}_filtered_noAD.vcf.gz",
         sample = lambda wildcards: wildcards.sample,
+        soi_lua= temp(out_dir + "results/{sample}_soi.lua"),
         donor = lambda wildcards: get_donor(wildcards.sample, matches)
     shell:
         """
-        mkdir -p {wildcards.out_dir}/results/depth_{wildcards.dp}/alt_{wildcards.ad}
-        echo 'samplesOfInterest = {{"{params.donor}_{params.sample}"}}' > {output.soi_lua}
-        ./vcfexpress filter -p {wildcards.out_dir}/results/depth_{wildcards.dp}/alt_{wildcards.ad}/{params.sample}_soi.lua -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > {wildcards.ad} end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vcf}
+        echo 'samplesOfInterest = {{"{params.donor}_{params.sample}"}}' > {params.soi_lua}
+        ./vcfexpress filter -p {params.soi_lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 2 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {params.sample_vcf}
         """
-
-rule ts_tv_ratio:
-    input:
-        vcf="{out_dir}/results/depth_{dp}/alt_{ad}/{sample}_filtered.vcf",
-    output:
-        txt="{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/ts_tv_ratio.txt"
-    shell:
-        "bcftools stats {input.vcf} | grep 'TSTV' > {output.txt}"
 
 rule count_snvs:
     input:
-        vcf="{out_dir}/results/depth_{dp}/alt_{ad}/{sample}_filtered.vcf",
+        vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz",
     output:
-        txt="{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/snv_count.txt"
+        txt= out_dir + "/results/{donor}/{sample}_snv_count.txt"
     shell:
         "bcftools view -v snps {input.vcf} | grep -v '^#' | wc -l > {output.txt} || echo 0 > {output.txt}"
-
-rule aggregate_results:
-    input:
-        snv_counts=expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/snv_count.txt", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10)),
-        ts_tv_ratios=expand("{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/ts_tv_ratio.txt", out_dir = out_dir, sample=samples, dp=range(1,11), ad=range(2,10))
-    output:
-        csv="{out_dir}/results/summary/snp_summary.csv"
-    shell:
-        """
-        echo "sample,depth,alt_depth,snp_count,ts_tv_ratio" > {output.csv}
-        for snv_file in {input.snv_counts}; do
-            # Extract sample, depth, and alt depth from the file path
-            sample=$(echo "$snv_file" | awk -F'/' '{{print $(NF-3)}}')  # Sample is 3 levels up
-            depth=$(echo "$snv_file" | awk -F'/' '{{print $(NF-2)}}' | sed 's/depth_//')  # Extract number after depth_
-            alt_depth=$(echo "$snv_file" | awk -F'/' '{{print $(NF-1)}}' | sed 's/alt_//')  # Extract number after alt_
-
-            # Read SNV count
-            snp_count=$(cat "$snv_file" 2>/dev/null || echo 0)
-
-            # Find matching ts_tv_ratio.txt
-            ts_tv_file=$(echo "{input.ts_tv_ratios}" | tr ' ' '\n' | grep "/$sample/depth_$depth/alt_$alt_depth/ts_tv_ratio.txt" || echo "NA")
-
-            # Extract ts/tv ratio (last column of the TSTV line)
-            ts_tv_ratio=$(grep "^TSTV" "$ts_tv_file" 2>/dev/null | awk '{{print $NF}}' || echo "NA")
-
-            echo "$sample,$depth,$alt_depth,$snp_count,$ts_tv_ratio" >> {output.csv}
-        done
-        """
-
-
-
-
-rule mutation_spectrum:
-    input:
-        vcf="{out_dir}/results/depth_{dp}/alt_{ad}/{sample}_filtered.vcf"
-    output:
-        pdf="{out_dir}/results/{sample}/depth_{dp}/alt_{ad}/mutation_spectrum.pdf"
-    shell:
-        "mutation_spectrum_tool {input.vcf} -o {output.pdf}"
-
-
-
-        ### SigProfilerMatrixGenerator install GRCh38
-
-
-###SigProfilerMatrixGenerator matrix_generator <project> <reference_genome> <path_to_input_files>
-
-
-### and then I will need to aggregate all the output into what, donor reports? sample reports?

@@ -7,6 +7,18 @@ reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v
 reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
 
 samples:
+- A16__084_CE
+- A13__148_AS
+- A7__116_DC
+- A10__180_DC
+- A6__103_CE
+- A1__031_AS
+- 33_130AS
+- A5__074_AS
+- A9__019_CE
+- A2__148_CE
+- A8__093_SI
+- A15__180_TR
 - 30_130RE
 - 21_116CE
 - 76_DC
@@ -37,16 +49,8 @@ samples:
 - 116_TR
 - 148_SI
 - 40_AS
-- Laurel-1
 - Laurel-2
-- Laurel-3
-- Laurel-5
-- Laurel-6
-- Laurel-7
-- Laurel-8
 - Laurel-10
-- Laurel-11
-- Laurel-12
 # - PD37509b8
 # - PD37509b9
 # - PD37510b4
@@ -496,83 +500,84 @@ samples:
 # - PD37590d_lo0012
 
 matches:
-  O130:
+  GB19:
+    crypt_samples:
+      - A9__019_CE
+  GB130:
     crypt_samples:
       - 24_130DC
       - 30_130RE
-  O180:
+      - 33_130AS
+  GB180:
     crypt_samples:
       - 23_180RE
-  O93:
+      - A15__180_TR
+      - A10__180_DC
+  GB93:
     crypt_samples:
       - 93_CE
-  O74:
+      - A8__093_SI
+  GB74:
     crypt_samples:
       - 74_DC
       - 29_74TR
-  O76:
+      - A5__074_AS
+  GB76:
     crypt_samples:
       - 22_76TR
       - 76_DC
-  O31:
+  GB31:
     crypt_samples:
       - 031_RE_T
-  O30:
+      - A1__031_AS
+  GB30:
     crypt_samples:
       - 030_CE_T
       - 30_TR
-  O58:
+  GB58:
     crypt_samples:
       - 058_RE_T
       - 58_TR
       - 58_DC
-  O84:
+  GB84:
     crypt_samples:
-      - 084_SI_T
-  O27:
+      - A16__084_CE
+  #     - 084_SI_T
+  GB27:
     crypt_samples:
       - 27_CE
       - 27_DC
       - 19_27TR
       - 17_27AS
       - 18_27RE
-  O29:
+  GB29:
     crypt_samples:
       - 29_CE
       - 029_DC_T
       - 32_29TR
-  O103:
+  GB103:
     crypt_samples:
       - 103_RE
-  O116:
+      - A6__103_CE
+  GB116:
     crypt_samples:
       - 116_TR
       - 116_RE_T
       - 21_116CE
-  O148:
+      - A7__116_DC
+  GB148:
     crypt_samples:
       - 148_SI
-  O40:
+      - A2__148_CE
+      - A13__148_AS
+  GB40:
     crypt_samples:
       - 40_AS
       - 20_40DC
   GB115:
     crypt_samples:
-      - Laurel-1
       - Laurel-2
-      - Laurel-3
-      - Laurel-5
-      - Laurel-6
-      - Laurel-7
-      - Laurel-8
       - Laurel-10
-      - Laurel-11
-      - Laurel-12
-      - Laurel-13
-      - Laurel-14
-      - Laurel-15
-      - Laurel-16
-      - Laurel-17
   # O300:
   #   crypt_samples:
   #     - PD37509b8
@@ -1106,21 +1111,22 @@ matches:
   #     - PD37590d_lo0012
 
 donors:
-- O130
-- O180
-- O76
-- O74
-- O93
-- O31
-- O30
-- O58
-- O84
-- O27
-- O29
-- O103
-- O116
-- O148
-- O40
+- GB19
+- GB130
+- GB180
+- GB76
+- GB74
+- GB93
+- GB31
+- GB30
+- GB58
+- GB84
+- GB27
+- GB29
+- GB103
+- GB116
+- GB148
+- GB40
 - GB115
 # - O300
 # - O312
@@ -1164,3 +1170,140 @@ donors:
 # - PD37266
 # - PD37449
 # - PD37590
+
+regions:
+  GB19:
+    cecum:
+      - A9__019_CE
+  GB130:
+    desc_col:
+      - 24_130DC
+    rectum:
+      - 30_130RE
+    asc_col:
+      - 33_130AS
+  GB180:
+    rectum:
+      - 23_180RE
+    trans_col:
+      - A15__180_TR
+    desc_col:
+      - A10__180_DC
+  GB93:
+    cecum:
+      - 93_CE
+    sig_col:
+      - A8__093_SI
+  GB74:
+    desc_col:
+      - 74_DC
+    trans_col:
+      - 29_74TR
+    asc_col:
+      - A5__074_AS
+  GB76:
+    trans_col:
+      - 22_76TR
+    desc_col:
+      - 76_DC
+  GB31:
+    rectum:
+      - 031_RE_T
+    asc_col:
+      - A1__031_AS
+  GB30:
+    cecum:
+      - 030_CE_T
+    trans_col:
+      - 30_TR
+  GB58:
+    rectum:
+      - 058_RE_T
+    trans_col:
+      - 58_TR
+    desc_col:
+      - 58_DC
+  GB84:
+    cecum:
+      - A16__084_CE
+    sig_col:
+      # - 084_SI_T
+  GB27:
+    cecum:
+      - 27_CE
+    asc_col:
+      - 17_27AS
+    desc_col:
+      - 27_DC
+    trans_col:
+      - 19_27TR
+    rectum:
+      - 18_27RE
+  GB29:
+    cecum:
+      - 29_CE
+    desc_col:
+      - 029_DC_T
+    trans_col:
+      - 32_29TR
+  GB103:
+    rectum:
+      - 103_RE
+    cecum:
+      - A6__103_CE
+  GB116:
+    cecum:
+      - 21_116CE
+    trans_col:
+      - 116_TR
+    rectum:
+      - 116_RE_T
+    desc_col:
+      - A7__116_DC
+  GB148:
+    cecum:
+      - A2__148_CE
+    sig_col:
+      - 148_SI
+    asc_col:
+      - A13__148_AS
+  GB40:
+    asc_col:
+      - 40_AS
+    desc_col:
+      - 20_40DC
+  GB115:
+    cecum:
+      - Laurel-10
+    asc_col:
+      - Laurel-2
+
+
+cohorts:
+  normal:
+    - GB40
+    - GB103
+    - GB130
+    - GB180
+    - GB58
+    - GB27
+    - GB148
+    # - GB153
+    # - GB273
+    # - GB277
+  adenoma:
+    - GB19
+    - GB31
+    - GB30
+    - GB76
+    - GB115
+    - GB116
+    - GB29
+    - GB74
+    - GB84
+    - GB93
+
+
+
+
+

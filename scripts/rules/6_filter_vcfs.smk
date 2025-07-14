@@ -56,11 +56,9 @@ rule remove_lcr:
         log_dir + "/{donor}_noLCR.log"
     benchmark:
         bench_dir + "/{donor}_noLCR.tsv"
-    envmodules:
-        "bedtools/2.30.0"
     shell:
         """
-        module load bedtools/2.30.0
+        module load bedtools
         bedtools intersect -header -v -a {input.annotated_vcf} -b {input.lcr_bed} | \
         bedtools intersect -header -v -a - -b {input.simplerepeats_bed} | bgzip -c > {output.filtered_vcf}
         tabix -p vcf {output.filtered_vcf}
