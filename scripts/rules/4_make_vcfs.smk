@@ -4,6 +4,26 @@ from itertools import product
 log_dir = out_dir + "/log/4_make_vcfs"
 bench_dir = out_dir + "/benchmark/4_make_vcfs"
 
+def swap_acct(wc, attempt):
+    if attempt == 1:
+        return "owner-guest"
+    else:
+        return "quinlan-rw"
+
+# If first attempt, redwood-guest (matches owner-guest). Else, quinlan.
+def swap_part(wc, attempt):
+    if attempt == 1:
+        return "redwood-shared-guest"
+    else:
+        return "quinlan-shared-rw"
+
+# If first attempt, 3 hours (short time for guest). Else, two weeks.
+def swap_time(wc, attempt):
+    if attempt == 1:
+        return 180
+    else:
+        return 20160
+
 def get_bam_inputs(wildcards):
     donor_samples = matches.get(wildcards.donor, {}).get("crypt_samples", [])
     return [
@@ -107,7 +127,10 @@ rule freebayes_variant_calling:
     params:
         out_dir = out_dir
     resources:
-        mem_mb = mem_xlarge
+        mem_mb = mem_xlarge,
+        slurm_account = swap_acct,
+        slurm_partition = swap_part,
+        runtime = swap_time
     threads:
         1
     log:
