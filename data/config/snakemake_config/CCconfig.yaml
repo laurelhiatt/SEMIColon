@@ -7,6 +7,12 @@ reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v
 reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
 
 samples:
+- B3_084_DC
+- B8_103_SI
+- B30_093_TR
+- B29_153_CE
+- B28_273_CE
+- B1_115_SI
 - A16__084_CE
 - A13__148_AS
 - A7__116_DC
@@ -517,6 +523,7 @@ matches:
     crypt_samples:
       - 93_CE
       - A8__093_SI
+      - B30_093_TR
   GB74:
     crypt_samples:
       - 74_DC
@@ -542,6 +549,7 @@ matches:
   GB84:
     crypt_samples:
       - A16__084_CE
+      - B3_084_DC
   #     - 084_SI_T
   GB27:
     crypt_samples:
@@ -559,6 +567,7 @@ matches:
     crypt_samples:
       - 103_RE
       - A6__103_CE
+      - B8_103_SI
   GB116:
     crypt_samples:
       - 116_TR
@@ -578,6 +587,13 @@ matches:
     crypt_samples:
       - Laurel-2
       - Laurel-10
+      - B1_115_SI
+  GB273:
+    crypt_samples:
+      - B28_273_CE
+  GB153:
+    crypt_samples:
+      - B29_153_CE
   # O300:
   #   crypt_samples:
   #     - PD37509b8
@@ -1128,6 +1144,7 @@ donors:
 - GB148
 - GB40
 - GB115
+- GB273
 # - O300
 # - O312
 # - HLS
@@ -1194,6 +1211,8 @@ regions:
       - 93_CE
     sig_col:
       - A8__093_SI
+    trans_col:
+      - B30_093_TR
   GB74:
     desc_col:
       - 74_DC
@@ -1226,6 +1245,8 @@ regions:
   GB84:
     cecum:
       - A16__084_CE
+    desc_col:
+      - B3_084_DC
     sig_col:
       # - 084_SI_T
   GB27:
@@ -1247,6 +1268,8 @@ regions:
     trans_col:
       - 32_29TR
   GB103:
+    sig_col:
+      - B8_103_SI
     rectum:
       - 103_RE
     cecum:
@@ -1277,6 +1300,14 @@ regions:
       - Laurel-10
     asc_col:
       - Laurel-2
+    sig_col:
+      - B1_115_SI
+  GB273:
+    cecum:
+      - B28_273_CE
+  GB153:
+    cecum:
+      - B29_153_CE
 
 
 cohorts:
@@ -1288,8 +1319,8 @@ cohorts:
     - GB58
     - GB27
     - GB148
-    # - GB153
-    # - GB273
+    - GB153
+    - GB273
     # - GB277
   adenoma:
     - GB19
