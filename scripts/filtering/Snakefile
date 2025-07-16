@@ -76,8 +76,8 @@ rule filter_by_gnomad:
         depth_vcf= out_dir + "/results/{donor}-depth-filtered.vcf.gz",
         indexed_vcf= out_dir + "/results/{donor}-depth-filtered.vcf.gz.tbi"
     output:
-        gnomad_vcf= temp(out_dir + "/results/{donor}-gnomad-filtered.vcf.gz"),
-        done = temp(out_dir + "/results/{donor}/gnomad.done")
+        gnomad_vcf= out_dir + "/results/{donor}-gnomad-filtered.vcf.gz",
+        done = out_dir + "/results/{donor}/gnomad.done"
     shell:
         """
         module load bcftools
@@ -112,7 +112,6 @@ rule filter_by_sample:
         gnomad_vcf = out_dir + "/results/{donor}-gnomad-filtered.vcf.gz"
     shell:
         """
-        mkdir -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/results/{wildcards.donor}
         ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua \
             -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' \
             -o {output.sample_vcf} {params.gnomad_vcf}
