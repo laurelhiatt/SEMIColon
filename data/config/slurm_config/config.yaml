@@ -9,7 +9,7 @@ default-resources:
 - slurm_partition="ucgd-shared-rw"
 - runtime=1440
 - mem_mb=16000*attempt
-- slurm_extra="--qos=ucgd-rw"
+# - slurm_extra="--qos=ucgd-rw"
 software-deployment-method: conda
 rerun-incomplete: True
 rerun-triggers:

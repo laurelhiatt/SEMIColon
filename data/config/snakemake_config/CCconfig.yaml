@@ -7,11 +7,20 @@ reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v
 reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
 
 samples:
+# - B43_273_AS
+# - B44_273_TR
+# - B45_273_SI
+# - B33_153_AS
+# - B35_130_TR
+# - B41_277_AC
+- B2_116_RE
+- B4_076_SI
+- B14_031_CE
 - B3_084_DC
 - B8_103_SI
-- B30_093_TR
-- B29_153_CE
-- B28_273_CE
+- B30_093_TR # 040_RE actually
+# - B29_153_CE actually 009_AS
+- B28_273_CE # 31 TR
 - B1_115_SI
 - A16__084_CE
 - A13__148_AS
@@ -514,6 +523,7 @@ matches:
       - 24_130DC
       - 30_130RE
       - 33_130AS
+      - B35_130_TR
   GB180:
     crypt_samples:
       - 23_180RE
@@ -533,10 +543,12 @@ matches:
     crypt_samples:
       - 22_76TR
       - 76_DC
+      - B4_076_SI
   GB31:
     crypt_samples:
       - 031_RE_T
       - A1__031_AS
+      - B14_031_CE
   GB30:
     crypt_samples:
       - 030_CE_T
@@ -574,6 +586,7 @@ matches:
       - 116_RE_T
       - 21_116CE
       - A7__116_DC
+      - B2_116_RE
   GB148:
     crypt_samples:
       - 148_SI
@@ -591,9 +604,16 @@ matches:
   GB273:
     crypt_samples:
       - B28_273_CE
+      - B43_273_AS
+      - B44_273_TR
+      - B45_273_SI
   GB153:
     crypt_samples:
       - B29_153_CE
+      - B33_153_AS
+  GB277:
+    crypt_samples:
+      - B41_277_AC
   # O300:
   #   crypt_samples:
   #     - PD37509b8
@@ -1145,6 +1165,8 @@ donors:
 - GB40
 - GB115
 - GB273
+- GB153
+# - GB277
 # - O300
 # - O312
 # - HLS
@@ -1191,7 +1213,7 @@ donors:
 regions:
   GB19:
     cecum:
-      - A9__019_CE
+      - A9__019_CE # this is actually 009_CE, need to rename at some point
   GB130:
     desc_col:
       - 24_130DC
@@ -1199,6 +1221,8 @@ regions:
       - 30_130RE
     asc_col:
       - 33_130AS
+    trans_col:
+      - B35_130_TR
   GB180:
     rectum:
       - 23_180RE
@@ -1225,11 +1249,15 @@ regions:
       - 22_76TR
     desc_col:
       - 76_DC
+    sig_col:
+      - B4_076_SI
   GB31:
     rectum:
       - 031_RE_T
     asc_col:
       - A1__031_AS
+    cecum:
+      - B14_031_CE
   GB30:
     cecum:
       - 030_CE_T
@@ -1283,6 +1311,8 @@ regions:
       - 116_RE_T
     desc_col:
       - A7__116_DC
+    rectum:
+      - B2_116_RE
   GB148:
     cecum:
       - A2__148_CE
@@ -1305,9 +1335,20 @@ regions:
   GB273:
     cecum:
       - B28_273_CE
+    asc_col:
+      - B43_273_AS
+    trans_col:
+      - B44_273_TR
+    sig_col:
+      - B45_273_SI
   GB153:
     cecum:
       - B29_153_CE
+    asc_col:
+      - B33_153_AS
+  GB277:
+    asc_col:
+      - B41_277_AC
 
 
 cohorts:

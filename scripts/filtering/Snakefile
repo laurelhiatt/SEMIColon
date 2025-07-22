@@ -135,4 +135,7 @@ rule count_snvs:
     output:
         txt= out_dir + "/results/{donor}/{sample}_snv_count.txt"
     shell:
-        "bcftools view -v snps {input.vcf} | grep -v '^#' | wc -l > {output.txt} || echo 0 > {output.txt}"
+        """
+        module load bcftools
+        bcftools view -v snps {input.vcf} | grep -v '^#' | wc -l > {output.txt} || echo 0 > {output.txt}
+        """
