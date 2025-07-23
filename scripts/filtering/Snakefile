@@ -134,8 +134,11 @@ rule count_snvs:
         vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz",
     output:
         txt= out_dir + "/results/{donor}/{sample}_snv_count.txt"
+    params:
+        sample = "{sample}"
+    conda:
+        "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/envs/cyvcf2.yaml"
     shell:
         """
-        module load bcftools
-        bcftools view -v snps {input.vcf} | grep -v '^#' | wc -l > {output.txt} || echo 0 > {output.txt}
+        python /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/mutations/per-sample-report.py {input.vcf} | grep "{params.sample}" > {output.txt}
         """

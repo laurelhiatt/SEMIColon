@@ -7,19 +7,19 @@ reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v
 reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
 
 samples:
-# - B43_273_AS
-# - B44_273_TR
-# - B45_273_SI
-# - B33_153_AS
-# - B35_130_TR
-# - B41_277_AC
+- B43_273_AS
+- B44_273_TR
+- B45_273_SI
+- B33_153_AS
+- B35_130_TR
+- B41_277_AC
 - B2_116_RE
 - B4_076_SI
 - B14_031_CE
 - B3_084_DC
 - B8_103_SI
 - B30_093_TR # 040_RE actually
-# - B29_153_CE actually 009_AS
+- B29_153_CE # actually 009_AS
 - B28_273_CE # 31 TR
 - B1_115_SI
 - A16__084_CE

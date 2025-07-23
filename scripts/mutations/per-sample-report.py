@@ -1,10 +1,14 @@
 import sys
-from cyvcf2 import VCF
+from cyvcf2 import VCF, Writer
 
-def count_unique_snvs(vcf_path):
+
+
+
+def count_unique_snvs(vcf_path, fname):
     vcf = VCF(vcf_path)
     sample_names = vcf.samples
     unique_snvs = {sample: 0 for sample in sample_names}
+    w = Writer(fname, vcf)
 
     for variant in vcf:
         if not variant.is_snp:
@@ -22,12 +26,13 @@ def count_unique_snvs(vcf_path):
         # Count as unique only if exactly one sample is non-ref
         if len(non_ref_samples) == 1:
             unique_snvs[sample_names[non_ref_samples[0]]] += 1
+            w.write_record(variant)
 
     for sample, count in unique_snvs.items():
         print(f"{sample}: {count} unique SNVs")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python script.py <input.vcf.gz>")
+    if len(sys.argv) != 3:
+        print("Usage: python per-sample-report.py <input.vcf.gz> <output.vcf.gz>")
         sys.exit(1)
-    count_unique_snvs(sys.argv[1])
+    count_unique_snvs(sys.argv[1], sys.argv[2])
