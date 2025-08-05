@@ -231,41 +231,41 @@ samples:
 - PD36814b7
 - PD37265b7
 - PD37265b
-# - PD36814c2
-# - PD36814c3
-# - PD36814c4
-# - PD37226b5
-# - PD37226b6
-# - PD37265c2
-# - PD37265c3
-# - PD37265c5
-# - PD28690bx_2_a5
-# - PD28690bx_2_d5
-# - PD28690cb_2_g1
-# - PD28690cb_2_g3
-# - PD28690cb_2_h1
-# - PD28690cb_2_h3
-# - PD34199a_c17
-# - PD34199a_c22
-# - PD34199a_c27
-# - PD34199a_c28
-# - PD34199a_c31
-# - PD34199a_c3
-# - PD34199a_c5
-# - PD34199a_c7
-# - PD34199a_s13
-# - PD34199a_s16
-# - PD34199a_s27
-# - PD34199a_s2
-# - PD34199a_s31
-# - PD34199a_s4
-# - PD34199a_t14
-# - PD34199a_t16
-# - PD34199a_t18
-# - PD34199a_t22
-# - PD34199a_t24
-# - PD34199a_t28
-# - PD34199a_t31
+- PD36814c2
+- PD36814c3
+- PD36814c4
+- PD37226b5
+- PD37226b6
+- PD37265c2
+- PD37265c3
+- PD37265c5
+- PD28690bx_2_a5
+- PD28690bx_2_d5
+- PD28690cb_2_g1
+- PD28690cb_2_g3
+- PD28690cb_2_h1
+- PD28690cb_2_h3
+- PD34199a_c17
+- PD34199a_c22
+- PD34199a_c27
+- PD34199a_c28
+- PD34199a_c31
+- PD34199a_c3
+- PD34199a_c5
+- PD34199a_c7
+- PD34199a_s13
+- PD34199a_s16
+- PD34199a_s27
+- PD34199a_s2
+- PD34199a_s31
+- PD34199a_s4
+- PD34199a_t14
+- PD34199a_t16
+- PD34199a_t18
+- PD34199a_t22
+- PD34199a_t24
+- PD34199a_t28
+- PD34199a_t31
 # - PD34200a_c10
 # - PD34200a_c14
 # - PD34200a_c15
@@ -376,26 +376,26 @@ samples:
 - PD34202a_s41
 - PD34202a_s43
 - PD34202a_s9
-# - PD37266b_lo0004
-# - PD37266b_lo0005
-# - PD37266b_lo0006
-# - PD37266b_lo0007
-# - PD37266b_lo0008
-# - PD34202a_s12
-# - PD37266b_lo0017
-# - PD37266b_lo0023
-# - PD37266c_lo0010
-# - PD37266c_lo0012
-# - PD37266c_lo0014
-# - PD37266c_lo0016
-# - PD37266c_lo0018
-# - PD37266c_lo0023
-# - PD37266d_lo0002
-# - PD37266d_lo0010
-# - PD37266d_lo0012
-# - PD37266d_lo0014
-# - PD37266e_lo0008
-# - PD37266e_lo0010
+- PD34202a_s12
+- PD37266b_lo0004
+- PD37266b_lo0005
+- PD37266b_lo0006
+- PD37266b_lo0007
+- PD37266b_lo0008
+- PD37266b_lo0017
+- PD37266b_lo0023
+- PD37266c_lo0010
+- PD37266c_lo0012
+- PD37266c_lo0014
+- PD37266c_lo0016
+- PD37266c_lo0018
+- PD37266c_lo0023
+- PD37266d_lo0002
+- PD37266d_lo0010
+- PD37266d_lo0012
+- PD37266d_lo0014
+- PD37266e_lo0008
+- PD37266e_lo0010
 # - PD37449c_lo0001
 # - PD37449c_lo0009
 # - PD37449c_lo0014
@@ -744,24 +744,24 @@ matches:
       - PD36814b7
       - PD37265b7
       - PD37265b
-  # OOO8:
-  #   crypt_samples:
-  #     - PD36814c2
-  #     - PD36814c3
-  #     - PD36814c4
-  #     - PD37226b5
-  #     - PD37226b6
-  #     - PD37265c2
-  #     - PD37265c3
-  #     - PD37265c5
-  # PD28690:
-  #   crypt_samples:
-  #     - PD28690bx_2_a5
-  #     - PD28690bx_2_d5
-  #     - PD28690cb_2_g1
-  #     - PD28690cb_2_g3
-  #     - PD28690cb_2_h1
-  #     - PD28690cb_2_h3
+  OOO8:
+    crypt_samples:
+      - PD36814c2
+      - PD36814c3
+      - PD36814c4
+      - PD37226b5
+      - PD37226b6
+      - PD37265c2
+      - PD37265c3
+      - PD37265c5
+  PD28690:
+    crypt_samples:
+      - PD28690bx_2_a5
+      - PD28690bx_2_d5
+      - PD28690cb_2_g1
+      - PD28690cb_2_g3
+      - PD28690cb_2_h1
+      - PD28690cb_2_h3
   PD34199:
     crypt_samples:
       - PD34199a_c17
@@ -904,27 +904,27 @@ matches:
       - PD34202a_s15
       - PD34202a_s12
       - PD34202a_s43
-  # PD37266:
-  #   crypt_samples:
-  #     - PD37266b_lo0004
-  #     - PD37266b_lo0005
-  #     - PD37266b_lo0006
-  #     - PD37266b_lo0007
-  #     - PD37266b_lo0008
-  #     - PD37266b_lo0017
-  #     - PD37266b_lo0023
-  #     - PD37266c_lo0010
-  #     - PD37266c_lo0012
-  #     - PD37266c_lo0014
-  #     - PD37266c_lo0016
-  #     - PD37266c_lo0018
-  #     - PD37266c_lo0023
-  #     - PD37266d_lo0002
-  #     - PD37266d_lo0010
-  #     - PD37266d_lo0012
-  #     - PD37266d_lo0014
-  #     - PD37266e_lo0008
-  #     - PD37266e_lo0010
+  PD37266:
+    crypt_samples:
+      - PD37266b_lo0004
+      - PD37266b_lo0005
+      - PD37266b_lo0006
+      - PD37266b_lo0007
+      - PD37266b_lo0008
+      - PD37266b_lo0017
+      - PD37266b_lo0023
+      - PD37266c_lo0010
+      - PD37266c_lo0012
+      - PD37266c_lo0014
+      - PD37266c_lo0016
+      - PD37266c_lo0018
+      - PD37266c_lo0023
+      - PD37266d_lo0002
+      - PD37266d_lo0010
+      - PD37266d_lo0012
+      - PD37266d_lo0014
+      - PD37266e_lo0008
+      - PD37266e_lo0010
   # PD37449:
   #   crypt_samples:
   #     - PD37449c_lo0001
@@ -1022,12 +1022,12 @@ donors:
 - OO94
 - OO99
 - OOO7
-# - OOO8
+- OOO8
 - PD28690
-# - PD34199
+- PD34199
 # - PD34200
 # - PD34201
 - PD34202
-# - PD37266
+- PD37266
 # - PD37449
 # - PD37590

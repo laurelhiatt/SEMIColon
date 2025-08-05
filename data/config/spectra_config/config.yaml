@@ -13,4 +13,4 @@ software-deployment-method: conda
 rerun-incomplete: True
 rerun-triggers:
 - "mtime"
-configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/test_config/testconfig.yaml"
+configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/spectra_config/config.yaml"

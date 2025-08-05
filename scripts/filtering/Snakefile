@@ -2,11 +2,26 @@ import os
 import glob
 import re
 
-configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/snakemake_config/CCconfig.yaml"
+configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/spectra_config/spectraconfig.yaml"
 samples: list[str] = config["samples"]
+in_dir: str = config["input_directory"]
 out_dir: str = config["output_directory"]
 donors: list[str] = config["donors"]
 matches = config["matches"]
+
+
+in_dir = in_dir.rstrip("/")
+out_dir = out_dir.rstrip("/")
+
+log_dir = out_dir + "/log/6_filter_vcfs"
+bench_dir = out_dir + "/benchmark/6_filter_vcfs"
+
+# reference data
+reference: str = config["reference_genome"]
+reference_index: str = config["reference_genome_index"]
+chroms = ["chr1","chr2","chr3","chr4","chr6","chr7","chr8","chr9","chr10","chr11","chr12",
+    "chr13","chr14","chr15","chr16","chr17", "chr18","chr19","chr20","chr21","chr22","chrX","chrY"]
+
 
 # Wildcard constraints; should all be alphanumeric
 wildcard_constraints:
@@ -16,53 +31,77 @@ wildcard_constraints:
     out_dir = out_dir,
     donor = "[A-Za-z0-9]+"
 
+# Define functions for memory during retries.
+def mem_xsmall(wildcards, attempt):
+    return attempt * 4000
+
+def mem_small(wildcards, attempt):
+    return attempt * 8000
+
+def mem_medium(wildcards, attempt):
+    return attempt * 16000
+
+def mem_large(wildcards, attempt):
+    return attempt * 32000
+
+def mem_xlarge(wildcards, attempt):
+    return attempt * 64000
+
 def get_donor(sample, matches):
     for donor, samples in matches.items():
         if sample in samples['crypt_samples']:
             return donor
     raise KeyError(f"Sample {sample} not found in matches dictionary")
 
-sample_to_donor = {sample: donor for donor, data in matches.items() for sample in data['crypt_samples']}
 
-def get_sample(donor, sample_to_donor):
-    for sample, d in sample_to_donor.items():
-        if d == donor:
-            return sample
+rule all:
+    # final output
+    input:
+        [
+            f"{out_dir}/results/{donor}/{sample}_snv_smallfilter_count.txt"
+            for donor, sample in zip(donors, samples)
+        ],
+        [
+            f"{out_dir}/results/{donor}/{sample}_snv_bigfilter_count.txt"
+            for donor, sample in zip(donors, samples)
+        ],
+        [
+            f"{out_dir}/results/{donor}/{sample}_snv_smallslop_count.txt"
+            for donor, sample in zip(donors, samples)
+        ],
+         [
+            f"{out_dir}/results/{donor}/{sample}_snv_bigslop_count.txt"
+            for donor, sample in zip(donors, samples)
+        ]
+
 
 pairs = [
     (get_donor(sample, matches), sample)
     for sample in samples
-    if get_donor(sample, matches) != "GB84"
+    if get_donor(sample, matches) != "gibberish"
 ]
 
 if pairs:
-    donors, filtered_samples = zip(*pairs)
+    donors, samples = zip(*pairs)
 else:
-    donors, filtered_samples = [], []
+    donors, samples = [], []
 
-rule all:
-    input:
-        [
-            f"{out_dir}/results/{donor}/{sample}_snv_count.txt"
-            for donor, sample in zip(donors, filtered_samples)
-        ]
 
-### filter all variants by depth > 5
-rule filter_by_depth:
+rule filter_by_depth_small:
     input:
         filtered_vcf= out_dir + "/vcf/{donor}-annotated-var-noLCR.vcf.gz"
     output:
-        depth_vcf= temp(out_dir + "/results/{donor}-depth-filtered.vcf.gz")
+        depth_vcf= temp(out_dir + "/results/{donor}-depth-filteredsmall.vcf.gz")
     shell:
         """
         ./vcfexpress filter -e 'return all(function (dp) return dp > 5 end, variant:format("DP"))' -o {output.depth_vcf} {input.filtered_vcf}
         """
 
-rule index_depth:
+rule index_depth_small:
     input:
-        depth_vcf= out_dir + "/results/{donor}-depth-filtered.vcf.gz"
+        depth_vcf= out_dir + "/results/{donor}-depth-filteredsmall.vcf.gz"
     output:
-        indexed_vcf= temp(out_dir + "/results/{donor}-depth-filtered.vcf.gz.tbi")
+        indexed_vcf= temp(out_dir + "/results/{donor}-depth-filteredsmall.vcf.gz.tbi")
     threads:
         8
     shell:
@@ -71,13 +110,13 @@ rule index_depth:
         """
 
 ### it shouldn't exist in gnomad (at this point, pre-blood)
-rule filter_by_gnomad:
+rule filter_by_gnomad_small:
     input:
-        depth_vcf= out_dir + "/results/{donor}-depth-filtered.vcf.gz",
-        indexed_vcf= out_dir + "/results/{donor}-depth-filtered.vcf.gz.tbi"
+        depth_vcf= out_dir + "/results/{donor}-depth-filteredsmall.vcf.gz",
+        indexed_vcf= out_dir + "/results/{donor}-depth-filteredsmall.vcf.gz.tbi"
     output:
-        gnomad_vcf= out_dir + "/results/{donor}-gnomad-filtered.vcf.gz",
-        done = out_dir + "/results/{donor}/gnomad.done"
+        gnomad_vcf= out_dir + "/results/{donor}-gnomad-filteredsmall.vcf.gz",
+        done = out_dir + "/results/{donor}/gnomadsmall.done"
     shell:
         """
         module load bcftools
@@ -85,31 +124,31 @@ rule filter_by_gnomad:
         touch {output.done}
         """
 
-def donor_done_input(wildcards):
+def donor_done_smallinput(wildcards):
     donor = wildcards.donor
     sample = wildcards.sample
     crypt_samples = matches.get(donor, {}).get("crypt_samples", [])
     if sample not in crypt_samples:
         pass
-    return os.path.join(out_dir, "results", donor, "gnomad.done")
+    return os.path.join(out_dir, "results", donor, "gnomadsmall.done")
 
-rule make_lua:
+rule make_lua_small:
     input:
-        gnomad_done = donor_done_input,
+        gnomad_done = donor_done_smallinput,
     output:
-        lua = out_dir + "/results/{donor}/{sample}_soi.lua"
+        lua = out_dir + "/results/{donor}/{sample}_soismall.lua"
     run:
         with open(output.lua, "w") as f:
             f.write(f'samplesOfInterest = {{"{wildcards.donor}_{wildcards.sample}"}}\n')
 
 ### all the other samples must have 0 alt alleles
-rule filter_by_sample:
+rule filter_by_sample_small:
     input:
-        lua = rules.make_lua.output.lua,
+        lua = rules.make_lua_small.output.lua,
     output:
-        sample_vcf = temp(out_dir + "/results/{donor}/{sample}_filtered_noAD.vcf.gz")
+        sample_vcf = temp(out_dir + "/results/{donor}/{sample}_filtered_noADsmall.vcf.gz")
     params:
-        gnomad_vcf = out_dir + "/results/{donor}-gnomad-filtered.vcf.gz"
+        gnomad_vcf = out_dir + "/results/{donor}-gnomad-filteredsmall.vcf.gz"
     shell:
         """
         ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua \
@@ -118,27 +157,392 @@ rule filter_by_sample:
         """
 
 ### this sample must have > # alternate allele
-rule filter_by_alt_depth:
+rule filter_by_alt_depth_small:
     input:
-        sample_vcf= out_dir + "/results/{donor}/{sample}_filtered_noAD.vcf.gz",
-        lua = rules.make_lua.output.lua,
+        sample_vcf= out_dir + "/results/{donor}/{sample}_filtered_noADsmall.vcf.gz",
+        lua = rules.make_lua_small.output.lua,
     output:
-        vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz",
+        vcf= out_dir + "/results/{donor}/{sample}_filteredsmall.vcf.gz",
     shell:
         """
         ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 2 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.sample_vcf}
         """
 
-rule count_snvs:
+rule count_snvs_small:
     input:
-        vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz",
+        vcf= out_dir + "/results/{donor}/{sample}_filteredsmall.vcf.gz",
     output:
-        txt= out_dir + "/results/{donor}/{sample}_snv_count.txt"
+        out_vcf= out_dir + "/results/{donor}/{sample}_filtered_snvssmall.vcf.gz",
+        txt= out_dir + "/results/{donor}/{sample}_snv_smallfilter_count.txt"
     params:
         sample = "{sample}"
     conda:
-        "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/envs/cyvcf2.yaml"
+        "../../envs/cyvcf2.yaml"
+    script:
+        "../mutations/per-sample-report.py"
+
+
+rule filter_by_depth_big:
+    input:
+        filtered_vcf= out_dir + "/vcf/{donor}-annotated-var-noLCR.vcf.gz"
+    output:
+        depth_vcf= temp(out_dir + "/results/{donor}-depth-filteredbig.vcf.gz")
     shell:
         """
-        python /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/mutations/per-sample-report.py {input.vcf} | grep "{params.sample}" > {output.txt}
+        ./vcfexpress filter -e 'return all(function (dp) return dp > 7 end, variant:format("DP"))' -o {output.depth_vcf} {input.filtered_vcf}
         """
+
+rule index_depth_big:
+    input:
+        depth_vcf= out_dir + "/results/{donor}-depth-filteredbig.vcf.gz"
+    output:
+        indexed_vcf= temp(out_dir + "/results/{donor}-depth-filteredbig.vcf.gz.tbi")
+    threads:
+        8
+    shell:
+        """
+        tabix -f -p vcf {input.depth_vcf} --threads {threads}
+        """
+
+### it shouldn't exist in gnomad (at this point, pre-blood)
+rule filter_by_gnomad_big:
+    input:
+        depth_vcf= out_dir + "/results/{donor}-depth-filteredbig.vcf.gz",
+        indexed_vcf= out_dir + "/results/{donor}-depth-filteredbig.vcf.gz.tbi"
+    output:
+        gnomad_vcf= out_dir + "/results/{donor}-gnomad-filteredbig.vcf.gz",
+        done = out_dir + "/results/{donor}/gnomadbig.done"
+    shell:
+        """
+        module load bcftools
+        bcftools filter -i '(gnomad_popmax_af <= 0 || gnomad_popmax_af == ".")' -Oz -o {output.gnomad_vcf} {input.depth_vcf}
+        touch {output.done}
+        """
+
+def donor_done_biginput(wildcards):
+    donor = wildcards.donor
+    sample = wildcards.sample
+    crypt_samples = matches.get(donor, {}).get("crypt_samples", [])
+    if sample not in crypt_samples:
+        pass
+    return os.path.join(out_dir, "results", donor, "gnomadbig.done")
+
+rule make_lua_big:
+    input:
+        gnomad_done = donor_done_biginput,
+    output:
+        lua = out_dir + "/results/{donor}/{sample}_soibig.lua"
+    run:
+        with open(output.lua, "w") as f:
+            f.write(f'samplesOfInterest = {{"{wildcards.donor}_{wildcards.sample}"}}\n')
+
+### all the other samples must have 0 alt alleles
+rule filter_by_sample_big:
+    input:
+        lua = rules.make_lua_big.output.lua,
+    output:
+        sample_vcf = temp(out_dir + "/results/{donor}/{sample}_filtered_noADbig.vcf.gz")
+    params:
+        gnomad_vcf = out_dir + "/results/{donor}-gnomad-filteredbig.vcf.gz"
+    shell:
+        """
+        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua \
+            -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' \
+            -o {output.sample_vcf} {params.gnomad_vcf}
+        """
+
+### this sample must have > # alternate allele
+rule filter_by_alt_depth_big:
+    input:
+        sample_vcf= out_dir + "/results/{donor}/{sample}_filtered_noADbig.vcf.gz",
+        lua = rules.make_lua_big.output.lua,
+    output:
+        vcf= out_dir + "/results/{donor}/{sample}_filteredbig.vcf.gz",
+    shell:
+        """
+        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 3 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.sample_vcf}
+        """
+
+rule count_snvs_big:
+    input:
+        vcf= out_dir + "/results/{donor}/{sample}_filteredbig.vcf.gz",
+    output:
+        out_vcf= out_dir + "/results/{donor}/{sample}_filtered_snvsbig.vcf.gz",
+        txt= out_dir + "/results/{donor}/{sample}_snv_bigfilter_count.txt"
+    params:
+        sample = "{sample}"
+    conda:
+        "../../envs/cyvcf2.yaml"
+    script:
+        "../mutations/per-sample-report.py"
+
+
+rule decompose_vcfs:
+    input:
+        vcf = out_dir + "/vcf/{donor}-var.vcf.gz",
+        fasta = reference
+    output:
+        clean_vcf = temp(out_dir + "/vcf/{donor}-clean-var.vcf.gz")
+    resources:
+        mem_mb = mem_large
+    threads: 8
+    envmodules:
+        "bcftools/1.16"
+    log:
+        log_dir + "/{donor}_decompose.log"
+    benchmark:
+        bench_dir + "/{donor}_decompose.tsv"
+    shell:
+        """
+        module load bcftools/1.16
+        bcftools norm -m - {input.vcf} --threads {threads} -w 10000 -f {input.fasta} -O b -o {output.clean_vcf} > {log} 2>&1
+        """
+
+# annotate the vcf with gnomAD
+rule gnomad_VCFs:
+    input:
+        clean_vcf = out_dir + "/vcf/{donor}-clean-var.vcf.gz",
+    output:
+        annotated_vcf = temp(out_dir + "/vcf/{donor}-annotated-var.vcf.gz"),
+    resources:
+        mem_mb = mem_large
+    threads: 2
+    log:
+        log_dir + "/{donor}_gnomad.log"
+    envmodules:
+        "slivar/0.3.1"
+    shell:
+        """
+        slivar expr -g /scratch/ucgd/lustre/common/data/Slivar/db/gnomad.hg38.genomes.v3.fix.zip -v {input.clean_vcf} -o {output.annotated_vcf}
+        """
+
+rule slop_lcr_regions:
+    input:
+        lcr_bed = "/scratch/ucgd/lustre-labs/quinlan/data-shared/annotations/LCR-hs38.bed.gz",
+        simplerepeats_bed = "/scratch/ucgd/lustre-labs/quinlan/data-shared/annotations/GRCh38.UCSC.SimpleRepeats.simple.bed",
+        genome = "/scratch/ucgd/lustre-labs/quinlan/data-shared/annotations/hg38.genome"
+    output:
+        lcr_slop = temp(out_dir + "/annotations/LCR-hs38-slop100.bed"),
+        simplerepeats_slop = temp(out_dir + "/annotations/SimpleRepeats-hs38-slop100.bed")
+    resources:
+        mem_mb = 1000
+    threads: 1
+    log:
+        log_dir + "/slop_annotations.log"
+    shell:
+        """
+        module load bedtools
+        bedtools slop -b 100 -i {input.lcr_bed} -g {input.genome} > {output.lcr_slop}
+        bedtools slop -b 100 -i {input.simplerepeats_bed} -g {input.genome} > {output.simplerepeats_slop}
+        """
+
+rule remove_lcr_slop:
+    input:
+        annotated_vcf = out_dir + "/vcf/{donor}-annotated-var.vcf.gz",
+        lcr_slop = rules.slop_lcr_regions.output.lcr_slop,
+        simplerepeats_slop = rules.slop_lcr_regions.output.simplerepeats_slop
+    output:
+        filtered_vcf = out_dir + "/vcf/{donor}-annotated-var-noLCRslop.vcf.gz"
+    resources:
+        mem_mb = mem_xlarge
+    threads: 4
+    log:
+        log_dir + "/{donor}_noLCRslop.log"
+    benchmark:
+        bench_dir + "/{donor}_noLCRslop.tsv"
+    shell:
+        """
+        module load bedtools
+        bedtools intersect -header -v -a {input.annotated_vcf} -b {input.lcr_slop} | \
+        bedtools intersect -header -v -a - -b {input.simplerepeats_slop} | bgzip -c > {output.filtered_vcf}
+        tabix -p vcf {output.filtered_vcf}
+        """
+
+
+rule filter_by_depth_smallslop:
+    input:
+        filtered_vcf= out_dir + "/vcf/{donor}-annotated-var-noLCRslop.vcf.gz"
+    output:
+        depth_vcf= temp(out_dir + "/results/{donor}-depth-filteredsmallslop.vcf.gz")
+    shell:
+        """
+        ./vcfexpress filter -e 'return all(function (dp) return dp > 5 end, variant:format("DP"))' -o {output.depth_vcf} {input.filtered_vcf}
+        """
+
+rule index_depth_smallslop:
+    input:
+        depth_vcf= out_dir + "/results/{donor}-depth-filteredsmallslop.vcf.gz"
+    output:
+        indexed_vcf= temp(out_dir + "/results/{donor}-depth-filteredsmallslop.vcf.gz.tbi")
+    threads:
+        8
+    shell:
+        """
+        tabix -f -p vcf {input.depth_vcf} --threads {threads}
+        """
+
+### it shouldn't exist in gnomad (at this point, pre-blood)
+rule filter_by_gnomad_smallslop:
+    input:
+        depth_vcf= out_dir + "/results/{donor}-depth-filteredsmallslop.vcf.gz",
+        indexed_vcf= out_dir + "/results/{donor}-depth-filteredsmallslop.vcf.gz.tbi"
+    output:
+        gnomad_vcf= out_dir + "/results/{donor}-gnomad-filteredsmallslop.vcf.gz",
+        done = out_dir + "/results/{donor}/gnomadsmallslop.done"
+    shell:
+        """
+        module load bcftools
+        bcftools filter -i '(gnomad_popmax_af <= 0 || gnomad_popmax_af == ".")' -Oz -o {output.gnomad_vcf} {input.depth_vcf}
+        touch {output.done}
+        """
+
+def donor_done_smallslopinput(wildcards):
+    donor = wildcards.donor
+    sample = wildcards.sample
+    crypt_samples = matches.get(donor, {}).get("crypt_samples", [])
+    if sample not in crypt_samples:
+        pass
+    return os.path.join(out_dir, "results", donor, "gnomadsmallslop.done")
+
+rule make_lua_smallslop:
+    input:
+        gnomad_done = donor_done_smallslopinput,
+    output:
+        lua = out_dir + "/results/{donor}/{sample}_soismallslop.lua"
+    run:
+        with open(output.lua, "w") as f:
+            f.write(f'samplesOfInterest = {{"{wildcards.donor}_{wildcards.sample}"}}\n')
+
+### all the other samples must have 0 alt alleles
+rule filter_by_sample_smallslop:
+    input:
+        lua = rules.make_lua_smallslop.output.lua,
+    output:
+        sample_vcf = temp(out_dir + "/results/{donor}/{sample}_filtered_noADsmallslop.vcf.gz")
+    params:
+        gnomad_vcf = out_dir + "/results/{donor}-gnomad-filteredsmallslop.vcf.gz"
+    shell:
+        """
+        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua \
+            -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' \
+            -o {output.sample_vcf} {params.gnomad_vcf}
+        """
+
+### this sample must have > # alternate allele
+rule filter_by_alt_depth_smallslop:
+    input:
+        sample_vcf= out_dir + "/results/{donor}/{sample}_filtered_noADsmallslop.vcf.gz",
+        lua = rules.make_lua_smallslop.output.lua,
+    output:
+        vcf= out_dir + "/results/{donor}/{sample}_filteredsmallslop.vcf.gz",
+    shell:
+        """
+        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 2 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.sample_vcf}
+        """
+
+rule count_snvs_smallslop:
+    input:
+        vcf= out_dir + "/results/{donor}/{sample}_filteredsmallslop.vcf.gz",
+    output:
+        out_vcf= out_dir + "/results/{donor}/{sample}_filtered_snvssmallslop.vcf.gz",
+        txt= out_dir + "/results/{donor}/{sample}_snv_smallslop_count.txt"
+    params:
+        sample = "{sample}"
+    conda:
+        "../../envs/cyvcf2.yaml"
+    script:
+        "../mutations/per-sample-report.py"
+
+rule filter_by_depth_bigslop:
+    input:
+        filtered_vcf= out_dir + "/vcf/{donor}-annotated-var-noLCRslop.vcf.gz"
+    output:
+        depth_vcf= temp(out_dir + "/results/{donor}-depth-filteredbigslop.vcf.gz")
+    shell:
+        """
+        ./vcfexpress filter -e 'return all(function (dp) return dp > 5 end, variant:format("DP"))' -o {output.depth_vcf} {input.filtered_vcf}
+        """
+
+rule index_depth_bigslop:
+    input:
+        depth_vcf= out_dir + "/results/{donor}-depth-filteredbigslop.vcf.gz"
+    output:
+        indexed_vcf= temp(out_dir + "/results/{donor}-depth-filteredbigslop.vcf.gz.tbi")
+    threads:
+        8
+    shell:
+        """
+        tabix -f -p vcf {input.depth_vcf} --threads {threads}
+        """
+
+### it shouldn't exist in gnomad (at this point, pre-blood)
+rule filter_by_gnomad_bigslop:
+    input:
+        depth_vcf= out_dir + "/results/{donor}-depth-filteredbigslop.vcf.gz",
+        indexed_vcf= out_dir + "/results/{donor}-depth-filteredbigslop.vcf.gz.tbi"
+    output:
+        gnomad_vcf= out_dir + "/results/{donor}-gnomad-filteredbigslop.vcf.gz",
+        done = out_dir + "/results/{donor}/gnomadbigslop.done"
+    shell:
+        """
+        module load bcftools
+        bcftools filter -i '(gnomad_popmax_af <= 0 || gnomad_popmax_af == ".")' -Oz -o {output.gnomad_vcf} {input.depth_vcf}
+        touch {output.done}
+        """
+
+def donor_done_bigslopinput(wildcards):
+    donor = wildcards.donor
+    sample = wildcards.sample
+    crypt_samples = matches.get(donor, {}).get("crypt_samples", [])
+    if sample not in crypt_samples:
+        pass
+    return os.path.join(out_dir, "results", donor, "gnomadbigslop.done")
+
+rule make_lua_bigslop:
+    input:
+        gnomad_done = donor_done_bigslopinput,
+    output:
+        lua = out_dir + "/results/{donor}/{sample}_soibigslop.lua"
+    run:
+        with open(output.lua, "w") as f:
+            f.write(f'samplesOfInterest = {{"{wildcards.donor}_{wildcards.sample}"}}\n')
+
+### all the other samples must have 0 alt alleles
+rule filter_by_sample_bigslop:
+    input:
+        lua = rules.make_lua_bigslop.output.lua,
+    output:
+        sample_vcf = temp(out_dir + "/results/{donor}/{sample}_filtered_noADbigslop.vcf.gz")
+    params:
+        gnomad_vcf = out_dir + "/results/{donor}-gnomad-filteredbigslop.vcf.gz"
+    shell:
+        """
+        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua \
+            -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' \
+            -o {output.sample_vcf} {params.gnomad_vcf}
+        """
+
+### this sample must have > # alternate allele
+rule filter_by_alt_depth_bigslop:
+    input:
+        sample_vcf= out_dir + "/results/{donor}/{sample}_filtered_noADbigslop.vcf.gz",
+        lua = rules.make_lua_bigslop.output.lua,
+    output:
+        vcf= out_dir + "/results/{donor}/{sample}_filteredbigslop.vcf.gz",
+    shell:
+        """
+        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 2 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.sample_vcf}
+        """
+
+rule count_snvs_bigslop:
+    input:
+        vcf= out_dir + "/results/{donor}/{sample}_filteredbigslop.vcf.gz",
+    output:
+        out_vcf= out_dir + "/results/{donor}/{sample}_filtered_snvsbigslop.vcf.gz",
+        txt= out_dir + "/results/{donor}/{sample}_snv_bigslop_count.txt"
+    params:
+        sample = "{sample}"
+    conda:
+        "../../envs/cyvcf2.yaml"
+    script:
+        "../mutations/per-sample-report.py"
