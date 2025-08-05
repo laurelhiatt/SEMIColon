@@ -16,6 +16,24 @@ out_dir = out_dir.rstrip("/")
 log_dir = out_dir + "/log/6_filter_vcfs"
 bench_dir = out_dir + "/benchmark/6_filter_vcfs"
 
+def get_donor(sample, matches):
+    for donor, samples in matches.items():
+        if sample in samples['crypt_samples']:
+            return donor
+    raise KeyError(f"Sample {sample} not found in matches dictionary")
+
+
+pairs = [
+    (get_donor(sample, matches), sample)
+    for sample in samples
+    if get_donor(sample, matches) != "gibberish"
+]
+
+if pairs:
+    donors, filtered_samples = zip(*pairs)
+else:
+    donors, filtered_samples = [], []
+
 # reference data
 reference: str = config["reference_genome"]
 reference_index: str = config["reference_genome_index"]
@@ -59,32 +77,23 @@ rule all:
     input:
         [
             f"{out_dir}/results/{donor}/{sample}_snv_smallfilter_count.txt"
-            for donor, sample in zip(donors, samples)
+            for donor, sample in zip(donors, filtered_samples)
         ],
         [
             f"{out_dir}/results/{donor}/{sample}_snv_bigfilter_count.txt"
-            for donor, sample in zip(donors, samples)
+            for donor, sample in zip(donors, filtered_samples)
         ],
         [
             f"{out_dir}/results/{donor}/{sample}_snv_smallslop_count.txt"
-            for donor, sample in zip(donors, samples)
+            for donor, sample in zip(donors, filtered_samples)
         ],
          [
             f"{out_dir}/results/{donor}/{sample}_snv_bigslop_count.txt"
-            for donor, sample in zip(donors, samples)
+            for donor, sample in zip(donors, filtered_samples)
         ]
 
 
-pairs = [
-    (get_donor(sample, matches), sample)
-    for sample in samples
-    if get_donor(sample, matches) != "gibberish"
-]
 
-if pairs:
-    donors, samples = zip(*pairs)
-else:
-    donors, samples = [], []
 
 
 rule filter_by_depth_small:

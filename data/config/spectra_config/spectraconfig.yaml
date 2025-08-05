@@ -10,11 +10,11 @@ samples:
 - 21_116CE
 - A7__116_DC
 - B2_116_RE
-- 148_SI
-- A2__148_CE
-- A13__148_AS
-- B13_148_DC
-- B15_148_RE
+# - 148_SI
+# - A2__148_CE
+# - A13__148_AS
+# - B13_148_DC
+# - B15_148_RE
 - PD36814m5
 - PD36814m8
 - PD37226j4
@@ -36,13 +36,13 @@ matches:
       - 21_116CE
       - A7__116_DC
       - B2_116_RE
-  GB148:
-    crypt_samples:
-      - 148_SI
-      - A2__148_CE
-      - A13__148_AS
-      - B13_148_DC
-      - B15_148_RE
+  # GB148:
+  #   crypt_samples:
+  #     - 148_SI
+  #     - A2__148_CE
+  #     - A13__148_AS
+  #     - B13_148_DC
+  #     - B15_148_RE
   O337:
     crypt_samples:
       - PD36814m5
@@ -60,5 +60,5 @@ matches:
 
 donors:
 - GB116
-- GB148
+# - GB148
 - O337
