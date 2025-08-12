@@ -1,4 +1,4 @@
-# Laurel Hiatt 04/14/2025
+# Laurel Hiatt 08/12/2025
 log_dir = out_dir + "/log/6_filter_vcfs"
 bench_dir = out_dir + "/benchmark/6_filter_vcfs"
 
@@ -40,7 +40,7 @@ rule gnomad_VCFs:
     input:
         clean_vcf = out_dir + "/vcf/{donor}-clean-var.vcf.gz",
     output:
-        annotated_vcf = temp(out_dir + "/vcf/{donor}-annotated-var.vcf.gz"),
+        annotated_vcf = temp(out_dir + "/vcf/{donor}-annotated-var.vcf.gz")
     resources:
         mem_mb = mem_large
     threads: 2
@@ -74,8 +74,6 @@ rule remove_lcr:
         bedtools intersect -header -v -a - -b {input.simplerepeats_bed} | bgzip -c > {output.filtered_vcf}
         tabix -p vcf {output.filtered_vcf}
         """
-
-
 
 rule filter_by_depth:
     input:
@@ -146,16 +144,26 @@ rule filter_by_sample:
             -o {output.sample_vcf} {params.gnomad_vcf}
         """
 
+rule filter_by_vaf:
+    input:
+        sample_vcf = (out_dir + "/results/{donor}/{sample}_filtered_noAD.vcf.gz")
+    output:
+        vaf_vcf = temp(out_dir + "/results/{donor}/{sample}_filtered_noADvaf.vcf.gz")
+    shell:
+        """
+        bcftools filter -i '((FMT/AD[0:0]+FMT/AD[0:1])>0 && (FMT/AD[0:1])/(FMT/AD[0:0]+FMT/AD[0:1]) < 0.885)' -Oz -o {output.vaf_vcf} {input.sample_vcf}
+        """
+
 ### this sample must have > # alternate allele
 rule filter_by_alt_depth:
     input:
-        sample_vcf= out_dir + "/results/{donor}/{sample}_filtered_noAD.vcf.gz",
+        vaf_vcf = out_dir + "/results/{donor}/{sample}_filtered_noADvaf.vcf.gz",
         lua = rules.make_lua.output.lua,
     output:
         vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz",
     shell:
         """
-        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 2 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.sample_vcf}
+        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 2 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vaf_vcf}
         """
 
 rule count_snvs:
