@@ -7,6 +7,9 @@ reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v
 reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
 
 samples:
+- B22_040_RE
+- B27_277_TC
+- B32_103_DC
 - B12_180_AS
 - B15_148_RE
 - B26_115_TC
@@ -173,6 +176,7 @@ matches:
     crypt_samples:
       - 40_AS
       - 20_40DC
+      - B22_040_RE
   GB115:
     crypt_samples:
       - Laurel-2
@@ -198,6 +202,7 @@ matches:
       - B41_277_AC
       - B39_277_CE
       - B42_277_RTM
+      - B27_277_TC
 
 donors:
 - GB19
@@ -352,6 +357,8 @@ regions:
       - 40_AS
     desc_col:
       - 20_40DC
+    rectum:
+      - B22_040_RE
   GB115:
     cecum:
       - Laurel-10
@@ -390,6 +397,9 @@ regions:
       - B39_277_CE
     rectum:
       - B42_277_RTM
+    trans_col:
+      - B27_277_TC
+
 
 
 cohorts:
