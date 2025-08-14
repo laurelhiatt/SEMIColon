@@ -153,16 +153,28 @@ rule filter_by_sample_big:
             -o {output.sample_vcf} {params.gnomad_vcf}
         """
 
+rule filter_by_vaf_big:
+    input:
+        sample_vcf = (out_dir + "/results/{donor}/{sample}_filtered_noADbig.vcf.gz")
+    output:
+        vaf_vcf = temp(out_dir + "/results/{donor}/{sample}_filtered_noADvafbig.vcf.gz")
+    shell:
+        """
+        module load bcftools
+
+        bcftools filter -i 'MIN((FMT/AD[*:1]) / (FMT/AD[*:0] + FMT/AD[*:1])) < 0.885' -Oz -o {output.vaf_vcf} {input.sample_vcf}
+        """
+
 ### this sample must have > # alternate allele
 rule filter_by_alt_depth_big:
     input:
-        sample_vcf= out_dir + "/results/{donor}/{sample}_filtered_noADbig.vcf.gz",
+        vaf_vcf= out_dir + "/results/{donor}/{sample}_filtered_noADvafbig.vcf.gz",
         lua = rules.make_lua_big.output.lua,
     output:
         vcf= out_dir + "/results/{donor}/{sample}_filteredbig.vcf.gz",
     shell:
         """
-        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 3 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.sample_vcf}
+        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 3 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vaf_vcf}
         """
 
 rule count_snvs_big:
@@ -337,7 +349,8 @@ rule filter_by_vaf_bigslop:
         vaf_vcf = temp(out_dir + "/results/{donor}/{sample}_filtered_noADvafbigslop.vcf.gz")
     shell:
         """
-        bcftools filter \-i '((FMT/AD[0:0]+FMT/AD[0:1])>0 && (FMT/AD[0:1])/(FMT/AD[0:0]+FMT/AD[0:1]) < 0.885)' \-Oz -o {output.vaf_vcf} {input.sample_vcf}
+        module load bcftools
+        bcftools filter -i 'MIN((FMT/AD[*:1]) / (FMT/AD[*:0] + FMT/AD[*:1])) < 0.885' -Oz -o {output.vaf_vcf} {input.sample_vcf}
         """
 
 
@@ -350,7 +363,7 @@ rule filter_by_alt_depth_bigslop:
         vcf= out_dir + "/results/{donor}/{sample}_filteredbigslop.vcf.gz",
     shell:
         """
-        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 3 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.sample_vcf}
+        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 3 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vaf_vcf}
         """
 
 rule count_snvs_bigslop:

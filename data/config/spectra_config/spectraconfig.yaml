@@ -6,59 +6,59 @@ reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human
 
 samples:
 - 116_TR
-# - 116_RE_T
-# - 21_116CE
-# - A7__116_DC
-# - B2_116_RE
-# - 148_SI
-# - A2__148_CE
-# - A13__148_AS
-# - B13_148_DC
-# - B15_148_RE
-# - PD36814m5
-# - PD36814m8
-# - PD37226j4
-# - PD37226j5
-# - PD37226j6
-# - PD37226j7
-# - PD37226j8
-# - PD37226o4
-# - PD37226o5
-# - PD37226p7
-# - PD37265m3
-# - PD37265m4
+- 116_RE_T
+- 21_116CE
+- A7__116_DC
+- B2_116_RE
+- 148_SI
+- A2__148_CE
+- A13__148_AS
+- B13_148_DC
+- B15_148_RE
+- PD36814m5
+- PD36814m8
+- PD37226j4
+- PD37226j5
+- PD37226j6
+- PD37226j7
+- PD37226j8
+- PD37226o4
+- PD37226o5
+- PD37226p7
+- PD37265m3
+- PD37265m4
 
 matches:
   GB116:
     crypt_samples:
       - 116_TR
-      # - 116_RE_T
-      # - 21_116CE
-      # - A7__116_DC
-      # - B2_116_RE
-  # GB148:
-  #   crypt_samples:
-  #     - 148_SI
-  #     - A2__148_CE
-  #     - A13__148_AS
-  #     - B13_148_DC
-  #     - B15_148_RE
-  # O337:
-  #   crypt_samples:
-  #     - PD36814m5
-  #     - PD36814m8
-  #     - PD37226j4
-  #     - PD37226j5
-  #     - PD37226j6
-  #     - PD37226j7
-  #     - PD37226j8
-  #     - PD37226o4
-  #     - PD37226o5
-  #     - PD37226p7
-  #     - PD37265m3
-  #     - PD37265m4
+      - 116_RE_T
+      - 21_116CE
+      - A7__116_DC
+      - B2_116_RE
+  GB148:
+    crypt_samples:
+      - 148_SI
+      - A2__148_CE
+      - A13__148_AS
+      - B13_148_DC
+      - B15_148_RE
+  O337:
+    crypt_samples:
+      - PD36814m5
+      - PD36814m8
+      - PD37226j4
+      - PD37226j5
+      - PD37226j6
+      - PD37226j7
+      - PD37226j8
+      - PD37226o4
+      - PD37226o5
+      - PD37226p7
+      - PD37265m3
+      - PD37265m4
 
 donors:
 - GB116
-# - GB148
-# - O337
+- GB148
+- O337
