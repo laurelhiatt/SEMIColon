@@ -162,7 +162,7 @@ rule filter_by_vaf_big:
         """
         module load bcftools
 
-        bcftools filter -i 'MIN((FMT/AD[*:1]) / (FMT/AD[*:0] + FMT/AD[*:1])) < 0.885' -Oz -o {output.vaf_vcf} {input.sample_vcf}
+        bcftools filter -i 'MAX((FMT/AD[*:1]) / (FMT/AD[*:0] + FMT/AD[*:1])) < 0.885' -Oz -o {output.vaf_vcf} {input.sample_vcf}
         """
 
 ### this sample must have > # alternate allele
@@ -350,7 +350,7 @@ rule filter_by_vaf_bigslop:
     shell:
         """
         module load bcftools
-        bcftools filter -i 'MIN((FMT/AD[*:1]) / (FMT/AD[*:0] + FMT/AD[*:1])) < 0.885' -Oz -o {output.vaf_vcf} {input.sample_vcf}
+        bcftools filter -i 'MAX((FMT/AD[*:1]) / (FMT/AD[*:0] + FMT/AD[*:1])) < 0.885' -Oz -o {output.vaf_vcf} {input.sample_vcf}
         """
 
 
