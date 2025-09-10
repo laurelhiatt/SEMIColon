@@ -19,7 +19,20 @@
 ## [4] compress_chunks: Compress vcf chunks
 ## [4] index_chunks: Index vcf chunks
 ## [4] concat_vcfs: Concatenate vcf chunks
+## [4] decompose_vcfs: Decompose multiallelic sites
+## [5] somalier_extract: Extract relatedness info with somalier
+## [5] somalier_check: Check relatedness with somalier
 ## [5] bcftools_stats: Basic stats on vcf files
+## [5] plot_vcf_stats: Plot vcf stats
+## [6] gnomad_VCFs: Annotate with gnomad VAFs
+## [6] remove_lcr: Remove variants in low complexity regions
+## [6] filter_by_depth: Filter variants by depth (currently > 7)
+## [6] index_depth: Index depth-filtered vcf
+## [6] filter_by_gnomad: Filter variants by gnomAD frequency (must be absent)
+## [6] make_lua: Create lua file for sample-specific filtering
+## [6] filter_by_sample: Filter variants to be sample-specific
+
+
 
 # Laurel Hiatt 09/10/2025
 

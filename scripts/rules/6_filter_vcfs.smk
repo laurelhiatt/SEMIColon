@@ -13,28 +13,6 @@ if pairs:
 else:
     donors, filtered_samples = [], []
 
-# decompose the vcf for downstream
-rule decompose_vcfs:
-    input:
-        vcf = out_dir + "/vcf/{donor}-var.vcf.gz",
-        fasta = reference
-    output:
-        clean_vcf = temp(out_dir + "/vcf/{donor}-clean-var.vcf.gz")
-    resources:
-        mem_mb = mem_large
-    threads: 8
-    envmodules:
-        "bcftools/1.16"
-    log:
-        log_dir + "/{donor}_decompose.log"
-    benchmark:
-        bench_dir + "/{donor}_decompose.tsv"
-    shell:
-        """
-        module load bcftools/1.16
-        bcftools norm -m - {input.vcf} --threads {threads} -w 10000 -f {input.fasta} -O b -o {output.clean_vcf} > {log} 2>&1
-        """
-
 # annotate the vcf with gnomAD
 rule gnomad_VCFs:
     input:
@@ -44,8 +22,6 @@ rule gnomad_VCFs:
     resources:
         mem_mb = mem_large
     threads: 2
-    log:
-        log_dir + "/{donor}_gnomad.log"
     envmodules:
         "slivar/0.3.1"
     shell:
@@ -63,10 +39,6 @@ rule remove_lcr:
     resources:
         mem_mb = mem_xlarge
     threads: 4
-    log:
-        log_dir + "/{donor}_noLCR.log"
-    benchmark:
-        bench_dir + "/{donor}_noLCR.tsv"
     shell:
         """
         module load bedtools

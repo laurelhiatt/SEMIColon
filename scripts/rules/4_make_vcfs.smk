@@ -202,3 +202,25 @@ rule concat_vcfs:
         bcftools concat -a {input.chunk_zip} -o {output.vcf} --threads {threads} > {log} 2>&1
         tabix -f -p vcf {output.vcf} --threads {threads}
         """
+
+# decompose the vcf for downstream
+rule decompose_vcfs:
+    input:
+        vcf = out_dir + "/vcf/{donor}-var.vcf.gz",
+        fasta = reference
+    output:
+        clean_vcf = out_dir + "/vcf/{donor}-clean-var.vcf.gz"
+    resources:
+        mem_mb = mem_large
+    threads: 8
+    envmodules:
+        "bcftools/1.16"
+    log:
+        log_dir + "/{donor}_decompose.log"
+    benchmark:
+        bench_dir + "/{donor}_decompose.tsv"
+    shell:
+        """
+        module load bcftools/1.16
+        bcftools norm -m - {input.vcf} --threads {threads} -w 10000 -f {input.fasta} -O b -o {output.clean_vcf} > {log} 2>&1
+        """

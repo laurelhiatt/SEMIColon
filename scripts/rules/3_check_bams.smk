@@ -85,12 +85,9 @@ rule mosdepth:
 # plotting mosdepth results
 rule plot_mosdepth:
     input:
-        mosdepth = lambda wildcards: expand(
-            out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt",
-            sample=get_samples_for_donor(wildcards.donor, matches)
-        )
+        rules.mosdepth.output
     output:
-        html = out_dir + "/mosdepth/{donor}_mosdepth_coverage.html"
+        html = out_dir + "/mosdepth/{sample}_mosdepth_coverage.html"
     conda:
          "../../envs/plot_mosdepth.yaml"
     resources:
@@ -98,7 +95,7 @@ rule plot_mosdepth:
     threads:
         2
     log:
-        log_dir + "/{donor}_plot_mosdepth.log"
+        log_dir + "/{sample}_plot_mosdepth.log"
     shell:
         """
         python ../quality_control/plot-dist.py {input.mosdepth} --output {output.html}
