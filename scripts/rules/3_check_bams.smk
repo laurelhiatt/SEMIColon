@@ -59,19 +59,27 @@ rule mosdepth:
     input:
         bam_sort = rules.add_rg.output.sort_bam_RG
     output:
-        temp(out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt"),
+        out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt"
+    params:
+        mos_dir = out_dir + "/mosdepth",
     resources:
         mem_mb = mem_medium
-    params:
-        out_dir = out_dir
     threads:
         2
     envmodules:
         "mosdepth/0.3.1"
     log:
         log_dir + "/{sample}_mosdepth.log"
-    script:
-        "../quality_control/mosdepth.sh"
+    shell:
+        """
+        mkdir -p {params.mos_dir}
+
+        BASE_NAME=$(basename {input.bam_sort} -sorted.bam)
+
+        mosdepth -n --fast-mode --by 500 \
+           "${params.mos_dir}/${{BASE_NAME}}" \
+           "${input.bam_sort}" 2>> {log}
+        """
 
 # plotting mosdepth results
 rule plot_mosdepth:

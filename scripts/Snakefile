@@ -1,9 +1,16 @@
         ### SEMIColon Snakemake
 ## This Snakemake Pipeline is the workflow for the
 ## SEMIColon thesis project. The commands run are:
-## *RULES WILL GO HERE
-##
-# Laurel Hiatt 04/14/2025
+## [0] merge_fastq: Merge FASTQ files from multiple sequencing runs (where applicable)
+## [1] fastp: Preprocess fastq files (quality reports)
+## [2] bwa_mem: Align reads to reference
+## [2] samblaster: Mark duplicates, option to extract discordant and split reads
+## [2] samtools_sort: Sort and convert to bam
+## [2] add_rg: Add standard read groups for joint calling
+## [2] samtools_index: Index bam files
+## [3] samtools_stats: Basic stats on bam files
+
+# Laurel Hiatt 09/10/2025
 
 #################
 ### LIBRARIES ###
@@ -162,6 +169,10 @@ rule all:
         expand(
             out_dir + "/vcf/{donor}-annotated-var-noLCR.vcf.gz",
             donor = donors
+        ),
+        expand(
+            out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt",
+            sample = samples
         ),
         [
             f"{out_dir}/results/{donor}/{sample}_snv_count.txt"
