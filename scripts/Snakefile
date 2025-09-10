@@ -19,9 +19,9 @@ import re
 # The input, output, genome fasta, etc are specified in the
 # accompanying "CCconfig.yaml".
 
-# configfile: '../data/config/snakemake_config/toyconfig.yaml'
+configfile: '../data/config/spectra_config/spectraconfig.yaml'
 
-configfile: '../data/config/snakemake_config/CCconfig.yaml'
+# configfile: '../data/config/snakemake_config/CCconfig.yaml'
 
 
 ## directories
@@ -89,16 +89,23 @@ def mem_xlarge(wildcards, attempt):
 ### find all fastq data for samples; useful for top-off sequencing
 for sample in samples:
     matching_dirs = glob.glob(f"{top_dir}/**/{sample}", recursive=True)
+    # Temporary lists to collect all files for a sample
+    temp_r1_files = []
+    temp_r2_files = []
     for subdir in matching_dirs:
         subdir_files = glob.glob(f"{subdir}/*.fastq.gz")
         r1_files = [f for f in subdir_files if "_R1" in f]
         r2_files = [f for f in subdir_files if "_R2" in f]
 
+        temp_r1_files.extend(r1_files)
+        temp_r2_files.extend(r2_files)
+        #print(f"Found {len(r1_files)} R1 and {len(r2_files)} R2 files in {subdir} for sample {sample}")
+
         if sample not in sample_files:
             sample_files[sample] = {'R1': [], 'R2': []}
 
-        sample_files[sample]['R1'].extend(r1_files)
-        sample_files[sample]['R2'].extend(r2_files)
+        sample_files[sample]['R1'] = list(set(temp_r1_files))
+        sample_files[sample]['R2'] = list(set(temp_r2_files))
 
 def get_donor(sample, matches):
     for donor, samples in matches.items():

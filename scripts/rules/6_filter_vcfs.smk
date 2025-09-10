@@ -144,26 +144,16 @@ rule filter_by_sample:
             -o {output.sample_vcf} {params.gnomad_vcf}
         """
 
-rule filter_by_vaf:
-    input:
-        sample_vcf = (out_dir + "/results/{donor}/{sample}_filtered_noAD.vcf.gz")
-    output:
-        vaf_vcf = temp(out_dir + "/results/{donor}/{sample}_filtered_noADvaf.vcf.gz")
-    shell:
-        """
-        bcftools filter -i '((FMT/AD[0:0]+FMT/AD[0:1])>0 && (FMT/AD[0:1])/(FMT/AD[0:0]+FMT/AD[0:1]) < 0.885)' -Oz -o {output.vaf_vcf} {input.sample_vcf}
-        """
-
 ### this sample must have > # alternate allele
 rule filter_by_alt_depth:
     input:
-        vaf_vcf = out_dir + "/results/{donor}/{sample}_filtered_noADvaf.vcf.gz",
+        sample_vcf = out_dir + "/results/{donor}/{sample}_filtered_noAD.vcf.gz",
         lua = rules.make_lua.output.lua,
     output:
         vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz",
     shell:
         """
-        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 2 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vaf_vcf}
+        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 2 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.sample_vcf}
         """
 
 rule count_snvs:
@@ -173,7 +163,8 @@ rule count_snvs:
         out_vcf= out_dir + "/results/{donor}/{sample}_filtered_snvs.vcf.gz",
         txt= out_dir + "/results/{donor}/{sample}_snv_count.txt"
     params:
-        sample = "{sample}"
+        sample = "{sample}",
+        vaf_threshold = 0.885
     conda:
         "../../envs/cyvcf2.yaml"
     script:
