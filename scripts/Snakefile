@@ -1,6 +1,7 @@
         ### SEMIColon Snakemake
 ## This Snakemake Pipeline is the workflow for the
-## SEMIColon thesis project. The commands run are:
+## SEMIColon thesis project. The rules run are (# indicates smk rules file):
+
 ## [0] merge_fastq: Merge FASTQ files from multiple sequencing runs (where applicable)
 ## [1] fastp: Preprocess fastq files (quality reports)
 ## [2] bwa_mem: Align reads to reference
@@ -9,6 +10,16 @@
 ## [2] add_rg: Add standard read groups for joint calling
 ## [2] samtools_index: Index bam files
 ## [3] samtools_stats: Basic stats on bam files
+## [3] mosdepth: Coverage across genome
+## [3] plot_mosdepth: Plot mosdepth results NEEDS TO BE CHECKED
+## [3] alfred_qc: Bam statistics and plotting
+## [4] make_bam_list: Create list of bams for joint variant calling
+## [4] generate_regions: Generate regions for parallelized variant calling
+## [4] freebayes_variant_calling: Joint variant calling with freebayes
+## [4] compress_chunks: Compress vcf chunks
+## [4] index_chunks: Index vcf chunks
+## [4] concat_vcfs: Concatenate vcf chunks
+## [5] bcftools_stats: Basic stats on vcf files
 
 # Laurel Hiatt 09/10/2025
 

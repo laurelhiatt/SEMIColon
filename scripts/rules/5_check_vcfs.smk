@@ -1,9 +1,8 @@
-# Laurel Hiatt 04/14/2025
+# Laurel Hiatt 09/10/2025
 
 log_dir = out_dir + "/log/5_check_vcfs"
 bench_dir = out_dir + "/benchmark/5_check_vcfs"
 
-# check relatedness
 # check relatedness
 rule somalier_extract:
     input:

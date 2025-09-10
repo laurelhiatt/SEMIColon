@@ -1,4 +1,4 @@
-# Laurel Hiatt 06/09/2025
+# Laurel Hiatt 09/10/2025
 from itertools import product
 
 log_dir = out_dir + "/log/4_make_vcfs"
@@ -88,8 +88,6 @@ rule make_bam_list:
         mem_mb = mem_xsmall
     threads: 2
     localrule: True
-    log:
-        stdio = log_dir + "/{donor}_bamlist.log"
     script:
         "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/variant_calling/create_bam_list.py"
 
@@ -107,8 +105,6 @@ rule generate_regions:
     localrule: True
     conda:
          "../../envs/plot_mosdepth.yaml"
-    log:
-        log_dir + "/{chroms}_{i}_generateregions.log"
     script:
         """
         ../variant_calling/fasta_generate_regions.py

@@ -82,7 +82,7 @@ rule filter_by_depth:
         depth_vcf= temp(out_dir + "/results/{donor}-depth-filtered.vcf.gz")
     shell:
         """
-        ./vcfexpress filter -e 'return all(function (dp) return dp > 5 end, variant:format("DP"))' -o {output.depth_vcf} {input.filtered_vcf}
+        ./vcfexpress filter -e 'return all(function (dp) return dp > 7 end, variant:format("DP"))' -o {output.depth_vcf} {input.filtered_vcf}
         """
 
 rule index_depth:
@@ -153,7 +153,7 @@ rule filter_by_alt_depth:
         vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz",
     shell:
         """
-        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 2 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.sample_vcf}
+        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 3 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.sample_vcf}
         """
 
 rule count_snvs:

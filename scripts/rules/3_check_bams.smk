@@ -1,4 +1,4 @@
-# Laurel Hiatt 04/14/2025
+# Laurel Hiatt 09/10/2025
 
 log_dir = out_dir + "/log/3_check_bams"
 bench_dir = out_dir + "/benchmark/3_check_bams"
@@ -62,6 +62,7 @@ rule mosdepth:
         out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt"
     params:
         mos_dir = out_dir + "/mosdepth",
+        sample = "{sample}"
     resources:
         mem_mb = mem_medium
     threads:
@@ -74,11 +75,11 @@ rule mosdepth:
         """
         mkdir -p {params.mos_dir}
 
-        BASE_NAME=$(basename {input.bam_sort} -sorted.bam)
+        module load mosdepth/0.3.1
 
         mosdepth -n --fast-mode --by 500 \
-           "${params.mos_dir}/${{BASE_NAME}}" \
-           "${input.bam_sort}" 2>> {log}
+           {params.mos_dir}/{params.sample} \
+           {input.bam_sort} 2>> {log}
         """
 
 # plotting mosdepth results
