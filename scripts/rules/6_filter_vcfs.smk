@@ -158,12 +158,12 @@ rule filter_by_alt_depth:
 
 rule count_snvs:
     input:
-        vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz",
+        vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz"
     output:
         out_vcf= out_dir + "/results/{donor}/{sample}_filtered_snvs.vcf.gz",
         txt= out_dir + "/results/{donor}/{sample}_snv_count.txt"
     params:
-        sample = "{sample}",
+        sample_name = "{donor}_{sample}",
         vaf_threshold = 0.885
     conda:
         "../../envs/cyvcf2.yaml"
