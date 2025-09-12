@@ -162,10 +162,6 @@ rule all:
             sample = samples
         ),
         expand(
-            out_dir + "/mosdepth/{donor}/{sample}_mosdepth_coverage.html",
-            donor = donors, sample = samples
-        ),
-        expand(
             out_dir + "/alfred/{sample}.pdf",
             sample = samples
         ),
@@ -188,4 +184,8 @@ rule all:
         [
             f"{out_dir}/results/{donor}/{sample}_snv_count.txt"
             for donor, sample in zip(donors, filtered_samples)
-        ]
+        ],
+        [
+            f"{out_dir}/mosdepth/{donor}/{sample}_mosdepth_coverage.html"
+            for donor, sample in zip(donors, filtered_samples)
+        ],

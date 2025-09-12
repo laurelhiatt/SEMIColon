@@ -89,20 +89,22 @@ rule plot_mosdepth:
             out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt",
             sample=get_samples_for_donor(wildcards.donor, matches)
         ),
-        sample = lambda wildcards: get_samples_for_donor(wildcards.donor, matches)
+        file = out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt"
+    params:
+        donor = lambda wildcards: get_donor(wildcards.sample, matches),
     output:
-        html = out_dir + "/mosdepth/{donor}/{sample}_mosdepth_coverage.html"
+        html = out_dir + "/mosdepth/{donor}/{sample}_mosdepth_coverage.html",
     conda:
          "../../envs/plot_mosdepth.yaml"
     resources:
         mem_mb = mem_small
     threads:
         2
-    log:
-        log_dir + "/{donor}_{sample}_plot_mosdepth.log"
     shell:
         """
-        python ../quality_control/plot-dist.py {input.sample} --output {output.html}
+        mkdir -p {out_dir}/mosdepth/{params.donor}
+        echo "Plotting mosdepth coverage for {input.file}"
+        python /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/quality_control/plot-dist.py {input.file} --output {output.html}
         """
 
 # bam statistcs with downstream plotting of quality metrics
@@ -114,7 +116,7 @@ rule alfred_qc:
     output:
         temp(out_dir + "/alfred/{sample}.alfred.qc.json.gz")  # Per-sample Alfred QC report
     conda:
-         "../../envs/alfred.yaml"
+         "../../envs/alfred2.yaml"
     resources:
         mem_mb = mem_small
     threads: 2
