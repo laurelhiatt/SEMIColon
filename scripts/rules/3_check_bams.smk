@@ -88,9 +88,10 @@ rule plot_mosdepth:
         mosdepth = lambda wildcards: expand(
             out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt",
             sample=get_samples_for_donor(wildcards.donor, matches)
-        )
+        ),
+        sample = lambda wildcards: get_samples_for_donor(wildcards.donor, matches)
     output:
-        html = out_dir + "/mosdepth/{donor}_mosdepth_coverage.html"
+        html = out_dir + "/mosdepth/{donor}/{sample}_mosdepth_coverage.html"
     conda:
          "../../envs/plot_mosdepth.yaml"
     resources:
@@ -98,10 +99,10 @@ rule plot_mosdepth:
     threads:
         2
     log:
-        log_dir + "/{donor}_plot_mosdepth.log"
+        log_dir + "/{donor}_{sample}_plot_mosdepth.log"
     shell:
         """
-        python ../quality_control/plot-dist.py {input.mosdepth} --output {output.html}
+        python ../quality_control/plot-dist.py {input.sample} --output {output.html}
         """
 
 # bam statistcs with downstream plotting of quality metrics

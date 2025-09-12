@@ -162,8 +162,8 @@ rule all:
             sample = samples
         ),
         expand(
-            out_dir + "/mosdepth/{donor}_mosdepth_coverage.html",
-            donor = donors
+            out_dir + "/mosdepth/{donor}/{sample}_mosdepth_coverage.html",
+            donor = donors, sample = samples
         ),
         expand(
             out_dir + "/alfred/{sample}.pdf",
