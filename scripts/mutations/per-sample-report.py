@@ -1,10 +1,25 @@
 import sys
-from cyvcf2 import VCF
+from cyvcf2 import VCF, Writer
 
-def count_unique_snvs(vcf_path):
+vcf_path = snakemake.input["vcf"]
+fname = snakemake.output["out_vcf"]
+snv_count = snakemake.output["txt"]
+high_vaf_threshold = snakemake.params["high_vaf_threshold"]
+low_vaf_threshold = snakemake.params["low_vaf_threshold"]
+sample_name = snakemake.params["sample_name"]
+
+def count_unique_snvs(vcf_path, fname, snv_count, sample_name):
     vcf = VCF(vcf_path)
-    sample_names = vcf.samples
-    unique_snvs = {sample: 0 for sample in sample_names}
+    # sample_names = vcf.samples
+    # unique_snvs = {sample: 0 for sample in sample_names}
+    w = Writer(fname, vcf)
+
+    try:
+        sample_idx = vcf.samples.index(sample_name)
+    except ValueError:
+        raise RuntimeError(f"Sample {sample_name} not found in {vcf_path}")
+
+    passing_snvs = []
 
     for variant in vcf:
         if not variant.is_snp:
@@ -12,22 +27,35 @@ def count_unique_snvs(vcf_path):
 
         genotypes = variant.gt_types  # 0=hom-ref, 1=het, 2=unknown, 3=hom-alt
 
+        vafs = variant.gt_alt_freqs
+
         # Ensure no sample has an unknown genotype (2)
         if 2 in genotypes:
             continue
 
-        # Identify samples with non-ref alleles (het or hom-alt)
-        non_ref_samples = [i for i, gt in enumerate(genotypes) if gt in {1, 3}]
+        # Make sure only sample of interest in non-ref
+        other_non_ref = [
+            i for i, gt in enumerate(genotypes) if gt in {1, 3} and i != sample_idx
+        ]
+        if other_non_ref:
+            continue  # not unique
 
-        # Count as unique only if exactly one sample is non-ref
-        if len(non_ref_samples) == 1:
-            unique_snvs[sample_names[non_ref_samples[0]]] += 1
 
-    for sample, count in unique_snvs.items():
-        print(f"{sample}: {count} unique SNVs")
+        # Count as unique only if specific sample is non-ref
+        if genotypes[sample_idx] in {1, 3} and low_vaf_threshold < vafs[sample_idx] < high_vaf_threshold:
+            passing_snvs.append(
+                (variant.CHROM, variant.POS, variant.REF, ",".join(variant.ALT), vafs[sample_idx])
+            )
+            w.write_record(variant)
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python script.py <input.vcf.gz>")
-        sys.exit(1)
-    count_unique_snvs(sys.argv[1])
+    w.close()
+
+    with open(snv_count, "w") as f:
+        f.write(f"# {sample_name} unique SNVs (VAF filter {low_vaf_threshold} < x < {high_vaf_threshold})\n")
+        f.write("CHROM\tPOS\tREF\tALT\tVAF\n")
+        for chrom, pos, ref, alt, vaf in passing_snvs:
+            f.write(f"{chrom}\t{pos}\t{ref}\t{alt}\t{vaf:.4f}\n")
+        f.write(f"\nTotal: {len(passing_snvs)} unique SNVs\n")
+
+# Run
+count_unique_snvs(vcf_path, fname, snv_count, sample_name)

@@ -1,9 +1,27 @@
-### SEMIColon Snakemake
+        ### SEMIColon Snakemake
 ## This Snakemake Pipeline is the workflow for the
-## SEMIColon thesis project. The commands run are:
-## *RULES WILL GO HERE
-##
-# Laurel Hiatt 04/14/2025
+## SEMIColon thesis project. The rules run are (# indicates smk rules file):
+
+## [0] merge_fastq: Merge FASTQ files from multiple sequencing runs (where applicable)
+## [1] fastp: Preprocess fastq files (quality reports)
+## [2] bwa_mem: Align reads to reference
+## [2] samblaster: Mark duplicates, option to extract discordant and split reads
+## [2] samtools_sort: Sort and convert to bam
+## [2] add_rg: Add standard read groups for joint calling
+## [2] samtools_index: Index bam files
+## [3] samtools_stats: Basic stats on bam files
+## [3] mosdepth: Coverage across genome
+## [3] plot_mosdepth: Plot mosdepth results NEEDS TO BE CHECKED
+## [3] alfred_qc: Bam statistics and plotting
+## [4] make_bam_list: Create list of bams for joint variant calling
+## [4] generate_regions: Generate regions for parallelized variant calling
+## [4] freebayes_variant_calling: Joint variant calling with freebayes
+## [4] compress_chunks: Compress vcf chunks
+## [4] index_chunks: Index vcf chunks
+## [4] concat_vcfs: Concatenate vcf chunks
+## [5] bcftools_stats: Basic stats on vcf files
+
+# Laurel Hiatt 09/10/2025
 
 #################
 ### LIBRARIES ###
@@ -19,7 +37,7 @@ import re
 # The input, output, genome fasta, etc are specified in the
 # accompanying "CCconfig.yaml".
 
-# configfile: '../data/config/snakemake_config/toyconfig.yaml'
+# configfile: '../data/config/spectra_config/spectraconfig.yaml'
 
 configfile: '../data/config/snakemake_config/CCconfig.yaml'
 
@@ -89,16 +107,23 @@ def mem_xlarge(wildcards, attempt):
 ### find all fastq data for samples; useful for top-off sequencing
 for sample in samples:
     matching_dirs = glob.glob(f"{top_dir}/**/{sample}", recursive=True)
+    # Temporary lists to collect all files for a sample
+    temp_r1_files = []
+    temp_r2_files = []
     for subdir in matching_dirs:
         subdir_files = glob.glob(f"{subdir}/*.fastq.gz")
         r1_files = [f for f in subdir_files if "_R1" in f]
         r2_files = [f for f in subdir_files if "_R2" in f]
 
+        temp_r1_files.extend(r1_files)
+        temp_r2_files.extend(r2_files)
+        #print(f"Found {len(r1_files)} R1 and {len(r2_files)} R2 files in {subdir} for sample {sample}")
+
         if sample not in sample_files:
             sample_files[sample] = {'R1': [], 'R2': []}
 
-        sample_files[sample]['R1'].extend(r1_files)
-        sample_files[sample]['R2'].extend(r2_files)
+        sample_files[sample]['R1'] = list(set(temp_r1_files))
+        sample_files[sample]['R2'] = list(set(temp_r2_files))
 
 def get_donor(sample, matches):
     for donor, samples in matches.items():
@@ -137,10 +162,6 @@ rule all:
             sample = samples
         ),
         expand(
-            out_dir + "/mosdepth/{donor}_mosdepth_coverage.html",
-            donor = donors
-        ),
-        expand(
             out_dir + "/alfred/{sample}.pdf",
             sample = samples
         ),
@@ -155,4 +176,16 @@ rule all:
         expand(
             out_dir + "/vcf/{donor}-annotated-var-noLCR.vcf.gz",
             donor = donors
-        )
+        ),
+        expand(
+            out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt",
+            sample = samples
+        ),
+        [
+            f"{out_dir}/results/{donor}/{sample}_snv_count.txt"
+            for donor, sample in zip(donors, filtered_samples)
+        ],
+        [
+            f"{out_dir}/mosdepth/{donor}/{sample}_mosdepth_coverage.html"
+            for donor, sample in zip(donors, filtered_samples)
+        ],

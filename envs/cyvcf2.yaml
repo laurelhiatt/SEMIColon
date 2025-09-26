@@ -1,0 +1,55 @@
+name: cyvcf2
+channels:
+  - defaults
+  - conda-forge
+  - bioconda
+dependencies:
+  - _libgcc_mutex=0.1=main
+  - _openmp_mutex=5.1=1_gnu
+  - blas=1.0=openblas
+  - bzip2=1.0.8=h5eee18b_6
+  - c-ares=1.34.5=hb9d3cd8_0
+  - ca-certificates=2025.2.25=h06a4308_0
+  - click=8.1.8=py312h06a4308_0
+  - coloredlogs=15.0.1=py312h06a4308_3
+  - cyvcf2=0.31.1=py312h68a07e8_1
+  - htslib=1.22.1=h566b1c6_0
+  - humanfriendly=10.0=py312h06a4308_2
+  - krb5=1.21.3=h8a1dbc1_1
+  - ld_impl_linux-64=2.40=h12ee557_0
+  - libcurl=8.14.1=h332b0f4_0
+  - libdeflate=1.22=h5eee18b_0
+  - libedit=3.1.20230828=h5eee18b_0
+  - libev=4.33=h7f8727e_1
+  - libexpat=2.7.1=hecca717_0
+  - libffi=3.4.6=h2dba641_1
+  - libgcc=15.1.0=h767d61c_3
+  - libgcc-ng=15.1.0=h69a702a_3
+  - libgfortran-ng=11.2.0=h00389a5_1
+  - libgfortran5=11.2.0=h1234567_1
+  - libgomp=15.1.0=h767d61c_3
+  - liblzma=5.8.1=hb9d3cd8_2
+  - libnghttp2=1.64.0=h161d5f1_0
+  - libnsl=2.0.1=hb9d3cd8_1
+  - libopenblas=0.3.29=ha39b09d_0
+  - libsqlite=3.50.3=h0c1763c_0
+  - libssh2=1.11.1=hcf80075_0
+  - libstdcxx=15.1.0=h8f9b012_3
+  - libstdcxx-ng=11.2.0=h1234567_1
+  - libuuid=2.38.1=h0b41bf4_0
+  - libxcrypt=4.4.36=hd590300_1
+  - libzlib=1.3.1=hb9d3cd8_2
+  - ncurses=6.5=h2d0b736_3
+  - numpy=2.3.1=py312h7610711_0
+  - numpy-base=2.3.1=py312h150128d_0
+  - openssl=3.5.1=h7b32b05_0
+  - pip=25.1=pyhc872135_2
+  - python=3.12.11=h9e4cc4f_0_cpython
+  - python_abi=3.12=8_cp312
+  - readline=8.2=h5eee18b_0
+  - setuptools=72.1.0=py312h06a4308_0
+  - tk=8.6.13=noxft_hd72426e_102
+  - tzdata=2025b=h04d1e81_0
+  - wheel=0.45.1=py312h06a4308_0
+  - zstd=1.5.7=hb8e6e7a_2
+prefix: /uufs/chpc.utah.edu/common/HIPAA/u1264408/software/pkg/miniforge3/envs/cyvcf2

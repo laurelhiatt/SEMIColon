@@ -1,8 +1,28 @@
-# Laurel Hiatt 06/09/2025
+# Laurel Hiatt 09/10/2025
 from itertools import product
 
 log_dir = out_dir + "/log/4_make_vcfs"
 bench_dir = out_dir + "/benchmark/4_make_vcfs"
+
+def swap_acct(wc, attempt):
+    if attempt == 1:
+        return "ucgd-rw"
+    else:
+        return "quinlan-rw"
+
+# If first attempt, redwood-guest (matches owner-guest). Else, quinlan.
+def swap_part(wc, attempt):
+    if attempt == 1:
+        return "ucgd-shared-rw"
+    else:
+        return "quinlan-shared-rw"
+
+# If first attempt, 3 hours (short time for guest). Else, two weeks.
+def swap_time(wc, attempt):
+    if attempt == 1:
+        return 180
+    else:
+        return 20160
 
 def get_bam_inputs(wildcards):
     donor_samples = matches.get(wildcards.donor, {}).get("crypt_samples", [])
@@ -68,8 +88,6 @@ rule make_bam_list:
         mem_mb = mem_xsmall
     threads: 2
     localrule: True
-    log:
-        stdio = log_dir + "/{donor}_bamlist.log"
     script:
         "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/variant_calling/create_bam_list.py"
 
@@ -87,8 +105,6 @@ rule generate_regions:
     localrule: True
     conda:
          "../../envs/plot_mosdepth.yaml"
-    log:
-        log_dir + "/{chroms}_{i}_generateregions.log"
     script:
         """
         ../variant_calling/fasta_generate_regions.py
@@ -107,7 +123,10 @@ rule freebayes_variant_calling:
     params:
         out_dir = out_dir
     resources:
-        mem_mb = mem_xlarge
+        mem_mb = mem_xlarge,
+        slurm_account = swap_acct,
+        slurm_partition = swap_part,
+        runtime = swap_time
     threads:
         1
     log:

@@ -1,4 +1,4 @@
-# Laurel Hiatt 04/14/2025
+# Laurel Hiatt 09/10/2025
 
 log_dir = out_dir + "/log/0_merge_fastq"
 

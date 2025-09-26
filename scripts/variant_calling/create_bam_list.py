@@ -7,9 +7,6 @@ import sys
 import yaml
 import os
 
-sys.stdout = sys.stderr = open(snakemake.log.stdio, "w")
-
-
 # Access matches
 matches = snakemake.params.matches
 

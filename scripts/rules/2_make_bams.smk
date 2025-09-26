@@ -1,4 +1,4 @@
-# Laurel Hiatt 04/14/2025
+# Laurel Hiatt 09/10/2025
 
 log_dir = out_dir + "/log/2_make_bams"
 bench_dir = out_dir + "/benchmark/2_make_bams"
@@ -35,15 +35,13 @@ rule samblaster:
     threads: 8
     resources:
         mem_mb = mem_medium
-    log:
-        log_dir + "/{sample}_samblaster.log"
     benchmark:
         bench_dir + "/{sample}_samblaster.tsv"
     conda:
         "../../envs/make_bams.yaml"
     shell:
         """
-        samblaster -i {input.sam} | samtools view -b -@ {threads} - > {output} 2> {log}
+        samblaster -i {input.sam} | samtools view -b -@ {threads} - > {output}
         """
 
 rule samtools_sort:
@@ -77,8 +75,6 @@ rule add_rg:
         8
     resources:
         mem_mb = mem_medium
-    log:
-        log_dir + "/{sample}_rg.log"
     benchmark:
         bench_dir + "/{sample}_rg.tsv"
     conda:
@@ -88,7 +84,7 @@ rule add_rg:
         samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" \
         --threads {threads} \
         -o {output.sort_bam_RG} \
-        {input.bam_sort} > {log} 2>&1
+        {input.bam_sort}
         """
 
 # an index helps
@@ -101,12 +97,10 @@ rule index_bam:
         2
     resources:
         mem_mb = mem_small
-    log:
-        log_dir + "/{sample}_index.log"
     conda:
          "../../envs/make_bams.yaml"
     localrule: True
     shell:
         """
-        samtools index --threads {threads} {input.bam_sort} > {log} 2>&1
+        samtools index --threads {threads} {input.bam_sort}
         """
