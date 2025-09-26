@@ -7,6 +7,18 @@ reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v
 reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
 
 samples:
+- C3_103_DE
+- C14_115_TR
+- C16_180_CE
+- C6_153_RE
+- C24_31_TR
+- C22_19_SI
+- C10_93_CE
+- C1_103_TR
+- C18_277_DE
+- C17_93_AS
+- C15_277_TR
+- C5_148_TR
 - B32_93_AS
 - B27_116_AS
 - B21_153_CE
@@ -92,6 +104,9 @@ samples:
 
 
 matches:
+  GB19:
+    crypt_samples:
+      - C22_19_SI
   GB9:
     crypt_samples:
       - A9_09_CE
@@ -109,11 +124,14 @@ matches:
       - A10__180_DC
       - B38_180_SI
       - B12_180_AS
+      - C16_180_CE
   GB93:
     crypt_samples:
       - A8__093_SI
       - B22_93_TR
       - B32_93_AS
+      - C17_93_AS
+      - C10_93_CE
   GB74:
     crypt_samples:
       - 74_DC
@@ -131,6 +149,7 @@ matches:
       - B14_031_CE
       - B5_031_RE
       - B28_31_TR
+      - C24_31_TR
   GB30:
     crypt_samples:
       - 030_CE_T
@@ -163,6 +182,8 @@ matches:
       - 103_RE
       - A6__103_CE
       - B8_103_SI
+      - C1_103_TR
+      - C3_103_DE
   GB116:
     crypt_samples:
       - B27_116_AS
@@ -178,6 +199,7 @@ matches:
       - A13__148_AS
       - B13_148_DC
       - B15_148_RE
+      - C5_148_TR
   GB40:
     crypt_samples:
       - 40_AS
@@ -190,6 +212,7 @@ matches:
       - B9_115_RE
       - B26_115_DC
       - B18_115_TC
+      - C14_115_TR
   GB273:
     crypt_samples:
       - B43_273_AS
@@ -204,6 +227,7 @@ matches:
       - B33_153_AS
       - B6_153_SI
       - B23_153_RE
+      - C6_153_RE
   GB277:
     crypt_samples:
       - B41_277_AC
@@ -211,9 +235,12 @@ matches:
       - B42_277_RTM
       - B17_277_DC
       - B19_277_TC
+      - C15_277_TR
+      - C18_277_DE
 
 donors:
 - GB9
+- GB19
 - GB130
 - GB180
 - GB76
@@ -235,6 +262,9 @@ donors:
 - GB277
 
 regions:
+  GB19:
+    sig_col:
+      - C22_19_SI
   GB9:
     cecum:
       - A9_09_CE
@@ -250,6 +280,8 @@ regions:
     trans_col:
       - B35_130_TR
   GB180:
+    cecum:
+      - C16_180_CE
     rectum:
       - 23_180RE
     trans_col:
@@ -261,12 +293,15 @@ regions:
     asc_col:
       - B12_180_AS
   GB93:
+    cecum:
+      - C10_93_CE
     sig_col:
       - A8__093_SI
     trans_col:
       - B22_93_TR
     asc_col:
       - B32_93_AS
+      - C17_93_AS
   GB74:
     desc_col:
       - 74_DC
@@ -292,6 +327,7 @@ regions:
       - B5_031_RE
     trans_col:
       - B28_31_TR
+      - C24_31_TR
   GB30:
     cecum:
       - 030_CE_T
@@ -338,6 +374,10 @@ regions:
       - 103_RE
     cecum:
       - A6__103_CE
+    trans_col:
+      - C1_103_TR
+    desc_col:
+      - C3_103_DE
   GB116:
     cecum:
       - 21_116CE
@@ -362,6 +402,8 @@ regions:
       - B13_148_DC
     rectum:
       - B15_148_RE
+    trans_col:
+      - C5_148_TR
   GB40:
     asc_col:
       - 40_AS
@@ -380,6 +422,7 @@ regions:
       - B26_115_DC
     trans_col:
       - B18_115_TC
+      - C14_115_TR
   GB273:
     cecum:
       - B20_273_CE
@@ -402,6 +445,7 @@ regions:
       - B6_153_SI
     rectum:
       - B23_153_RE
+      - C6_153_RE
   GB277:
     asc_col:
       - B41_277_AC
@@ -411,13 +455,14 @@ regions:
       - B42_277_RTM
     trans_col:
       - B19_277_TC
+      - C15_277_TR
     desc_col:
       - B17_277_DC
+      - C18_277_DE
 
-
-#check where GB9 falls
 cohorts:
   normal:
+    - GB9
     - GB40
     - GB103
     - GB130
@@ -429,6 +474,7 @@ cohorts:
     - GB273
     - GB277
   adenoma:
+    - GB19
     - GB31
     - GB30
     - GB76

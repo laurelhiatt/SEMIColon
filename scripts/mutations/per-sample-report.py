@@ -4,7 +4,8 @@ from cyvcf2 import VCF, Writer
 vcf_path = snakemake.input["vcf"]
 fname = snakemake.output["out_vcf"]
 snv_count = snakemake.output["txt"]
-vaf_threshold = snakemake.params["vaf_threshold"]
+high_vaf_threshold = snakemake.params["high_vaf_threshold"]
+low_vaf_threshold = snakemake.params["low_vaf_threshold"]
 sample_name = snakemake.params["sample_name"]
 
 def count_unique_snvs(vcf_path, fname, snv_count, sample_name):
@@ -41,7 +42,7 @@ def count_unique_snvs(vcf_path, fname, snv_count, sample_name):
 
 
         # Count as unique only if specific sample is non-ref
-        if genotypes[sample_idx] in {1, 3} and vafs[sample_idx] < vaf_threshold:
+        if genotypes[sample_idx] in {1, 3} and low_vaf_threshold < vafs[sample_idx] < high_vaf_threshold:
             passing_snvs.append(
                 (variant.CHROM, variant.POS, variant.REF, ",".join(variant.ALT), vafs[sample_idx])
             )
@@ -50,7 +51,7 @@ def count_unique_snvs(vcf_path, fname, snv_count, sample_name):
     w.close()
 
     with open(snv_count, "w") as f:
-        f.write(f"# {sample_name} unique SNVs (VAF < {vaf_threshold})\n")
+        f.write(f"# {sample_name} unique SNVs (VAF filter {low_vaf_threshold} < x < {high_vaf_threshold})\n")
         f.write("CHROM\tPOS\tREF\tALT\tVAF\n")
         for chrom, pos, ref, alt, vaf in passing_snvs:
             f.write(f"{chrom}\t{pos}\t{ref}\t{alt}\t{vaf:.4f}\n")

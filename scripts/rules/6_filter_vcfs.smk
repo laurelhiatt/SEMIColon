@@ -164,7 +164,8 @@ rule count_snvs:
         txt= out_dir + "/results/{donor}/{sample}_snv_count.txt"
     params:
         sample_name = "{donor}_{sample}",
-        vaf_threshold = 0.885
+        high_vaf_threshold = 0.6,
+        low_vaf_threshold = 0.2
     conda:
         "../../envs/cyvcf2.yaml"
     script:
