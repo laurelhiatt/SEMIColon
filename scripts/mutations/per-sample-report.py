@@ -63,6 +63,13 @@ def count_unique_snvs(vcf_path, fname, snv_count, sample_name):
                     f.write(f"{chrom}\t{pos}\t{"CpG"}\t{alt}\t{vaf:.4f}\n")
                 else:
                     f.write(f"{chrom}\t{pos}\t{ref}\t{alt}\t{vaf:.4f}\n")
+            elif ref == "G" and alt == "A":
+                genome = Fasta(reference, as_raw=True)
+                base_right = genome[chrom][pos]
+                if base_right == "C":
+                    f.write(f"{chrom}\t{pos}\t{"GpC"}\t{alt}\t{vaf:.4f}\n")
+                else:
+                    f.write(f"{chrom}\t{pos}\t{ref}\t{alt}\t{vaf:.4f}\n")
             else:
                 f.write(f"{chrom}\t{pos}\t{ref}\t{alt}\t{vaf:.4f}\n")
         f.write(f"\n # Total: {len(passing_snvs)} unique SNVs\n")

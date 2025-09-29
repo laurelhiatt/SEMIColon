@@ -140,7 +140,7 @@ matches:
   GB76:
     crypt_samples:
       - 22_76TR
-      - 76_DC
+      # - 76_DC
       - B4_076_SI
   GB31:
     crypt_samples:
@@ -312,19 +312,16 @@ regions:
   GB76:
     trans_col:
       - 22_76TR
-    desc_col:
-      - 76_DC
     sig_col:
       - B4_076_SI
   GB31:
     rectum:
       - 031_RE_T
+      - B5_031_RE
     asc_col:
       - A1__031_AS
     cecum:
       - B14_031_CE
-    rectum:
-      - B5_031_RE
     trans_col:
       - B28_31_TR
       - C24_31_TR
@@ -385,10 +382,9 @@ regions:
       - 116_TR
     rectum:
       - 116_RE_T
+      - B2_116_RE
     desc_col:
       - A7__116_DC
-    rectum:
-      - B2_116_RE
     asc_col:
       - B27_116_AS
   GB148:

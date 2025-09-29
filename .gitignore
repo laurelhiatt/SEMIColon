@@ -4,7 +4,9 @@
 /scripts/log.txt
 /scripts/cryptdata/.snakemake/*
 /scripts/filtering/.snakemake/*
-/scripts/LeeSixdata/.snakemake/*
+/scripts/leesix_waiting/*
+/scripts/.snakemake/*
+
 
 # Output directory
 /data/output/*
