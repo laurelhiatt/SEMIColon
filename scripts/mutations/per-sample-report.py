@@ -1,5 +1,6 @@
 import sys
 from cyvcf2 import VCF, Writer
+from pyfaidx import Fasta
 
 vcf_path = snakemake.input["vcf"]
 fname = snakemake.output["out_vcf"]
@@ -7,6 +8,7 @@ snv_count = snakemake.output["txt"]
 high_vaf_threshold = snakemake.params["high_vaf_threshold"]
 low_vaf_threshold = snakemake.params["low_vaf_threshold"]
 sample_name = snakemake.params["sample_name"]
+reference = snakemake.params["ref"]
 
 def count_unique_snvs(vcf_path, fname, snv_count, sample_name):
     vcf = VCF(vcf_path)
@@ -54,8 +56,16 @@ def count_unique_snvs(vcf_path, fname, snv_count, sample_name):
         f.write(f"# {sample_name} unique SNVs (VAF filter {low_vaf_threshold} < x < {high_vaf_threshold})\n")
         f.write("CHROM\tPOS\tREF\tALT\tVAF\n")
         for chrom, pos, ref, alt, vaf in passing_snvs:
-            f.write(f"{chrom}\t{pos}\t{ref}\t{alt}\t{vaf:.4f}\n")
-        f.write(f"\nTotal: {len(passing_snvs)} unique SNVs\n")
+            if ref == "C" and alt == "T":
+                genome = Fasta(reference, as_raw=True)
+                base_right = genome[chrom][pos]
+                if base_right == "G":
+                    f.write(f"{chrom}\t{pos}\t{"CpG"}\t{alt}\t{vaf:.4f}\n")
+                else:
+                    f.write(f"{chrom}\t{pos}\t{ref}\t{alt}\t{vaf:.4f}\n")
+            else:
+                f.write(f"{chrom}\t{pos}\t{ref}\t{alt}\t{vaf:.4f}\n")
+        f.write(f"\n # Total: {len(passing_snvs)} unique SNVs\n")
 
 # Run
 count_unique_snvs(vcf_path, fname, snv_count, sample_name)
