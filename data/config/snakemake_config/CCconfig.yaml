@@ -15,7 +15,7 @@ samples:
 - D14_074_RE
 - D15_277_SI
 - D2_09_TR
-- D4_09_TR
+- D4_19_TR
 - D6_84_RE
 - D7_40_RE
 - GIB-103
@@ -134,13 +134,13 @@ matches:
   GB19:
     crypt_samples:
       - C22_19_SI
+      - D4_19_TR
     blood_sample: GIB-019
   GB9:
     crypt_samples:
       - A9_09_CE
       - B29_09_AS
       - D2_09_TR
-      - D4_09_TR
     blood_sample: GIB-09
   GB130:
     crypt_samples:
@@ -316,6 +316,8 @@ regions:
   GB19:
     sig_col:
       - C22_19_SI
+    trans_col:
+      - D4_19_TR
   GB9:
     cecum:
       - A9_09_CE
@@ -323,7 +325,6 @@ regions:
       - B29_09_AS
     trans_col:
       - D2_09_TR
-      - D4_09_TR
   GB130:
     desc_col:
       - 24_130DC
