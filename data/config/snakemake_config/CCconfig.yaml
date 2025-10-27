@@ -134,24 +134,21 @@ matches:
   GB19:
     crypt_samples:
       - C22_19_SI
-    blood_sample:
-      - GIB-019
+    blood_sample: GIB-019
   GB9:
     crypt_samples:
       - A9_09_CE
       - B29_09_AS
       - D2_09_TR
       - D4_09_TR
-    blood_sample:
-      - GIB-09
+    blood_sample: GIB-09
   GB130:
     crypt_samples:
       - 24_130DC
       - 30_130RE
       - 33_130AS
       - B35_130_TR
-    blood_sample:
-      - GIB-130
+    blood_sample: GIB-130
   GB180:
     crypt_samples:
       - 23_180RE
@@ -167,24 +164,21 @@ matches:
       - B32_93_AS
       - C17_93_AS
       - C10_93_CE
-    blood_sample:
-      - GIB-93
+    blood_sample: GIB-93
   GB74:
     crypt_samples:
       - 74_DC
       - 29_74TR
       - A5__074_AS
       - D14_074_RE
-    blood_sample:
-      - GIB-74
+    blood_sample: GIB-74
   GB76:
     crypt_samples:
       - 22_76TR
       # - 76_DC
       - B4_076_SI
       - D13_076_RE
-    blood_sample:
-      - GIB-76
+    blood_sample: GIB-76
   GB31:
     crypt_samples:
       - 031_RE_T
@@ -193,15 +187,13 @@ matches:
       - B5_031_RE
       - B28_31_TR
       - C24_31_TR
-    blood_sample:
-      - GIB-031
+    blood_sample: GIB-031
   GB30:
     crypt_samples:
       - 030_CE_T
       - 30_TR
       - B7_030_DC
-    blood_sample:
-      - GIB-030
+    blood_sample: GIB-030
   GB58:
     crypt_samples:
       - 058_RE_T
@@ -209,15 +201,13 @@ matches:
       - 58_DC
       - B10_058_CE
       - D12_058_SI
-    blood_sample:
-      - GIB-58
+    blood_sample: GIB-58
   GB84:
     crypt_samples:
       - A16__084_CE
       - B3_084_DC
       - D6_84_RE
-    blood_sample:
-      - GIB-084
+    blood_sample: GIB-84
   GB27:
     crypt_samples:
       - 27_CE
@@ -225,15 +215,13 @@ matches:
       - 19_27TR
       - 17_27AS
       - 18_27RE
-    blood_sample:
-      - GIB-027
+    blood_sample: GIB-027
   GB29:
     crypt_samples:
       - 29_CE
       - 029_DC_T
       - 32_29TR
-    blood_sample:
-      - GIB-029
+    blood_sample: GIB-029
   GB103:
     crypt_samples:
       - 103_RE
@@ -241,8 +229,7 @@ matches:
       - B8_103_SI
       - C1_103_TR
       - C3_103_DE
-    blood_sample:
-      - GIB-103
+    blood_sample: GIB-103
   GB116:
     crypt_samples:
       - B27_116_AS
@@ -251,8 +238,7 @@ matches:
       - 21_116CE
       - A7__116_DC
       - B2_116_RE
-    blood_sample:
-      - GIB-116
+    blood_sample: GIB-116
   GB148:
     crypt_samples:
       - 148_SI
@@ -266,8 +252,7 @@ matches:
       - 40_AS
       - 20_40DC
       - D7_40_RE
-    blood_sample:
-      - GIB-040
+    blood_sample: GIB-040
   GB115:
     crypt_samples:
       - Laurel-2
@@ -277,8 +262,7 @@ matches:
       - B26_115_DC
       - B18_115_TC
       - C14_115_TR
-    blood_sample:
-      - GIB-115
+    blood_sample: GIB-115
   GB273:
     crypt_samples:
       - B43_273_AS
