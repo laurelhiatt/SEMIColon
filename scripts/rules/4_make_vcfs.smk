@@ -24,17 +24,52 @@ def swap_time(wc, attempt):
     else:
         return 20160
 
+# def get_bam_inputs(wildcards):
+#     donor_samples = matches.get(wildcards.donor, {}).get("crypt_samples", [])
+#     return [
+#         os.path.join(out_dir, "bam", f"{s}-sorted.bam") for s in donor_samples
+#     ]
+
 def get_bam_inputs(wildcards):
-    donor_samples = matches.get(wildcards.donor, {}).get("crypt_samples", [])
-    return [
-        os.path.join(out_dir, "bam", f"{s}-sorted.bam") for s in donor_samples
-    ]
+    donor_info = matches.get(wildcards.donor, {})
+    bam_files = []
+
+    # Add crypt samples if present
+    crypt_samples = donor_info.get("crypt_samples", [])
+    bam_files.extend(
+        os.path.join(out_dir, "bam", f"{s}-sorted.bam") for s in crypt_samples
+    )
+
+    # Add blood sample if present
+    blood_sample = donor_info.get("blood_sample")
+    if blood_sample:
+        bam_files.append(os.path.join(out_dir, "bam", f"{blood_sample}-sorted.bam"))
+
+    return bam_files
+
+
+# def get_bai_inputs(wildcards):
+#     donor_samples = matches.get(wildcards.donor, {}).get("crypt_samples", [])
+#     return [
+#         os.path.join(out_dir, "bam", f"{s}-sorted.bam.bai") for s in donor_samples
+#     ]
 
 def get_bai_inputs(wildcards):
-    donor_samples = matches.get(wildcards.donor, {}).get("crypt_samples", [])
-    return [
-        os.path.join(out_dir, "bam", f"{s}-sorted.bam.bai") for s in donor_samples
-    ]
+    donor_info = matches.get(wildcards.donor, {})
+    bam_files = []
+
+    # Add crypt samples if present
+    crypt_samples = donor_info.get("crypt_samples", [])
+    bai_files.extend(
+        os.path.join(out_dir, "bam", f"{s}-sorted.bam.bai") for s in crypt_samples
+    )
+
+    # Add blood sample if present
+    blood_sample = donor_info.get("blood_sample")
+    if blood_sample:
+        bai_files.append(os.path.join(out_dir, "bam", f"{blood_sample}-sorted.bam.bai"))
+
+    return bai_files
 
 def make_chroms_dict(directory_path, chroms):
     chrom_chunks = {}

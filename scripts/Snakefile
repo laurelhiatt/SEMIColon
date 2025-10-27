@@ -127,7 +127,7 @@ for sample in samples:
 
 def get_donor(sample, matches):
     for donor, samples in matches.items():
-        if sample in samples['crypt_samples']:
+        if sample in samples['crypt_samples'] or sample == samples['blood_sample'][0]:
             return donor
     raise KeyError(f"Sample {sample} not found in matches dictionary")
 

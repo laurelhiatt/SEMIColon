@@ -26,3 +26,4 @@ data/PD34199_chr2_chunk2_snps_chunk.vcf
 data/default_credential_file.json
 vcfexpress
 scripts/process_lee-six/.snakemake/*
+scripts/quality_control/mospow.py
