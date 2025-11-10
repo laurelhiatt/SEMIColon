@@ -3,7 +3,7 @@ import sys
 
 input_type = "matrix"
 output = "sigpro"
-input_data = "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/mutsig_vcf/output/SBS/test.SBS96.all"
+input_data = "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/results/vaf_spectra_VAFinterval/output/SBS/vaf_spectra.SBS96.all"
 
 def run():
     sig.sigProfilerExtractor(input_type,
