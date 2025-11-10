@@ -11,6 +11,8 @@
 # Output directory
 /data/output/*
 
+/sigpro/*
+
 #Data for tools
 /data/KRAKEN/*
 /data/standard_db/*

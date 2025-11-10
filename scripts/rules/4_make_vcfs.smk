@@ -56,7 +56,7 @@ def get_bam_inputs(wildcards):
 
 def get_bai_inputs(wildcards):
     donor_info = matches.get(wildcards.donor, {})
-    bam_files = []
+    bai_files = []
 
     # Add crypt samples if present
     crypt_samples = donor_info.get("crypt_samples", [])
