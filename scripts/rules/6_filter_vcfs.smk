@@ -171,6 +171,21 @@ rule filter_by_alt_depth:
         ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 3 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.sample_vcf}
         """
 
+rule count_indels
+    input:
+        vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz"
+    output:
+        out_vcf= out_dir + "/results/{donor}/{sample}_filtered_indels.vcf.gz",
+    params:
+        sample_name = "{donor}_{sample}",
+        ref = reference,
+        high_vaf_threshold = 0.6,
+        low_vaf_threshold = 0.2
+    conda:
+        "../../envs/cyvcf2.yaml"
+    script:
+        "../mutations/per-sample-report-indels.py"
+
 rule count_snvs:
     input:
         vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz"

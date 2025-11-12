@@ -7,6 +7,10 @@ reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v
 reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
 
 samples:
+- D18_153_TR
+- D20_153_SI
+- D17_130_CE
+- D16_040_SI
 - D33_076_DE
 - D15b_277_SI
 - 12b_D12_84_TR
@@ -164,6 +168,7 @@ matches:
       - 30_130RE
       - 33_130AS
       - B35_130_TR
+      - D17_130_CE
     blood_sample: GIB-130
   GB180:
     crypt_samples:
@@ -283,6 +288,7 @@ matches:
       - 40_AS
       - 20_40DC
       - D7_40_RE
+      - D16_040_SI
     blood_sample: GIB-040
   GB115:
     crypt_samples:
@@ -310,6 +316,8 @@ matches:
       - B23_153_RE
       - C6_153_RE
       - D11_153_DE
+      - D18_153_TR
+      - D20_153_SI
   GB277:
     crypt_samples:
       - B41_277_AC
@@ -360,6 +368,8 @@ regions:
     trans_col:
       - D2_09_TR
   GB130:
+    cecum:
+      - D17_130_CE
     desc_col:
       - 24_130DC
     rectum:
@@ -528,6 +538,8 @@ regions:
       - 40_AS
     desc_col:
       - 20_40DC
+    sig_col:
+      - D16_040_SI
     rectum:
       - D7_40_RE
   GB115:
@@ -564,6 +576,9 @@ regions:
       - B33_153_AS
     sig_col:
       - B6_153_SI
+      - D20_153_SI
+    trans_col:
+      - D18_153_TR
     rectum:
       - B23_153_RE
       - C6_153_RE
