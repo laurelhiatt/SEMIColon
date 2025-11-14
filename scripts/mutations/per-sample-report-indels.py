@@ -51,4 +51,4 @@ def count_unique_indels(vcf_path, fname, sample_name):
 
     w.close()
 
-    count_unique_indels(vcf_path, fname, sample_name)
+count_unique_indels(vcf_path, fname, sample_name)
