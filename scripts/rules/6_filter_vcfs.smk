@@ -1,4 +1,4 @@
-# Laurel Hiatt 08/12/2025
+# Laurel Hiatt 10/27/2025
 log_dir = out_dir + "/log/6_filter_vcfs"
 bench_dir = out_dir + "/benchmark/6_filter_vcfs"
 
@@ -112,13 +112,28 @@ rule filter_by_gnomad:
         touch {output.done}
         """
 
+# def donor_done_input(wildcards):
+#     donor = wildcards.donor
+#     sample = wildcards.sample
+#     crypt_samples = matches.get(donor, {}).get("crypt_samples", [])
+#     if sample not in crypt_samples:
+#         pass
+#     return os.path.join(out_dir, "results", donor, "gnomad.done")
+
 def donor_done_input(wildcards):
     donor = wildcards.donor
     sample = wildcards.sample
-    crypt_samples = matches.get(donor, {}).get("crypt_samples", [])
-    if sample not in crypt_samples:
-        pass
-    return os.path.join(out_dir, "results", donor, "gnomad.done")
+    donor_info = matches.get(donor, {})
+    crypt_samples = donor_info.get("crypt_samples", [])
+    blood_sample = donor_info.get("blood_sample")
+
+    # If sample is one of the crypt samples or matches the blood sample
+    if sample in crypt_samples or sample == blood_sample:
+        return os.path.join(out_dir, "results", donor, "gnomad.done")
+
+    # Otherwise, skip
+    return None
+
 
 rule make_lua:
     input:
@@ -155,6 +170,21 @@ rule filter_by_alt_depth:
         """
         ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 3 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.sample_vcf}
         """
+
+rule count_indels:
+    input:
+        vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz"
+    output:
+        out_vcf= out_dir + "/results/{donor}/{sample}_filtered_indels.vcf.gz",
+    params:
+        sample_name = "{donor}_{sample}",
+        ref = reference,
+        high_vaf_threshold = 0.6,
+        low_vaf_threshold = 0.2
+    conda:
+        "../../envs/cyvcf2.yaml"
+    script:
+        "../mutations/per-sample-report-indels.py"
 
 rule count_snvs:
     input:

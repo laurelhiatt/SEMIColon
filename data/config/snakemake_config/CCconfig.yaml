@@ -7,6 +7,53 @@ reference_genome: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v
 reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human_g1k_v38_decoy_phix.fasta.fai"
 
 samples:
+- D18_153_TR
+- D20_153_SI
+- D17_130_CE
+- D16_040_SI
+- D33_076_DE
+- D15b_277_SI
+- 12b_D12_84_TR
+- D29_030_AS
+- D30_029_AS
+- D31_031_DE
+- D32_076_CE
+- D10_030_RE
+- D8_076_AS
+- D11_153_DE
+- D9_084_AS
+- D24_093_RE
+- D25_029_RE
+- D26_084_SI
+- D27_074_SI
+- GIB-148
+- GIB-180
+- GIB-277
+- GIB-148
+- D12_058_SI
+- D13_076_RE
+- D14_074_RE
+- D15_277_SI
+- D2_09_TR
+- D4_19_TR
+- D6_84_RE
+- D7_40_RE
+- GIB-103
+- GIB-115
+- GIB-116
+- GIB-130
+- GIB-74
+- GIB-76
+- GIB-84
+- GIB-93
+- GIB-030
+- GIB-031
+- GIB-040
+- GIB-58
+- GIB-019
+- GIB-027
+- GIB-029
+- GIB-09
 - C3_103_DE
 - C14_115_TR
 - C16_180_CE
@@ -67,7 +114,7 @@ samples:
 - A5__074_AS
 - A9_09_CE
 - A2__148_CE
-- A8__093_SI
+- A8__093_SI #fixing the merge
 - A15__180_TR
 - 30_130RE
 - 21_116CE
@@ -107,16 +154,22 @@ matches:
   GB19:
     crypt_samples:
       - C22_19_SI
+      - D4_19_TR
+    blood_sample: GIB-019
   GB9:
     crypt_samples:
       - A9_09_CE
       - B29_09_AS
+      - D2_09_TR
+    blood_sample: GIB-09
   GB130:
     crypt_samples:
       - 24_130DC
       - 30_130RE
       - 33_130AS
       - B35_130_TR
+      - D17_130_CE
+    blood_sample: GIB-130
   GB180:
     crypt_samples:
       - 23_180RE
@@ -125,6 +178,7 @@ matches:
       - B38_180_SI
       - B12_180_AS
       - C16_180_CE
+    blood_sample: GIB-180
   GB93:
     crypt_samples:
       - A8__093_SI
@@ -132,16 +186,26 @@ matches:
       - B32_93_AS
       - C17_93_AS
       - C10_93_CE
+      - D24_093_RE
+    blood_sample: GIB-93
   GB74:
     crypt_samples:
       - 74_DC
       - 29_74TR
       - A5__074_AS
+      - D14_074_RE
+      - D27_074_SI
+    blood_sample: GIB-74
   GB76:
     crypt_samples:
+      - D32_076_CE
       - 22_76TR
-      - 76_DC
+      # - 76_DC
       - B4_076_SI
+      - D13_076_RE
+      - D8_076_AS
+      - D33_076_DE
+    blood_sample: GIB-76
   GB31:
     crypt_samples:
       - 031_RE_T
@@ -150,21 +214,33 @@ matches:
       - B5_031_RE
       - B28_31_TR
       - C24_31_TR
+      - D31_031_DE
+    blood_sample: GIB-031
   GB30:
     crypt_samples:
       - 030_CE_T
       - 30_TR
       - B7_030_DC
+      - D10_030_RE
+      - D29_030_AS
+    blood_sample: GIB-030
   GB58:
     crypt_samples:
       - 058_RE_T
       - 58_TR
       - 58_DC
       - B10_058_CE
+      - D12_058_SI
+    blood_sample: GIB-58
   GB84:
     crypt_samples:
       - A16__084_CE
       - B3_084_DC
+      - D6_84_RE
+      - D26_084_SI
+      - D9_084_AS
+      - 12b_D12_84_TR
+    blood_sample: GIB-84
   GB27:
     crypt_samples:
       - 27_CE
@@ -172,11 +248,15 @@ matches:
       - 19_27TR
       - 17_27AS
       - 18_27RE
+    blood_sample: GIB-027
   GB29:
     crypt_samples:
       - 29_CE
       - 029_DC_T
       - 32_29TR
+      - D25_029_RE
+      - D30_029_AS
+    blood_sample: GIB-029
   GB103:
     crypt_samples:
       - 103_RE
@@ -184,6 +264,7 @@ matches:
       - B8_103_SI
       - C1_103_TR
       - C3_103_DE
+    blood_sample: GIB-103
   GB116:
     crypt_samples:
       - B27_116_AS
@@ -192,6 +273,7 @@ matches:
       - 21_116CE
       - A7__116_DC
       - B2_116_RE
+    blood_sample: GIB-116
   GB148:
     crypt_samples:
       - 148_SI
@@ -200,10 +282,14 @@ matches:
       - B13_148_DC
       - B15_148_RE
       - C5_148_TR
+    blood_sample: GIB-148
   GB40:
     crypt_samples:
       - 40_AS
       - 20_40DC
+      - D7_40_RE
+      - D16_040_SI
+    blood_sample: GIB-040
   GB115:
     crypt_samples:
       - Laurel-2
@@ -213,6 +299,7 @@ matches:
       - B26_115_DC
       - B18_115_TC
       - C14_115_TR
+    blood_sample: GIB-115
   GB273:
     crypt_samples:
       - B43_273_AS
@@ -228,6 +315,9 @@ matches:
       - B6_153_SI
       - B23_153_RE
       - C6_153_RE
+      - D11_153_DE
+      - D18_153_TR
+      - D20_153_SI
   GB277:
     crypt_samples:
       - B41_277_AC
@@ -237,6 +327,9 @@ matches:
       - B19_277_TC
       - C15_277_TR
       - C18_277_DE
+      - D15_277_SI
+      - D15b_277_SI
+    blood_sample: GIB-277
 
 donors:
 - GB9
@@ -265,12 +358,18 @@ regions:
   GB19:
     sig_col:
       - C22_19_SI
+    trans_col:
+      - D4_19_TR
   GB9:
     cecum:
       - A9_09_CE
     asc_col:
       - B29_09_AS
+    trans_col:
+      - D2_09_TR
   GB130:
+    cecum:
+      - D17_130_CE
     desc_col:
       - 24_130DC
     rectum:
@@ -295,6 +394,8 @@ regions:
   GB93:
     cecum:
       - C10_93_CE
+    rectum:
+      - D24_093_RE
     sig_col:
       - A8__093_SI
     trans_col:
@@ -309,32 +410,47 @@ regions:
       - 29_74TR
     asc_col:
       - A5__074_AS
+    rectum:
+      - D14_074_RE
+    sig_col:
+      - D27_074_SI
   GB76:
+    cecum:
+      - D32_076_CE
+    desc_col:
+      - D33_076_DE
     trans_col:
       - 22_76TR
-    desc_col:
-      - 76_DC
     sig_col:
       - B4_076_SI
+    rectum:
+      - D13_076_RE
+    asc_col:
+      - D8_076_AS
   GB31:
     rectum:
       - 031_RE_T
+      - B5_031_RE
     asc_col:
       - A1__031_AS
+    desc_col:
+      - D31_031_DE
     cecum:
       - B14_031_CE
-    rectum:
-      - B5_031_RE
     trans_col:
       - B28_31_TR
       - C24_31_TR
   GB30:
     cecum:
       - 030_CE_T
+    asc_col:
+      - D29_030_AS
     trans_col:
       - 30_TR
     desc_col:
       - B7_030_DC
+    rectum:
+      - D10_030_RE
   GB58:
     rectum:
       - 058_RE_T
@@ -344,11 +460,21 @@ regions:
       - 58_DC
     cecum:
       - B10_058_CE
+    sig_col:
+      - D12_058_SI
   GB84:
     cecum:
       - A16__084_CE
     desc_col:
       - B3_084_DC
+    rectum:
+      - D6_84_RE
+    sig_col:
+      - D26_084_SI
+    asc_col:
+      - D9_084_AS
+    trans_col:
+      - 12b_D12_84_TR
   GB27:
     cecum:
       - 27_CE
@@ -363,10 +489,14 @@ regions:
   GB29:
     cecum:
       - 29_CE
+    asc_col:
+      - D30_029_AS
     desc_col:
       - 029_DC_T
     trans_col:
       - 32_29TR
+    rectum:
+      - D25_029_RE
   GB103:
     sig_col:
       - B8_103_SI
@@ -385,10 +515,9 @@ regions:
       - 116_TR
     rectum:
       - 116_RE_T
+      - B2_116_RE
     desc_col:
       - A7__116_DC
-    rectum:
-      - B2_116_RE
     asc_col:
       - B27_116_AS
   GB148:
@@ -409,6 +538,10 @@ regions:
       - 40_AS
     desc_col:
       - 20_40DC
+    sig_col:
+      - D16_040_SI
+    rectum:
+      - D7_40_RE
   GB115:
     cecum:
       - Laurel-10
@@ -443,9 +576,14 @@ regions:
       - B33_153_AS
     sig_col:
       - B6_153_SI
+      - D20_153_SI
+    trans_col:
+      - D18_153_TR
     rectum:
       - B23_153_RE
       - C6_153_RE
+    desc_col:
+      - D11_153_DE
   GB277:
     asc_col:
       - B41_277_AC
@@ -459,6 +597,9 @@ regions:
     desc_col:
       - B17_277_DC
       - C18_277_DE
+    sig_col:
+      - D15_277_SI
+      - D15b_277_SI
 
 cohorts:
   normal:

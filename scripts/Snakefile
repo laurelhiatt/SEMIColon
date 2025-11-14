@@ -125,11 +125,28 @@ for sample in samples:
         sample_files[sample]['R1'] = list(set(temp_r1_files))
         sample_files[sample]['R2'] = list(set(temp_r2_files))
 
+
 def get_donor(sample, matches):
     for donor, samples in matches.items():
-        if sample in samples['crypt_samples']:
+        crypt_samples = samples.get("crypt_samples", [])
+        blood_sample = samples.get("blood_sample")
+
+        # Check if sample is in crypt samples
+        if sample in crypt_samples:
             return donor
+
+        # Check if sample matches the blood sample (if it exists)
+        if blood_sample and sample == blood_sample:
+            return donor
+
+    # If we reach here, no match was found
     raise KeyError(f"Sample {sample} not found in matches dictionary")
+
+# def get_donor(sample, matches):
+#     for donor, samples in matches.items():
+#         if sample in samples['crypt_samples'] or sample in samples['blood_sample']:
+#             return donor
+#     raise KeyError(f"Sample {sample} not found in matches dictionary")
 
 def get_samples_for_donor(donor, matches):
     return [sample for sample, d in matches.items() if d == donor]
@@ -183,6 +200,10 @@ rule all:
         ),
         [
             f"{out_dir}/results/{donor}/{sample}_snv_count.txt"
+            for donor, sample in zip(donors, filtered_samples)
+        ],
+        [
+            f"{out_dir}/results/{donor}/{sample}_filtered_indels.vcf.gz"
             for donor, sample in zip(donors, filtered_samples)
         ],
         [
