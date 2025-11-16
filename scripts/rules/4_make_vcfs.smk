@@ -6,21 +6,21 @@ bench_dir = out_dir + "/benchmark/4_make_vcfs"
 
 def swap_acct(wc, attempt):
     if attempt == 1:
-        return "ucgd-rw"
+        return "owner-guest"
     else:
         return "quinlan-rw"
 
 # If first attempt, redwood-guest (matches owner-guest). Else, quinlan.
 def swap_part(wc, attempt):
     if attempt == 1:
-        return "ucgd-shared-rw"
+        return "redwood-shared-guest"
     else:
         return "quinlan-shared-rw"
 
 # If first attempt, 3 hours (short time for guest). Else, two weeks.
 def swap_time(wc, attempt):
     if attempt == 1:
-        return 180
+        return 600
     else:
         return 20160
 
