@@ -75,6 +75,17 @@ def create_recurrent_vcf(input_files, output_file, min_recurrence, report):
             for f in old_record.filter.keys():
                 new_rec.filter.add(f)
 
+        # Copy sample FORMAT fields
+            for sample in old_record.samples:
+                new_sample = new_rec.samples[sample]
+
+                old_sample = old_record.samples[sample]
+
+                for fmt_key in old_sample.keys():
+                # Only copy if FORMAT exists in output header
+                    if fmt_key in vcf_out.header.formats:
+                        new_sample[fmt_key] = old_sample[fmt_key]
+
         # Write record
             vcf_out.write(new_rec)
 
