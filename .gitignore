@@ -13,7 +13,8 @@
 /scripts/mutations/signatures/dbs/*
 /scripts/mutations/signatures/snvs/*
 /scripts/mutations/signatures/ID/*
-/sigpro/*
+/scripts/mutations/s
+scripts/mutations/instability.tsv
 
 #Data for tools
 /data/KRAKEN/*

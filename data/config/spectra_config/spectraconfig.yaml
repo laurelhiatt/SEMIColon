@@ -7,60 +7,60 @@ reference_genome_index: "/scratch/ucgd/lustre/common/data/Reference/GRCh38/human
 samples:
 - Laurel-2
 - Laurel-10
-- B1_115_SI
-- B9_115_RE
-- B26_115_DC
-- B18_115_TC
-- B41_277_AC
-- B39_277_CE
-- B42_277_RTM
-- B17_277_DC
-- B19_277_TC
-- PD36814m5
-- PD36814m8
-- PD37226j4
-- PD37226j5
-- PD37226j6
-- PD37226j7
-- PD37226j8
-- PD37226o4
-- PD37226o5
-- PD37226p7
-- PD37265m3
-- PD37265m4
+# - B1_115_SI
+# - B9_115_RE
+# - B26_115_DC
+# - B18_115_TC
+# - B41_277_AC
+# - B39_277_CE
+# - B42_277_RTM
+# - B17_277_DC
+# - B19_277_TC
+# - PD36814m5
+# - PD36814m8
+# - PD37226j4
+# - PD37226j5
+# - PD37226j6
+# - PD37226j7
+# - PD37226j8
+# - PD37226o4
+# - PD37226o5
+# - PD37226p7
+# - PD37265m3
+# - PD37265m4
 
 matches:
   GB115:
     crypt_samples:
       - Laurel-2
       - Laurel-10
-      - B1_115_SI
-      - B9_115_RE
-      - B26_115_DC
-      - B18_115_TC
-  GB277:
-    crypt_samples:
-      - B41_277_AC
-      - B39_277_CE
-      - B42_277_RTM
-      - B17_277_DC
-      - B19_277_TC
-  O337:
-    crypt_samples:
-      - PD36814m5
-      - PD36814m8
-      - PD37226j4
-      - PD37226j5
-      - PD37226j6
-      - PD37226j7
-      - PD37226j8
-      - PD37226o4
-      - PD37226o5
-      - PD37226p7
-      - PD37265m3
-      - PD37265m4
+  #     - B1_115_SI
+  #     - B9_115_RE
+  #     - B26_115_DC
+  #     - B18_115_TC
+  # GB277:
+  #   crypt_samples:
+  #     - B41_277_AC
+  #     - B39_277_CE
+  #     - B42_277_RTM
+  #     - B17_277_DC
+  #     - B19_277_TC
+  # O337:
+  #   crypt_samples:
+  #     - PD36814m5
+  #     - PD36814m8
+  #     - PD37226j4
+  #     - PD37226j5
+  #     - PD37226j6
+  #     - PD37226j7
+  #     - PD37226j8
+  #     - PD37226o4
+  #     - PD37226o5
+  #     - PD37226p7
+  #     - PD37265m3
+  #     - PD37265m4
 
 donors:
 - GB115
-- GB277
-- O337
+# - GB277
+# - O337

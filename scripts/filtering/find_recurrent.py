@@ -4,99 +4,126 @@ from collections import defaultdict
 from datetime import datetime
 
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-
-
-input_files = "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/results/GB130/24_130DC_filtered.vcf.gz,/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/results/GB74/D27_074_SI_filtered.vcf.gz".split(",")
-output_file = "recurrent.vcf"
-min_recurrence= 2
-report = "report.txt"
-
-# input_files = snakemake.input
-# output_file = snakemake.output["recurrent_vcf"]
-# min_recurrence= snakemake.params["recurrence_threshold"]
-# report = snakemake.output["report"]
+input_files = snakemake.input["all_annotated"]
+min_recurrence= snakemake.params.get("min_recurrence", 2)
+report = snakemake.output["report"]
+output_file = snakemake.output["recurrent_vcf"]
 
 def create_recurrent_vcf(input_files, output_file, min_recurrence, report):
     """
-    Creates a VCF file containing only recurrent mutations from a cohort.
+    Creates a VCF with only recurrent variants.
+    Removes all sample/genotype columns.
+    Adds RECURRENCE + FILES fields to INFO.
+    Produces a text report listing variants and files they were found in.
     """
+
     if not input_files:
         print("No input VCF files provided.")
         return
 
-    # Use the header from the first VCF file as a template
+    # ---------------------------
+    # Build a clean header
+    # ---------------------------
     first_vcf = pysam.VariantFile(input_files[0])
-    header = first_vcf.header.copy()
+    header = pysam.VariantHeader()
 
-    # Add a custom INFO field to the header for "Recurrence Count"
+    # Copy contigs
+    for ctg in first_vcf.header.contigs:
+        header.contigs.add(ctg, length=first_vcf.header.contigs[ctg].length)
+
+    # Copy INFO definitions
+    for info_id in first_vcf.header.info:
+        header.info.add(
+            info_id,
+            first_vcf.header.info[info_id].number,
+            first_vcf.header.info[info_id].type,
+            first_vcf.header.info[info_id].description
+        )
+
+    # Add custom INFO fields
     header.add_line('##INFO=<ID=RECURRENCE,Number=1,Type=Integer,Description="Number of samples this variant was found in.">')
+    header.add_line('##INFO=<ID=FILES,Number=.,Type=String,Description="List of input files containing this variant.">')
 
-    variant_counts = defaultdict(lambda: [0, None])
+    # Add FORMAT column (required, even if no samples)
+    header.formats.add("GT", 1, "String", "Dummy genotype format (no samples)")
 
+    # Define columns (no samples!)
+    header.add_meta("fileformat", value="VCFv4.2")
+    header.add_sample("DUMMY")  # We need one dummy sample to keep FORMAT column; we’ll drop its genotype later.
+
+    # -----------------------------------
+    # Gather variant counts + file list
+    # -----------------------------------
+    variant_data = defaultdict(lambda: {"count": 0, "record": None, "files": set()})
 
     for vcf_file in input_files:
         vcf_in = pysam.VariantFile(vcf_file)
         for record in vcf_in:
-            # Create a unique key for the variant (handling multiple alts)
             for alt in record.alts:
-                variant_key = (record.chrom, record.pos, record.ref, alt)
-                if variant_counts[variant_key][0] == 0:
-                    # Store the first occurrence's record object
-                    variant_counts[variant_key][1] = record
-                variant_counts[variant_key][0] += 1
+                key = (record.chrom, record.pos, record.ref, alt)
+
+                # Store first record for INFO copying
+                if variant_data[key]["record"] is None:
+                    variant_data[key]["record"] = record
+
+                variant_data[key]["count"] += 1
+                variant_data[key]["files"].add(vcf_file)
+
         vcf_in.close()
 
-    # Write recurrent variants to the output VCF
-    with pysam.VariantFile(output_file, 'w', header=header) as vcf_out:
-        for (chrom, pos, ref, alt), (count, old_record) in variant_counts.items():
+    # -----------------------------------
+    # Write output VCF (no samples)
+    # -----------------------------------
+    with pysam.VariantFile(output_file, "w", header=header) as vcf_out:
 
-            if count < min_recurrence:
+        for (chrom, pos, ref, alt), info in variant_data.items():
+
+            if info["count"] < min_recurrence:
                 continue
 
-        # Create new record tied to output header
+            old_record = info["record"]
+
+            # Create record
             new_rec = vcf_out.new_record(
                 contig=chrom,
                 start=pos - 1,
-                stop=pos - 1 + len(ref),
-                alleles=(ref, alt))
+                alleles=(ref, alt)
+            )
 
-        # Copy INFO fields
+            # Copy INFO fields
             for key in old_record.info:
-                if key in vcf_out.header.info:       # safety check
+                try:
                     new_rec.info[key] = old_record.info[key]
+                except Exception:
+                    pass  # ignore fields incompatible with copied header
 
-        # Add RECURRENCE
-            new_rec.info["RECURRENCE"] = count
+            # Add recurrence count + file list
+            new_rec.info["RECURRENCE"] = info["count"]
+            new_rec.info["FILES"] = list(info["files"])
 
-        # Copy QUAL
+            # Copy QUAL and FILTER
             new_rec.qual = old_record.qual
-
-        # Copy FILTER
             for f in old_record.filter.keys():
                 new_rec.filter.add(f)
 
-        # Copy sample FORMAT fields
-            for sample in old_record.samples:
-                new_sample = new_rec.samples[sample]
+            # Remove sample data — set dummy genotype to "."
+            new_rec.samples["DUMMY"]["GT"] = (None, None)
 
-                old_sample = old_record.samples[sample]
-
-                for fmt_key in old_sample.keys():
-                # Only copy if FORMAT exists in output header
-                    if fmt_key in vcf_out.header.formats:
-                        new_sample[fmt_key] = old_sample[fmt_key]
-
-        # Write record
             vcf_out.write(new_rec)
 
-
+    # -----------------------------------
+    # Write report
+    # -----------------------------------
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     with open(report, "w") as f:
-        f.write(f"Recurrent Variants Report for {timestamp} \n")
-        f.write(f"Recurrent variants VCF created at: {output_file}\n")
-        f.write(f"Minimum recurrence threshold: {min_recurrence}\n")
-        f.write(f"Total unique variants found: {len(variant_counts)}\n")
-        f.write(f"Variants meeting min_recurrence ({min_recurrence}): {sum(1 for c, r in variant_counts.values() if c >= min_recurrence)}\n")
+        f.write(f"Recurrent Variants Report: {timestamp}\n")
+        f.write(f"Output VCF: {output_file}\n")
+        f.write(f"Minimum recurrence: {min_recurrence}\n\n")
 
-# Create the recurrent VCF
+        for (chrom, pos, ref, alt), info in variant_data.items():
+            if info["count"] >= min_recurrence:
+                f.write(f"{chrom}:{pos} {ref}>{alt}\t{info['count']} samples\tFiles: {', '.join(info['files'])}\n")
+
+
 create_recurrent_vcf(input_files, output_file, min_recurrence, report)

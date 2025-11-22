@@ -203,7 +203,7 @@ rule all:
             for donor, sample in zip(donors, filtered_samples)
         ],
         [
-            f"{out_dir}/results/{donor}/{sample}_filtered_indels.vcf.gz"
+            f"{out_dir}/results/{donor}/{sample}_indels.vcf.gz"
             for donor, sample in zip(donors, filtered_samples)
         ],
         [

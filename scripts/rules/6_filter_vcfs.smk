@@ -2,6 +2,9 @@
 log_dir = out_dir + "/log/6_filter_vcfs"
 bench_dir = out_dir + "/benchmark/6_filter_vcfs"
 
+from collections import OrderedDict
+
+
 pairs = [
     (get_donor(sample, matches), sample)
     for sample in samples
@@ -12,6 +15,50 @@ if pairs:
     donors, filtered_samples = zip(*pairs)
 else:
     donors, filtered_samples = [], []
+
+
+def get_all_samples_for_donor(donor, matches):
+    """
+    Returns a list of samples for a donor:
+    - All crypt_samples
+    - Blood sample(s), if present, only if not already in crypt_samples
+    """
+    rec = matches.get(donor, {})
+    samples = list(rec.get("crypt_samples", []))  # copy list
+
+    bs = rec.get("blood_sample", None)
+    if bs:
+        if isinstance(bs, str) and bs not in samples:
+            samples.append(bs)
+        elif isinstance(bs, list):
+            for b in bs:
+                if b not in samples:
+                    samples.append(b)
+
+    return samples
+
+def get_all_inputs(donors, matches, out_dir):
+    """
+    Returns all donor filtered VCF paths using the real absolute path.
+    Removes duplicates to avoid periodic wildcard detection hang.
+    """
+    all_inputs = []
+    for donor in donors:
+        donor_samples = get_all_samples_for_donor(donor, matches)
+        donor_paths = [
+            f"{out_dir}/results/{donor}/{sample}.filtered.vcf.gz"
+            for sample in donor_samples
+        ]
+        all_inputs.extend(donor_paths)
+
+    from collections import OrderedDict
+    all_inputs = list(OrderedDict.fromkeys(all_inputs))
+
+    # Debug print
+    #print("DEBUG: find_recurrent input files:", all_inputs)
+
+    return all_inputs
+
 
 # decompose the vcf for downstream
 rule decompose_vcfs:
@@ -97,28 +144,43 @@ rule index_depth:
         tabix -f -p vcf {input.depth_vcf} --threads {threads}
         """
 
-### it shouldn't exist in gnomad (at this point, pre-blood)
+### it shouldn't exist in gnomad
 rule filter_by_gnomad:
     input:
         depth_vcf= out_dir + "/results/{donor}-depth-filtered.vcf.gz",
         indexed_vcf= out_dir + "/results/{donor}-depth-filtered.vcf.gz.tbi"
     output:
-        gnomad_vcf= out_dir + "/results/{donor}-gnomad-filtered.vcf.gz",
-        done = out_dir + "/results/{donor}/gnomad.done"
+        gnomad_vcf= out_dir + "/results/{donor}.gnomad.filtered.vcf.gz"
     shell:
         """
         module load bcftools
         bcftools filter -i '(gnomad_popmax_af <= 0 || gnomad_popmax_af == ".")' -Oz -o {output.gnomad_vcf} {input.depth_vcf}
-        touch {output.done}
         """
 
-# def donor_done_input(wildcards):
-#     donor = wildcards.donor
-#     sample = wildcards.sample
-#     crypt_samples = matches.get(donor, {}).get("crypt_samples", [])
-#     if sample not in crypt_samples:
-#         pass
-#     return os.path.join(out_dir, "results", donor, "gnomad.done")
+rule annotate_gene:
+    input:
+        gnomad_vcf= out_dir + "/results/{donor}.gnomad.filtered.vcf.gz",
+    output:
+        vcf = out_dir + "/results/{donor}.annotated.vcf.gz",
+        done = out_dir + "/results/{donor}/gnomad.done"
+    envmodules:
+        "vep/104.2"
+    resources:
+        mem_mb = mem_large
+    params:
+        dir_cache = "/scratch/ucgd/lustre/common/data/vep_cache"
+    log:
+        log_dir + "/{donor}_annotate.log"
+    threads:
+        8
+    shell:
+        """
+        echo "Running VEP annotation for {wildcards.donor}"
+        vep --cache --dir_cache {params.dir_cache} -i {input.gnomad_vcf} --vcf --compress_output bgzip -o {output.vcf} --symbol --force_overwrite --fork 10
+        tabix -p vcf {output.vcf} --threads {threads}
+        echo "Finished VEP annotation for {wildcards.donor}"
+        touch {output.done}
+        """
 
 def donor_done_input(wildcards):
     donor = wildcards.donor
@@ -133,7 +195,6 @@ def donor_done_input(wildcards):
 
     # Otherwise, skip
     return None
-
 
 rule make_lua:
     input:
@@ -151,12 +212,12 @@ rule filter_by_sample:
     output:
         sample_vcf = temp(out_dir + "/results/{donor}/{sample}_filtered_noAD.vcf.gz")
     params:
-        gnomad_vcf = out_dir + "/results/{donor}-gnomad-filtered.vcf.gz"
+        annotated_vcf = out_dir + "/results/{donor}.annotated.vcf.gz"
     shell:
         """
         ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua \
             -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' \
-            -o {output.sample_vcf} {params.gnomad_vcf}
+            -o {output.sample_vcf} {params.annotated_vcf}
         """
 
 ### this sample must have > # alternate allele
@@ -165,17 +226,59 @@ rule filter_by_alt_depth:
         sample_vcf = out_dir + "/results/{donor}/{sample}_filtered_noAD.vcf.gz",
         lua = rules.make_lua.output.lua,
     output:
-        vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz",
+        vcf= out_dir + "/results/{donor}/{sample}.filtered.vcf.gz",
     shell:
         """
         ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 3 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.sample_vcf}
         """
 
+rule find_recurrent:
+    input:
+        # Lazy evaluation to ensure DAG sees dependencies
+        all_filtered=lambda wc: get_all_inputs(donors, matches, out_dir)
+    params:
+        min_recurrence = 2
+    output:
+        recurrent_vcf =  out_dir + "/" + "results/recurrent.vcf",
+        report= out_dir + "/" + "results/recurrent.txt"
+    conda:
+        "../../envs/recurrent.yaml"
+    script:
+        "../filtering/find_recurrent.py"
+
+
+rule compress_recurrent:
+    input:
+        recurrent = out_dir + "/" + "results/recurrent.vcf"
+    output:
+        recurrent_vcf = out_dir + "/" + "results/recurrent.vcf.gz"
+    threads:
+        8
+    shell:
+        """
+        module load bcftools
+        bcftools sort -Oz -o {output.recurrent_vcf} {input.recurrent}
+        tabix -p vcf {output.recurrent_vcf} --threads {threads}
+
+        """
+### this sample must have > # alternate allele
+rule filter_by_recurrent:
+    input:
+        sample_vcf = out_dir + "/results/{donor}/{sample}.filtered.vcf.gz",
+        recurrent_vcf = out_dir + "/results/recurrent.vcf.gz"
+    output:
+        vcf= out_dir + "/results/{donor}/{sample}.vcf.gz"
+    shell:
+        """
+        module load bcftools
+        bcftools isec -C -w1 -O z -o {output.vcf} {input.sample_vcf} {input.recurrent_vcf}
+        """
+
 rule count_indels:
     input:
-        vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz"
+        vcf= out_dir + "/results/{donor}/{sample}.vcf.gz"
     output:
-        out_vcf= out_dir + "/results/{donor}/{sample}_filtered_indels.vcf.gz",
+        out_vcf= out_dir + "/results/{donor}/{sample}_indels.vcf.gz",
     params:
         sample_name = "{donor}_{sample}",
         ref = reference,
@@ -188,9 +291,9 @@ rule count_indels:
 
 rule count_snvs:
     input:
-        vcf= out_dir + "/results/{donor}/{sample}_filtered.vcf.gz"
+        vcf= out_dir + "/results/{donor}/{sample}.vcf.gz"
     output:
-        out_vcf= out_dir + "/results/{donor}/{sample}_filtered_snvs.vcf.gz",
+        out_vcf= out_dir + "/results/{donor}/{sample}_snvs.vcf.gz",
         txt= out_dir + "/results/{donor}/{sample}_snv_count.txt"
     params:
         sample_name = "{donor}_{sample}",
