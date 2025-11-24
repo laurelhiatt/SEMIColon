@@ -55,8 +55,10 @@ out_dir = out_dir.rstrip("/")
 # reference data
 reference: str = config["reference_genome"]
 reference_index: str = config["reference_genome_index"]
-chroms = ["chr1","chr2","chr3","chr4","chr6","chr7","chr8","chr9","chr10","chr11","chr12",
-    "chr13","chr14","chr15","chr16","chr17", "chr18","chr19","chr20","chr21","chr22","chrX","chrY"]
+chroms = [f"chr{c}" for c in range(1, 23)] + ["chrX", "chrY"]
+#print(chroms)
+# chroms = ["chr1","chr2","chr3","chr4","chr6","chr7","chr8","chr9","chr10","chr11","chr12",
+#     "chr13","chr14","chr15","chr16","chr17", "chr18","chr19","chr20","chr21","chr22","chrX","chrY"]
 
 # study data
 samples: list[str] = config["samples"]
@@ -199,11 +201,11 @@ rule all:
             sample = samples
         ),
         [
-            f"{out_dir}/results/{donor}/{sample}_snv_count.txt"
+            f"{out_dir}/results/{donor}/{sample}.snv_count.txt"
             for donor, sample in zip(donors, filtered_samples)
         ],
         [
-            f"{out_dir}/results/{donor}/{sample}_indels.vcf.gz"
+            f"{out_dir}/results/{donor}/{sample}.indels.vcf.gz"
             for donor, sample in zip(donors, filtered_samples)
         ],
         [
