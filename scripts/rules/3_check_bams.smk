@@ -57,7 +57,8 @@ rule samtools_stats:
 # getting coverage across genome, chromosomes, etc
 rule mosdepth:
     input:
-        bam_sort = rules.add_rg.output.sort_bam_RG
+        bam_sort = rules.add_rg.output.sort_bam_RG,
+        bai = rules.index_bam.output.bai
     output:
         out_dir + "/mosdepth/{sample}.mosdepth.global.dist.txt"
     params:

@@ -107,6 +107,7 @@ rule remove_lcr:
         simplerepeats_bed = "/scratch/ucgd/lustre-labs/quinlan/data-shared/annotations/GRCh38.UCSC.SimpleRepeats.bed.gz"
     output:
         filtered_vcf = out_dir + "/vcf/{donor}-annotated-var-noLCR.vcf.gz"
+
     resources:
         mem_mb = mem_xlarge
     threads: 4
@@ -122,39 +123,16 @@ rule remove_lcr:
         tabix -p vcf {output.filtered_vcf}
         """
 
-rule filter_by_depth:
-    input:
-        filtered_vcf= out_dir + "/vcf/{donor}-annotated-var-noLCR.vcf.gz"
-    output:
-        depth_vcf= temp(out_dir + "/results/{donor}-depth-filtered.vcf.gz")
-    shell:
-        """
-        ./vcfexpress filter -e 'return all(function (dp) return dp > 7 end, variant:format("DP"))' -o {output.depth_vcf} {input.filtered_vcf}
-        """
-
-rule index_depth:
-    input:
-        depth_vcf= out_dir + "/results/{donor}-depth-filtered.vcf.gz"
-    output:
-        indexed_vcf= temp(out_dir + "/results/{donor}-depth-filtered.vcf.gz.tbi")
-    threads:
-        8
-    shell:
-        """
-        tabix -f -p vcf {input.depth_vcf} --threads {threads}
-        """
-
 ### it shouldn't exist in gnomad
 rule filter_by_gnomad:
     input:
-        depth_vcf= out_dir + "/results/{donor}-depth-filtered.vcf.gz",
-        indexed_vcf= out_dir + "/results/{donor}-depth-filtered.vcf.gz.tbi"
+        filtered_vcf= out_dir + "/vcf/{donor}-annotated-var-noLCR.vcf.gz"
     output:
         gnomad_vcf= out_dir + "/results/{donor}.gnomad.filtered.vcf.gz"
     shell:
         """
         module load bcftools
-        bcftools filter -i '(gnomad_popmax_af <= 0 || gnomad_popmax_af == ".")' -Oz -o {output.gnomad_vcf} {input.depth_vcf}
+        bcftools filter -i '(gnomad_popmax_af <= 0 || gnomad_popmax_af == ".")' -Oz -o {output.gnomad_vcf} {input.filtered_vcf}
         """
 
 rule annotate_gene:
@@ -173,11 +151,14 @@ rule annotate_gene:
         log_dir + "/{donor}_annotate.log"
     threads:
         8
+    envmodules:
+        "vep/104.2"
     shell:
         """
+        module load vep/104.2
         echo "Running VEP annotation for {wildcards.donor}"
         vep --cache --dir_cache {params.dir_cache} -i {input.gnomad_vcf} --vcf --compress_output bgzip -o {output.vcf} --symbol --force_overwrite --fork 10
-        tabix -p vcf {output.vcf} --threads {threads}
+        tabix -p vcf {output.vcf}
         echo "Finished VEP annotation for {wildcards.donor}"
         touch {output.done}
         """
@@ -210,7 +191,7 @@ rule filter_by_sample:
     input:
         lua = rules.make_lua.output.lua,
     output:
-        sample_vcf = temp(out_dir + "/results/{donor}/{sample}_filtered_noAD.vcf.gz")
+        sample_vcf = temp(out_dir + "/results/{donor}/{sample}.filtered_noAD.vcf.gz")
     params:
         annotated_vcf = out_dir + "/results/{donor}.annotated.vcf.gz"
     shell:
@@ -220,10 +201,46 @@ rule filter_by_sample:
             -o {output.sample_vcf} {params.annotated_vcf}
         """
 
+# rule filter_by_depth:
+#     input:
+#         sample_vcf = out_dir + "/results/{donor}/{sample}.filtered_noAD.vcf.gz"
+#     output:
+#         depth_vcf= temp(out_dir + "/results/{donor}/{sample}.depth.filtered.vcf.gz")
+#     shell:
+#         """
+#         ./vcfexpress filter -e 'return all(function (dp) return dp > 7 end, variant:format("DP"))' -o {output.depth_vcf} {input.sample_vcf}
+#         """
+
+rule filter_by_depth:
+    input:
+        sample_vcf = out_dir + "/results/{donor}/{sample}.filtered_noAD.vcf.gz",
+        lua = rules.make_lua.output.lua  # include your lua so sampleIndexes is available
+    output:
+        depth_vcf= temp(out_dir + "/results/{donor}/{sample}.depth.filtered.vcf.gz")
+    shell:
+        """
+        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua \
+          -e 'return any(function(i) local dp = variant:format("DP")[i]; return dp and dp > 7 end, sampleIndexes)' \
+          -o {output.depth_vcf} {input.sample_vcf}
+        """
+
+rule index_depth:
+    input:
+        depth_vcf= out_dir + "/results/{donor}/{sample}.depth.filtered.vcf.gz"
+    output:
+        indexed_vcf= temp(out_dir + "/results/{donor}/{sample}.depth.filtered.vcf.gz.tbi")
+    threads:
+        8
+    shell:
+        """
+        tabix -f -p vcf {input.depth_vcf} --threads {threads}
+        """
+
 ### this sample must have > # alternate allele
 rule filter_by_alt_depth:
     input:
-        sample_vcf = out_dir + "/results/{donor}/{sample}_filtered_noAD.vcf.gz",
+        sample_vcf = out_dir + "/results/{donor}/{sample}.depth.filtered.vcf.gz",
+        index_vcf = out_dir + "/results/{donor}/{sample}.depth.filtered.vcf.gz.tbi",
         lua = rules.make_lua.output.lua,
     output:
         vcf= out_dir + "/results/{donor}/{sample}.filtered.vcf.gz",
@@ -258,10 +275,10 @@ rule compress_recurrent:
         """
         module load bcftools
         bcftools sort -Oz -o {output.recurrent_vcf} {input.recurrent}
-        tabix -p vcf {output.recurrent_vcf} --threads {threads}
+        tabix -p vcf {output.recurrent_vcf}
 
         """
-### this sample must have > # alternate allele
+
 rule filter_by_recurrent:
     input:
         sample_vcf = out_dir + "/results/{donor}/{sample}.filtered.vcf.gz",
@@ -278,7 +295,7 @@ rule count_indels:
     input:
         vcf= out_dir + "/results/{donor}/{sample}.vcf.gz"
     output:
-        out_vcf= out_dir + "/results/{donor}/{sample}_indels.vcf.gz",
+        out_vcf= out_dir + "/results/{donor}/{sample}.indels.vcf.gz",
     params:
         sample_name = "{donor}_{sample}",
         ref = reference,
@@ -293,8 +310,8 @@ rule count_snvs:
     input:
         vcf= out_dir + "/results/{donor}/{sample}.vcf.gz"
     output:
-        out_vcf= out_dir + "/results/{donor}/{sample}_snvs.vcf.gz",
-        txt= out_dir + "/results/{donor}/{sample}_snv_count.txt"
+        out_vcf= out_dir + "/results/{donor}/{sample}.snvs.vcf.gz",
+        txt= out_dir + "/results/{donor}/{sample}.snv_count.txt"
     params:
         sample_name = "{donor}_{sample}",
         ref = reference,
