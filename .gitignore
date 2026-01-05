@@ -6,6 +6,8 @@
 /scripts/filtering/.snakemake/*
 /scripts/leesix_waiting/*
 /scripts/.snakemake/*
+/scripts/deepsomatic_1.9.0.sif
+/scripts/glnexus_v1.2.7.sif
 
 
 # Output directory

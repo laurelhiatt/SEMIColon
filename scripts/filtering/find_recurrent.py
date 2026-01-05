@@ -4,7 +4,7 @@ from collections import defaultdict
 from datetime import datetime
 
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-input_files = snakemake.input["all_annotated"]
+input_files = snakemake.input["all_filtered"]
 min_recurrence= snakemake.params.get("min_recurrence", 2)
 report = snakemake.output["report"]
 output_file = snakemake.output["recurrent_vcf"]

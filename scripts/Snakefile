@@ -55,7 +55,7 @@ out_dir = out_dir.rstrip("/")
 # reference data
 reference: str = config["reference_genome"]
 reference_index: str = config["reference_genome_index"]
-chroms = [f"chr{c}" for c in range(1, 23)] + ["chrX", "chrY"]
+chroms = [f"chr{c}" for c in range(1, 23)] + ["chrX", "chrY", "chrM"]
 #print(chroms)
 # chroms = ["chr1","chr2","chr3","chr4","chr6","chr7","chr8","chr9","chr10","chr11","chr12",
 #     "chr13","chr14","chr15","chr16","chr17", "chr18","chr19","chr20","chr21","chr22","chrX","chrY"]
@@ -144,6 +144,15 @@ def get_donor(sample, matches):
     # If we reach here, no match was found
     raise KeyError(f"Sample {sample} not found in matches dictionary")
 
+def get_donor_only_crypt(sample, matches):
+    """
+    Return donor if sample is in crypt_samples. Return None for blood or not found.
+    """
+    for donor, info in matches.items():
+        if sample in info.get("crypt_samples", []):
+            return donor
+    return None
+
 # def get_donor(sample, matches):
 #     for donor, samples in matches.items():
 #         if sample in samples['crypt_samples'] or sample in samples['blood_sample']:
@@ -201,6 +210,14 @@ rule all:
             sample = samples
         ),
         [
+            f"{out_dir}/results_ds/{donor}/{sample}.snv_count.txt"
+            for donor, sample in zip(donors_ds, filtered_samples_ds)
+        ],
+        [
+            f"{out_dir}/results_ds/{donor}/{sample}.indels.vcf.gz"
+            for donor, sample in zip(donors_ds, filtered_samples_ds)
+        ],
+        [
             f"{out_dir}/results/{donor}/{sample}.snv_count.txt"
             for donor, sample in zip(donors, filtered_samples)
         ],
@@ -212,3 +229,4 @@ rule all:
             f"{out_dir}/mosdepth/{donor}/{sample}_mosdepth_coverage.html"
             for donor, sample in zip(donors, filtered_samples)
         ],
+        expand(out_dir + "/vcf/merged/{donor}.GRCh38.joint_genotyped.vcf.gz.tbi", donor=donors)

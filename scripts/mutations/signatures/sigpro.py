@@ -4,7 +4,7 @@ import sys
 input_type = "matrix"
 output = "snvs"
 #input_data = "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/results/vaf_spectra/snvs/output/SBS/snvs.SBS96.all"
-input_data = "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/results/vaf_spectra/snvs/output/SBS/snvs.SBS288.all"
+input_data = "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/results/Hiatt_continueif2unknownDec82025_no_vaf/snvs/output/SBS/snvs.SBS288.all"
 
 
 ### normally, 96 for SBS96
