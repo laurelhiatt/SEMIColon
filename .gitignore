@@ -1,5 +1,9 @@
 # Temp file directory
 /scripts/.snakemake/*
+/scripts/pks/.snakemake/*
+.conda/*
+pks*
+
 /scripts/LeeSixdata/.snakemake/
 /scripts/log.txt
 /scripts/cryptdata/.snakemake/*
@@ -34,3 +38,4 @@ data/default_credential_file.json
 vcfexpress
 scripts/process_lee-six/.snakemake/*
 scripts/quality_control/mospow.py
+scripts/pks/Nissle_processed.RData
