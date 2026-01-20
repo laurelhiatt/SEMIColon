@@ -5,8 +5,8 @@ resources:
 - threads=100
 - mem_mb=200000
 default-resources:
-- slurm_account="ucgd-rw"
-- slurm_partition="ucgd-shared-rw"
+- slurm_account="owner-guest"
+- slurm_partition="redwood-shared-guest"
 - runtime=1440
 - mem_mb=16000*attempt
 # - slurm_extra="--qos=ucgd-rw"

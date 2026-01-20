@@ -210,19 +210,19 @@ rule all:
             sample = samples
         ),
         [
-            f"{out_dir}/results_ds/{donor}/{sample}.snv_count.txt"
+            f"{out_dir}/results_ds/{donor}/{sample}.nuclear_all.snv_count.txt"
             for donor, sample in zip(donors_ds, filtered_samples_ds)
         ],
         [
-            f"{out_dir}/results_ds/{donor}/{sample}.indels.vcf.gz"
+            f"{out_dir}/results_ds/{donor}/{sample}.nuclear_all.indels_count.txt"
             for donor, sample in zip(donors_ds, filtered_samples_ds)
         ],
         [
-            f"{out_dir}/results/{donor}/{sample}.snv_count.txt"
+            f"{out_dir}/results/{donor}/{sample}.nuclear_all.snv_count.txt"
             for donor, sample in zip(donors, filtered_samples)
         ],
         [
-            f"{out_dir}/results/{donor}/{sample}.indels.vcf.gz"
+            f"{out_dir}/results/{donor}/{sample}.nuclear_all.indels_count.txt"
             for donor, sample in zip(donors, filtered_samples)
         ],
         [

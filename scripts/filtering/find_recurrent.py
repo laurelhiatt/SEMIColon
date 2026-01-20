@@ -40,6 +40,24 @@ def create_recurrent_vcf(input_files, output_file, min_recurrence, report):
             first_vcf.header.info[info_id].description
         )
 
+    # ---- Copy FILTER definitions so we can re-use record filters ----
+    # This fixes the KeyError: 'Invalid filter: ...' when adding filters to new_rec
+    try:
+        for fid in first_vcf.header.filters:
+            fobj = first_vcf.header.filters[fid]
+            # add(filter_id, number, type, description) - number/type may be None in some versions
+            # Use safe defaults if attributes missing
+            number = getattr(fobj, "number", ".")
+            ftype = getattr(fobj, "type", "String")
+            desc = getattr(fobj, "description", "")
+            # pysam header.filters.add expects (id, number, type, description)
+            # number should be string-like per pysam, but passing as-is usually works
+            header.filters.add(fid, number, ftype, desc)
+    except Exception:
+        # If header.filters not available or copying fails, continue without raising;
+        # we'll still handle unknown filters below when adding them to records.
+        pass
+
     # Add custom INFO fields
     header.add_line('##INFO=<ID=RECURRENCE,Number=1,Type=Integer,Description="Number of samples this variant was found in.">')
     header.add_line('##INFO=<ID=FILES,Number=.,Type=String,Description="List of input files containing this variant.">')
@@ -59,6 +77,9 @@ def create_recurrent_vcf(input_files, output_file, min_recurrence, report):
     for vcf_file in input_files:
         vcf_in = pysam.VariantFile(vcf_file)
         for record in vcf_in:
+            # record.alts may be None for some records — guard against that
+            if record.alts is None:
+                continue
             for alt in record.alts:
                 key = (record.chrom, record.pos, record.ref, alt)
 
@@ -103,10 +124,23 @@ def create_recurrent_vcf(input_files, output_file, min_recurrence, report):
 
             # Copy QUAL and FILTER
             new_rec.qual = old_record.qual
-            for f in old_record.filter.keys():
-                new_rec.filter.add(f)
 
-            # Remove sample data — set dummy genotype to "."
+            # Add filters safely: if filter not present in output header, try to add a minimal header entry;
+            # otherwise skip it (so we won't raise KeyError).
+            for f in old_record.filter.keys():
+                try:
+                    new_rec.filter.add(f)
+                except KeyError:
+                    # Try to add a minimal FILTER definition to header, then add to record.
+                    # Minimal description - adjust if you want more accurate descriptions.
+                    try:
+                        header.filters.add(f, ".", "String", "Copied filter (added dynamically)")
+                        new_rec.filter.add(f)
+                    except Exception:
+                        # If adding to header fails, just skip that filter
+                        continue
+
+            # Remove sample data — set dummy genotype to missing
             new_rec.samples["DUMMY"]["GT"] = (None, None)
 
             vcf_out.write(new_rec)
