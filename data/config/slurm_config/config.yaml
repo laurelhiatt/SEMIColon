@@ -15,9 +15,9 @@ rerun-incomplete: True
 rerun-triggers:
 - "mtime"
 configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/snakemake_config/CCconfig.yaml"
-set-resources:
-  freebayes_variant_calling:
-    slurm_account: "quinlan-rw"
-    slurm_partition: "quinlan-shared-rw"
-    runtime: 20160
+#set-resources:
+#  freebayes_variant_calling:
+#    slurm_account: "quinlan-rw"
+ #   slurm_partition: "quinlan-shared-rw"
+ #   runtime: 20160
 

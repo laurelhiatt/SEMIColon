@@ -1,380 +1,281 @@
+# Snakefile: intersect matching vcf.gz files from two directories
+# Use config.yaml to override defaults if desired.
+
 import os
-import glob
-import re
+from pathlib import Path
 
-configfile: "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/spectra_config/spectraconfig.yaml"
-samples: list[str] = config["samples"]
-in_dir: str = config["input_directory"]
-out_dir: str = config["output_directory"]
-donors: list[str] = config["donors"]
-matches = config["matches"]
+# configfile: "config.yaml"   # uncomment if you use a config.yaml
+
+DIR_A = Path(config.get("dir_a", "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/results_ds/nuclear_all"))
+DIR_B = Path(config.get("dir_b", "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/results/nuclear_all"))
+OUT_DIR = Path(config.get("out_dir", "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/overlap_variants"))
+
+BCFTOOLS = config.get("bcftools", "bcftools")
+BGZIP = config.get("bgzip", "bgzip")
+TABIX = config.get("tabix", "tabix")
+
+def read_count_table(path):
+    """
+    Read CHROM POS REF ALT VAF-like files into dict keyed by (chrom,pos,ref,alt).
+    Skip blank lines, comment lines (starting '#'), and header lines
+    (e.g. 'CHROM POS REF ALT VAF' or any line whose first column == 'CHROM').
+    """
+    d = {}
+    if not path:
+        return d
+    if not os.path.exists(path):
+        return d
+
+    with open(path) as fh:
+        for raw in fh:
+            line = raw.strip()
+            if not line:
+                continue
+            # skip explicit comment headers
+            if line.startswith("#"):
+                continue
+
+            parts = line.split()
+            if not parts:
+                continue
+
+            # Detect and skip a header row even if it's not commented:
+            # e.g. "CHROM POS REF ALT VAF" (case-insensitive),
+            # or any header containing the string "VAF" in the first 6 cols.
+            first = parts[0].upper()
+            upper_parts = [p.upper() for p in parts[:6]]  # check only first few cols
+            if first == "CHROM" or "VAF" in upper_parts or "POSITION" in upper_parts:
+                # this is a header line — skip it
+                continue
+
+            # require at least 5 columns: CHROM POS REF ALT VAF
+            if len(parts) < 5:
+                continue
+
+            chrom, pos, ref, alt, vaf = parts[0], parts[1], parts[2], parts[3], parts[4]
+            key = (chrom, pos, ref, alt)
+            d[key] = vaf
+
+    return d
 
 
-in_dir = in_dir.rstrip("/")
-out_dir = out_dir.rstrip("/")
+CONDA_ISEC = config.get("conda_isec", None)
 
-log_dir = out_dir + "/log/6_filter_vcfs"
-bench_dir = out_dir + "/benchmark/6_filter_vcfs"
+# --- discover .vcf.gz files robustly using pathlib ---
+def list_vcf_basenames(dirpath: Path):
+    """Return set of basenames like 'sample.vcf.gz' present in dirpath."""
+    if not dirpath.exists():
+        return set()
+    return {p.name for p in dirpath.glob("*.vcf.gz")}
 
-def get_donor(sample, matches):
-    for donor, samples in matches.items():
-        if sample in samples['crypt_samples']:
-            return donor
-    raise KeyError(f"Sample {sample} not found in matches dictionary")
+baseA = list_vcf_basenames(DIR_A)
+baseB = list_vcf_basenames(DIR_B)
 
+common_basenames = sorted(baseA & baseB)
 
-pairs = [
-    (get_donor(sample, matches), sample)
-    for sample in samples
-    if get_donor(sample, matches) != "gibberish"
-]
+# turn 'sample.vcf.gz' -> 'sample' even if sample contains dots
+def strip_vcf_gz(basename: str) -> str:
+    assert basename.endswith(".vcf.gz")
+    return basename[:-7]   # remove the trailing ".vcf.gz"
 
-if pairs:
-    donors, filtered_samples = zip(*pairs)
-else:
-    donors, filtered_samples = [], []
+SAMPLES = [strip_vcf_gz(b) for b in common_basenames]
 
-# reference data
-reference: str = config["reference_genome"]
-reference_index: str = config["reference_genome_index"]
-chroms = ["chr1","chr2","chr3","chr4","chr6","chr7","chr8","chr9","chr10","chr11","chr12",
-    "chr13","chr14","chr15","chr16","chr17", "chr18","chr19","chr20","chr21","chr22","chrX","chrY"]
+# If you want to debug what samples were found, uncomment the print below
+# print("SAMPLES:", SAMPLES)
 
-
-# Wildcard constraints; should all be alphanumeric
-wildcard_constraints:
-    sample = "[A-Za-z0-9_-]+",
-    chroms = "[A-Za-z0-9]+",
-    i = "[0-9]+",
-    out_dir = out_dir,
-    donor = "[A-Za-z0-9]+"
-
-# Define functions for memory during retries.
-def mem_xsmall(wildcards, attempt):
-    return attempt * 4000
-
-def mem_small(wildcards, attempt):
-    return attempt * 8000
-
-def mem_medium(wildcards, attempt):
-    return attempt * 16000
-
-def mem_large(wildcards, attempt):
-    return attempt * 32000
-
-def mem_xlarge(wildcards, attempt):
-    return attempt * 64000
-
-def get_donor(sample, matches):
-    for donor, samples in matches.items():
-        if sample in samples['crypt_samples']:
-            return donor
-    raise KeyError(f"Sample {sample} not found in matches dictionary")
-
+def a_vcf(sample): return str(DIR_A / f"{sample}.vcf.gz")
+def b_vcf(sample): return str(DIR_B / f"{sample}.vcf.gz")
+def out_vcf(sample): return str(OUT_DIR / f"{sample}.intersection.vcf.gz")
+def out_tbi(sample): return str(OUT_DIR / f"{sample}.intersection.vcf.gz.tbi")
 
 rule all:
-    # final output
     input:
-        [
-            f"{out_dir}/results/{donor}/{sample}_snv_bigfilter_count.txt"
-            for donor, sample in zip(donors, filtered_samples)
-        ],
-         [
-            f"{out_dir}/results/{donor}/{sample}_snv_bigslop_count.txt"
-            for donor, sample in zip(donors, filtered_samples)
-        ]
+        # intersections (vcf + tbi)
+        expand(os.path.join(str(OUT_DIR), "{sample}.intersection.vcf.gz"), sample=SAMPLES),
+        expand(os.path.join(str(OUT_DIR), "{sample}.intersection.vcf.gz.tbi"), sample=SAMPLES),
 
-rule filter_by_depth_big:
+        # merged per-sample tables created by merge_indels and merge_snvs
+        expand(os.path.join(str(OUT_DIR), "{sample}.indels_merged.tsv"), sample=SAMPLES),
+        expand(os.path.join(str(OUT_DIR), "{sample}.snvs_merged.tsv"), sample=SAMPLES),
+
+
+rule isec_pair:
     input:
-        filtered_vcf= out_dir + "/vcf/{donor}-annotated-var-noLCR.vcf.gz"
+        a = lambda wc: a_vcf(wc.sample),
+        b = lambda wc: b_vcf(wc.sample)
     output:
-        depth_vcf= temp(out_dir + "/results/{donor}-depth-filteredbig.vcf.gz")
-    shell:
-        """
-        ./vcfexpress filter -e 'return all(function (dp) return dp > 7 end, variant:format("DP"))' -o {output.depth_vcf} {input.filtered_vcf}
-        """
-
-rule index_depth_big:
-    input:
-        depth_vcf= out_dir + "/results/{donor}-depth-filteredbig.vcf.gz"
-    output:
-        indexed_vcf= temp(out_dir + "/results/{donor}-depth-filteredbig.vcf.gz.tbi")
-    threads:
-        8
-    shell:
-        """
-        tabix -f -p vcf {input.depth_vcf} --threads {threads}
-        """
-
-### it shouldn't exist in gnomad (at this point, pre-blood)
-rule filter_by_gnomad_big:
-    input:
-        depth_vcf= out_dir + "/results/{donor}-depth-filteredbig.vcf.gz",
-        indexed_vcf= out_dir + "/results/{donor}-depth-filteredbig.vcf.gz.tbi"
-    output:
-        gnomad_vcf= out_dir + "/results/{donor}-gnomad-filteredbig.vcf.gz",
-        done = out_dir + "/results/{donor}/gnomadbig.done"
-    shell:
-        """
-        module load bcftools
-        bcftools filter -i '(gnomad_popmax_af <= 0 || gnomad_popmax_af == ".")' -Oz -o {output.gnomad_vcf} {input.depth_vcf}
-        touch {output.done}
-        """
-
-def donor_done_biginput(wildcards):
-    donor = wildcards.donor
-    sample = wildcards.sample
-    crypt_samples = matches.get(donor, {}).get("crypt_samples", [])
-    if sample not in crypt_samples:
-        pass
-    return os.path.join(out_dir, "results", donor, "gnomadbig.done")
-
-rule make_lua_big:
-    input:
-        gnomad_done = donor_done_biginput,
-    output:
-        lua = out_dir + "/results/{donor}/{sample}_soibig.lua"
-    run:
-        with open(output.lua, "w") as f:
-            f.write(f'samplesOfInterest = {{"{wildcards.donor}_{wildcards.sample}"}}\n')
-
-### all the other samples must have 0 alt alleles
-rule filter_by_sample_big:
-    input:
-        lua = rules.make_lua_big.output.lua,
-    output:
-        sample_vcf = temp(out_dir + "/results/{donor}/{sample}_filtered_noADbig.vcf.gz")
-    params:
-        gnomad_vcf = out_dir + "/results/{donor}-gnomad-filteredbig.vcf.gz"
-    shell:
-        """
-        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua \
-            -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' \
-            -o {output.sample_vcf} {params.gnomad_vcf}
-        """
-
-rule filter_by_vaf_big:
-    input:
-        sample_vcf = (out_dir + "/results/{donor}/{sample}_filtered_noADbig.vcf.gz")
-    output:
-        vaf_vcf = temp(out_dir + "/results/{donor}/{sample}_filtered_noADvafbig.vcf.gz")
-    shell:
-        """
-        module load bcftools
-
-        bcftools filter -i 'MAX((FMT/AD[*:1]) / (FMT/AD[*:0] + FMT/AD[*:1])) < 0.885' -Oz -o {output.vaf_vcf} {input.sample_vcf}
-        """
-
-### this sample must have > # alternate allele
-rule filter_by_alt_depth_big:
-    input:
-        vaf_vcf= out_dir + "/results/{donor}/{sample}_filtered_noADvafbig.vcf.gz",
-        lua = rules.make_lua_big.output.lua,
-    output:
-        vcf= out_dir + "/results/{donor}/{sample}_filteredbig.vcf.gz",
-    shell:
-        """
-        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 3 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vaf_vcf}
-        """
-
-rule count_snvs_big:
-    input:
-        vcf= out_dir + "/results/{donor}/{sample}_filteredbig.vcf.gz",
-    output:
-        out_vcf= out_dir + "/results/{donor}/{sample}_filtered_snvsbig.vcf.gz",
-        txt= out_dir + "/results/{donor}/{sample}_snv_bigfilter_count.txt"
-    params:
-        sample = "{sample}"
-    conda:
-        "../../envs/cyvcf2.yaml"
-    script:
-        "../mutations/per-sample-report.py"
-
-
-rule decompose_vcfs:
-    input:
-        vcf = out_dir + "/vcf/{donor}-var.vcf.gz",
-        fasta = reference
-    output:
-        clean_vcf = temp(out_dir + "/vcf/{donor}-clean-var.vcf.gz")
-    resources:
-        mem_mb = mem_large
-    threads: 8
-    envmodules:
-        "bcftools/1.16"
-    log:
-        log_dir + "/{donor}_decompose.log"
-    benchmark:
-        bench_dir + "/{donor}_decompose.tsv"
-    shell:
-        """
-        module load bcftools/1.16
-        bcftools norm -m - {input.vcf} --threads {threads} -w 10000 -f {input.fasta} -O b -o {output.clean_vcf} > {log} 2>&1
-        """
-
-# annotate the vcf with gnomAD
-rule gnomad_VCFs:
-    input:
-        clean_vcf = out_dir + "/vcf/{donor}-clean-var.vcf.gz",
-    output:
-        annotated_vcf = temp(out_dir + "/vcf/{donor}-annotated-var.vcf.gz")
-    resources:
-        mem_mb = mem_large
-    threads: 2
-    log:
-        log_dir + "/{donor}_gnomad.log"
-    envmodules:
-        "slivar/0.3.1"
-    shell:
-        """
-        slivar expr -g /scratch/ucgd/lustre/common/data/Slivar/db/gnomad.hg38.genomes.v3.fix.zip -v {input.clean_vcf} -o {output.annotated_vcf}
-        """
-
-rule slop_lcr_regions:
-    input:
-        lcr_bed = "/scratch/ucgd/lustre-labs/quinlan/data-shared/annotations/LCR-hs38.bed.gz",
-        simplerepeats_bed = "/scratch/ucgd/lustre-labs/quinlan/data-shared/annotations/GRCh38.UCSC.SimpleRepeats.simple.bed",
-        genome = "/scratch/ucgd/lustre-labs/quinlan/data-shared/annotations/hg38.genome"
-    output:
-        lcr_slop = temp(out_dir + "/annotations/LCR-hs38-slop100.bed"),
-        simplerepeats_slop = temp(out_dir + "/annotations/SimpleRepeats-hs38-slop100.bed")
-    resources:
-        mem_mb = 1000
+        vcf = os.path.join(str(OUT_DIR), "{sample}.intersection.vcf.gz"),
+        tbi = os.path.join(str(OUT_DIR), "{sample}.intersection.vcf.gz.tbi")
     threads: 1
-    log:
-        log_dir + "/slop_annotations.log"
-    shell:
-        """
-        module load bedtools
-        bedtools slop -b 100 -i {input.lcr_bed} -g {input.genome} > {output.lcr_slop}
-        bedtools slop -b 100 -i {input.simplerepeats_bed} -g {input.genome} > {output.simplerepeats_slop}
-        """
-
-rule remove_lcr_slop:
-    input:
-        vaf_vcf = out_dir + "/vcf/{donor}-annotated-var.vcf.gz",
-        lcr_slop = rules.slop_lcr_regions.output.lcr_slop,
-        simplerepeats_slop = rules.slop_lcr_regions.output.simplerepeats_slop
-    output:
-        filtered_vcf = out_dir + "/results/{donor}-annotated-var-noLCRslop.vcf.gz"
-    resources:
-        mem_mb = mem_xlarge
-    threads: 4
-    log:
-        log_dir + "/{donor}_noLCRslop.log"
-    benchmark:
-        bench_dir + "/{donor}_noLCRslop.tsv"
-    shell:
-        """
-        module load bedtools
-        bedtools intersect -header -v -a {input.vaf_vcf} -b {input.lcr_slop} | \
-        bedtools intersect -header -v -a - -b {input.simplerepeats_slop} | bgzip -c > {output.filtered_vcf}
-        tabix -p vcf {output.filtered_vcf}
-        """
-
-rule filter_by_depth_bigslop:
-    input:
-        filtered_vcf= out_dir + "/results/{donor}-annotated-var-noLCRslop.vcf.gz"
-    output:
-        depth_vcf= temp(out_dir + "/results/{donor}-depth-filteredbigslop.vcf.gz")
-    shell:
-        """
-        ./vcfexpress filter -e 'return all(function (dp) return dp > 7 end, variant:format("DP"))' -o {output.depth_vcf} {input.filtered_vcf}
-        """
-
-rule index_depth_bigslop:
-    input:
-        depth_vcf= out_dir + "/results/{donor}-depth-filteredbigslop.vcf.gz"
-    output:
-        indexed_vcf= temp(out_dir + "/results/{donor}-depth-filteredbigslop.vcf.gz.tbi")
-    threads:
-        8
-    shell:
-        """
-        tabix -f -p vcf {input.depth_vcf} --threads {threads}
-        """
-
-### it shouldn't exist in gnomad (at this point, pre-blood)
-rule filter_by_gnomad_bigslop:
-    input:
-        depth_vcf= out_dir + "/results/{donor}-depth-filteredbigslop.vcf.gz",
-        indexed_vcf= out_dir + "/results/{donor}-depth-filteredbigslop.vcf.gz.tbi"
-    output:
-        gnomad_vcf= out_dir + "/results/{donor}-gnomad-filteredbigslop.vcf.gz",
-        done = out_dir + "/results/{donor}/gnomadbigslop.done"
+    # Option 1: use CONDA_ISEC from config (string path to env YAML), else comment/uncomment below:
+    conda: CONDA_ISEC
+    # Option 2 (uncomment to use fixed env file next to Snakefile):
+    # conda: "envs/isec.yaml"
+    params:
+        tmpdir = lambda wc: os.path.join("/tmp", f"snk_isec_{wc.sample}")
     shell:
         """
         module load bcftools
-        bcftools filter -i '(gnomad_popmax_af <= 0 || gnomad_popmax_af == ".")' -Oz -o {output.gnomad_vcf} {input.depth_vcf}
-        touch {output.done}
+        mkdir -p "{params.tmpdir}"
+        mkdir -p "$(dirname {output.vcf})"
+
+        tabix -f -p vcf {input.a}
+        tabix -f -p vcf {input.b}
+        bcftools isec -p "{params.tmpdir}" {input.a} {input.b}
+
+        shared_vcf="{params.tmpdir}/0002.vcf"
+
+        if [[ -s "$shared_vcf" ]]; then
+            echo "[OK] shared variants found for {wildcards.sample} -> compressing"
+            {BGZIP} -c "$shared_vcf" > "{output.vcf}"
+        else
+            echo "[INFO] no shared variants for {wildcards.sample} -> creating header-only VCF"
+            {BCFTOOLS} view -h "{input.a}" | {BGZIP} -c > "{output.vcf}"
+        fi
+
+        tabix -f -p vcf "{output.vcf}"
+        rm -rf "{params.tmpdir}"
         """
 
-def donor_done_bigslopinput(wildcards):
-    donor = wildcards.donor
-    sample = wildcards.sample
-    crypt_samples = matches.get(donor, {}).get("crypt_samples", [])
-    if sample not in crypt_samples:
-        pass
-    return os.path.join(out_dir, "results", donor, "gnomadbigslop.done")
+# --- improved finder helpers: return None if not found ---
+def find_indel_file(dirpath: Path, sample: str):
+    """Return str(path) of first match or None."""
+    if not dirpath.exists():
+        return None
+    matches = list(dirpath.rglob(f"{sample}*.indels_count.txt"))
+    return str(matches[0]) if matches else None
 
-rule make_lua_bigslop:
+def find_snv_file(dirpath: Path, sample: str):
+    """Return str(path) of first match or None."""
+    if not dirpath.exists():
+        return None
+    matches = list(dirpath.rglob(f"{sample}*.snv_count.txt"))
+    return str(matches[0]) if matches else None
+
+def a_indels(sample): return find_indel_file(DIR_A, sample)
+def b_indels(sample): return find_indel_file(DIR_B, sample)
+def a_snvs(sample): return find_snv_file(DIR_A, sample)
+def b_snvs(sample): return find_snv_file(DIR_B, sample)
+
+# --- merge_indels: input returns [] when not found (Snakemake-acceptable) ---
+rule merge_indels:
     input:
-        gnomad_done = donor_done_bigslopinput,
+        a = lambda wc: [a_indels(wc.sample)] if a_indels(wc.sample) else [],
+        b = lambda wc: [b_indels(wc.sample)] if b_indels(wc.sample) else []
     output:
-        lua = out_dir + "/results/{donor}/{sample}_soibigslop.lua"
+        merged = os.path.join(str(OUT_DIR), "{sample}.indels_merged.tsv")
+    threads: 1
+    params:
+        sample = lambda wc: wc.sample
     run:
-        with open(output.lua, "w") as f:
-            f.write(f'samplesOfInterest = {{"{wildcards.donor}_{wildcards.sample}"}}\n')
+        import csv, os
 
-### all the other samples must have 0 alt alleles
-rule filter_by_sample_bigslop:
+        out_path = output.merged
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+
+        # input.a and input.b are lists (maybe empty)
+        a_path = input.a[0] if input.a else None
+        b_path = input.b[0] if input.b else None
+
+        def read_indel_table(path):
+            d = {}
+            if not path:
+                return d
+            if not os.path.exists(path):
+                return d
+            with open(path) as fh:
+                for raw in fh:
+                    line = raw.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    parts = line.split()
+                    if len(parts) < 5:
+                        continue
+                    chrom, pos, ref, alt, vaf = parts[0], parts[1], parts[2], parts[3], parts[4]
+                    d[(chrom, pos, ref, alt)] = vaf
+            return d
+
+        a_table = read_count_table(a_path)
+        b_table = read_count_table(b_path)
+
+
+        keys = sorted(set(a_table.keys()) & set(b_table.keys()),
+              key=lambda k: (k[0],
+                             int(k[1]) if k[1].isdigit() else k[1],
+                             k[2], k[3]))
+
+
+        with open(out_path, "w") as out:
+            writer = csv.writer(out, delimiter="\t", lineterminator="\n")
+            writer.writerow(["CHROM","POS","REF","ALT","VAF_DS","VAF_FB"])
+            for k in keys:
+                vds = a_table.get(k, "NA")
+                vfb = b_table.get(k, "NA")
+                writer.writerow([k[0], k[1], k[2], k[3], vds, vfb])
+
+        print(f"[merge_indels] wrote {out_path} (rows: {len(keys)})")
+
+# --- merge_snvs: same approach as merge_indels ---
+rule merge_snvs:
     input:
-        lua = rules.make_lua_bigslop.output.lua,
+        a = lambda wc: [a_snvs(wc.sample)] if a_snvs(wc.sample) else [],
+        b = lambda wc: [b_snvs(wc.sample)] if b_snvs(wc.sample) else []
     output:
-        sample_vcf = temp(out_dir + "/results/{donor}/{sample}_filtered_noADbigslop.vcf.gz")
+        merged = os.path.join(str(OUT_DIR), "{sample}.snvs_merged.tsv")
+    threads: 1
     params:
-        gnomad_vcf = out_dir + "/results/{donor}-gnomad-filteredbigslop.vcf.gz"
-    shell:
-        """
-        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua \
-            -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 0 end, sampleIndexes, variant:format("AD"))' \
-            -o {output.sample_vcf} {params.gnomad_vcf}
-        """
+        sample = lambda wc: wc.sample
+    run:
+        import csv, os
+
+        out_path = output.merged
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+
+        a_path = input.a[0] if input.a else None
+        b_path = input.b[0] if input.b else None
+
+        def read_snv_table(path):
+            d = {}
+            if not path:
+                return d
+            if not os.path.exists(path):
+                return d
+            with open(path) as fh:
+                for raw in fh:
+                    line = raw.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    parts = line.split()
+                    if len(parts) < 5:
+                        continue
+                    chrom, pos, ref, alt, vaf = parts[0], parts[1], parts[2], parts[3], parts[4]
+                    d[(chrom, pos, ref, alt)] = vaf
+            return d
+
+        a_table = read_count_table(a_path)
+        b_table = read_count_table(b_path)
 
 
-rule filter_by_vaf_bigslop:
-    input:
-        sample_vcf = (out_dir + "/results/{donor}/{sample}_filtered_noADbigslop.vcf.gz")
-    output:
-        vaf_vcf = temp(out_dir + "/results/{donor}/{sample}_filtered_noADvafbigslop.vcf.gz")
-    shell:
-        """
-        module load bcftools
-        bcftools filter -i 'MAX((FMT/AD[*:1]) / (FMT/AD[*:0] + FMT/AD[*:1])) < 0.885' -Oz -o {output.vaf_vcf} {input.sample_vcf}
-        """
+        def sort_key(k):
+            chrom, pos = k[0], k[1]
+            try:
+                posnum = int(pos)
+            except Exception:
+                posnum = pos
+            return (chrom, posnum, k[2], k[3])
+
+        keys = sorted(set(a_table.keys()) & set(b_table.keys()),
+              key=lambda k: (k[0],
+                             int(k[1]) if k[1].isdigit() else k[1],
+                             k[2], k[3]))
 
 
-### this sample must have > # alternate allele
-rule filter_by_alt_depth_bigslop:
-    input:
-        vaf_vcf= out_dir + "/results/{donor}/{sample}_filtered_noADvafbigslop.vcf.gz",
-        lua = rules.make_lua_bigslop.output.lua,
-    output:
-        vcf= out_dir + "/results/{donor}/{sample}_filteredbigslop.vcf.gz",
-    shell:
-        """
-        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 3 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.vaf_vcf}
-        """
+        with open(out_path, "w") as out:
+            writer = csv.writer(out, delimiter="\t", lineterminator="\n")
+            writer.writerow(["CHROM","POS","REF","ALT","VAF_DS","VAF_FB"])
+            for k in keys:
+                vds = a_table.get(k, "NA")
+                vfb = b_table.get(k, "NA")
+                writer.writerow([k[0], k[1], k[2], k[3], vds, vfb])
 
-rule count_snvs_bigslop:
-    input:
-        vcf= out_dir + "/results/{donor}/{sample}_filteredbigslop.vcf.gz",
-    output:
-        out_vcf= out_dir + "/results/{donor}/{sample}_filtered_snvsbigslop.vcf.gz",
-        txt= out_dir + "/results/{donor}/{sample}_snv_bigslop_count.txt"
-    params:
-        sample = "{sample}"
-    conda:
-        "../../envs/cyvcf2.yaml"
-    script:
-        "../mutations/per-sample-report.py"
+        print(f"[merge_snvs] wrote {out_path} (rows: {len(keys)})")

@@ -1,26 +1,29 @@
-# Laurel Hiatt 09/10/2025
+# Laurel Hiatt 12/15/2025
+import os
 from itertools import product
+import json
+import pandas as pd
 
 log_dir = out_dir + "/log/4_make_vcfs"
 bench_dir = out_dir + "/benchmark/4_make_vcfs"
 
 def swap_acct(wc, attempt):
     if attempt == 1:
-        return "ucgd-rw"
+        return "owner-guest"
     else:
         return "quinlan-rw"
 
 # If first attempt, redwood-guest (matches owner-guest). Else, quinlan.
 def swap_part(wc, attempt):
     if attempt == 1:
-        return "ucgd-shared-rw"
+        return "redwood-shared-guest"
     else:
         return "quinlan-shared-rw"
 
-# If first attempt, 3 hours (short time for guest). Else, two weeks.
+# If first attempt, 24 hours. Else, two weeks.
 def swap_time(wc, attempt):
     if attempt == 1:
-        return 180
+        return 1440
     else:
         return 20160
 
@@ -145,9 +148,118 @@ rule generate_regions:
         ../variant_calling/fasta_generate_regions.py
         """
 
+# Add these wildcard constraints if you want to ensure assembly/chrom matching:
+wildcard_constraints:
+    chrom = r"chr[0-9]{1,2}|chrX|chrY|chrM"
+
+# helper: return list of g.vcf paths (per-chrom) for a donor (all crypts)
+def collect_donor_vcfs(wildcards):
+    """
+    Given wildcards.donor, return list of gVCF paths for each crypt sample of that donor.
+    Assumes g.vcf.gz naming: data/vcf/per-chrom/{donor}.{crypt}.GRCh38.{chrom}.g.vcf.gz
+    """
+    donor = wildcards.donor
+    donor_info = matches.get(donor, {})
+    crypts = donor_info.get("crypt_samples", [])
+    res = []
+    for crypt in crypts:
+        res.append(out_dir + f"/vcf/per-chrom/{donor}.{crypt}.GRCh38.{wildcards.chrom}.g.vcf.gz")
+    return res
+
+# helper: compute path to tumor bam given a {crypt}
+def tumor_bam_path(wildcards):
+    # crypt is e.g. B21_153_CE ; bams live in out_dir + "/bam/{crypt}-sorted.bam"
+    return os.path.join(out_dir, "bam", f"{wildcards.crypt}-sorted.bam")
+
+# helper: compute normal/blood sample flags for DeepSomatic call
+def normal_flags(wildcards):
+    donor = wildcards.donor
+    donor_info = matches.get(donor, {})
+    blood = donor_info.get("blood_sample")
+    if blood:
+        # return tuple (model_type, normal_cmd, normal_name)
+        normal_cmd = f"--reads_normal {os.path.join(out_dir, 'bam', blood + '-sorted.bam')}"
+        normal_name = f"--sample_name_normal {blood}"
+        return ("WGS", normal_cmd, normal_name)
+    else:
+        return ("WGS_TUMOR_ONLY", "", "")
+
+# Deepsomatic per-crypt SNV calling (calls the same script as your original deepsomatic example)
+rule deepsomatic_call_snvs:
+    input:
+        ref = reference,
+        ref_idx = reference_index,
+        tumor = tumor_bam_path,
+        sif = "deepsomatic_1.9.0.sif"
+    output:
+        vcf = out_dir + "/vcf/per-chrom/{donor}.{crypt}.GRCh38.{chrom}.vcf.gz",
+        gvcf = out_dir + "/vcf/per-chrom/{donor}.{crypt}.GRCh38.{chrom}.g.vcf.gz"
+    threads: 16
+    params:
+        # model_type, normal_cmd, normal_name computed from matches
+        model_type = lambda wildcards: normal_flags(wildcards)[0],
+        normal_cmd = lambda wildcards: normal_flags(wildcards)[1],
+        normal_name = lambda wildcards: normal_flags(wildcards)[2],
+        # extra optional params
+        out_dir = out_dir
+    resources:
+        mem_mb = mem_xlarge,
+        slurm_account = swap_acct,
+        slurm_partition = swap_part,
+        runtime = swap_time
+    script:
+        "../variant_calling/call.sh"
+
+# Combine donor crypt-level gVCFs per-chrom with GLnexus (like your DeepSomatic example)
+rule deepsomatic_combine_donor_chrom_vcfs:
+    input:
+        sif = "glnexus_v1.2.7.sif",
+        gvcfs = collect_donor_vcfs
+    output:
+        out_dir + "/vcf/per-chrom/{donor}.GRCh38.{chrom}.joint_genotyped.vcf.gz"
+    threads: 8
+    params:
+        # put glnexus DB inside the pipeline output tree (not external abspath)
+        gl_nexus_prefix = lambda wildcards: out_dir + f"/vcf/per-chrom/gl_nexus_dbs/{wildcards.donor}_GRCh38_{wildcards.chrom}"
+    resources:
+        mem_mb = 64_000
+    script:
+        "../variant_calling/joint.sh"
+
+# Merge per-chrom joint-genotyped VCFs into a per-donor merged vcf (concatenates all chromosomes)
+rule deepsomatic_merge_donor_vcfs:
+    input:
+        vcfs = expand(out_dir + "/vcf/per-chrom/{{donor}}.GRCh38.{chrom}.joint_genotyped.vcf.gz", chrom=chroms)
+    output:
+        out_dir + "/vcf/merged/{donor}.GRCh38.joint_genotyped.vcf.gz"
+    threads: 16
+    resources:
+        runtime = 1440,
+        mem_mb = 64_000
+    shell:
+        """
+        module load bcftools/1.16 || true
+        bcftools concat {input.vcfs} | bcftools view --threads {threads} | bgzip > {output}
+        """
+
+
+rule index_deepsomatic_donor_vcfs:
+    input:
+        joint = out_dir + "/vcf/merged/{donor}.GRCh38.joint_genotyped.vcf.gz"
+    output:
+        joint_index = out_dir + "/vcf/merged/{donor}.GRCh38.joint_genotyped.vcf.gz.tbi"
+    threads: 16
+    resources:
+        runtime = 1440,
+        mem_mb = 64_000
+    shell:
+        """
+        tabix -f -p vcf {input.joint}
+        """
+
 # Current filtering:
-### min-alternate-count 2
-## qsum 40
+## min-alternate-count 2
+# qsum 40
 rule freebayes_variant_calling:
     input:
         bam_file_list = rules.make_bam_list.output.bam_file_list,

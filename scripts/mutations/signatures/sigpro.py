@@ -3,15 +3,18 @@ import sys
 
 input_type = "matrix"
 output = "snvs"
-input_data = "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/results/vaf_spectra/snvs/output/SBS/snvs.SBS96.all"
+#input_data = "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/results/vaf_spectra/snvs/output/SBS/snvs.SBS96.all"
+input_data = "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/results/Hiatt_continueif2unknownDec82025_no_vaf/snvs/output/SBS/snvs.SBS288.all"
 
+
+### normally, 96 for SBS96
 def run():
     sig.sigProfilerExtractor(input_type,
                      output,
                      input_data,
                      reference_genome="GRCh38",
                      opportunity_genome = "GRCh38",
-                     context_type = "96",
+                     context_type = "288",
                      exome = False,
                      minimum_signatures=1,
                      maximum_signatures=15,

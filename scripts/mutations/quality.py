@@ -15,6 +15,25 @@ laurel_q30 = []
 other_q20 = []
 other_q30 = []
 
+hiatt_donors = ["AS", "AC", "DC", "DE", "CE", "RE", "TR", "SI", "TC", "RTM", "Laurel", "GIB"]
+
+
+def filename_contains_any_string(filename, string_list):
+    """
+    Checks if a filename contains any of the strings in a given list.
+
+    Args:
+        filename (str): The name of the file to check.
+        string_list (list): A list of strings to search for within the filename.
+
+    Returns:
+        bool: True if the filename contains any string from the list, False otherwise.
+    """
+    for search_string in string_list:
+        if search_string in filename:
+            return True
+    return False
+
 # Prepare a list for CSV export
 rows = []
 
@@ -32,7 +51,7 @@ for filepath in glob.glob(os.path.join(folder_path, '*-fastp-report.json')):
         sample_name = filename.replace('-fastp-report.json', '')
 
         # Decide group
-        if filename.startswith('Laurel'):
+        if filename_contains_any_string(filename, hiatt_donors):
             group = 'Laurel'
             laurel_q20.append(q20_rate)
             laurel_q30.append(q30_rate)

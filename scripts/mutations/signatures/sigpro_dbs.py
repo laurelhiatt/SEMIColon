@@ -3,7 +3,8 @@ import sys
 
 input_type = "matrix"
 output = "dbs"
-input_data = "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/results/vaf_spectra/indels/output/DBS/indels.DBS78.all"
+input_data = "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/results/Hiatt_continueif2unknownDec82025_no_vaf/indels/output/DBS/indels.DBS78.all"
+#78
 
 def run():
     sig.sigProfilerExtractor(input_type,

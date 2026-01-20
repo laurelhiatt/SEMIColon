@@ -32,7 +32,9 @@ def count_unique_snvs(vcf_path, fname, snv_count, sample_name):
         vafs = variant.gt_alt_freqs
 
         # Ensure no sample has an unknown genotype (2)
-        if 2 in genotypes:
+        #if 2 in genotypes:
+        #    continue
+        if (genotypes == 2).sum() > 1:
             continue
 
         # Make sure only sample of interest in non-ref

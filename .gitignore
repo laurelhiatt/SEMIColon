@@ -1,11 +1,17 @@
 # Temp file directory
 /scripts/.snakemake/*
+/scripts/pks/.snakemake/*
+.conda/*
+pks*
+
 /scripts/LeeSixdata/.snakemake/
 /scripts/log.txt
 /scripts/cryptdata/.snakemake/*
 /scripts/filtering/.snakemake/*
 /scripts/leesix_waiting/*
 /scripts/.snakemake/*
+/scripts/deepsomatic_1.9.0.sif
+/scripts/glnexus_v1.2.7.sif
 
 
 # Output directory
@@ -13,7 +19,8 @@
 /scripts/mutations/signatures/dbs/*
 /scripts/mutations/signatures/snvs/*
 /scripts/mutations/signatures/ID/*
-/sigpro/*
+/scripts/mutations/s
+scripts/mutations/instability.tsv
 
 #Data for tools
 /data/KRAKEN/*
@@ -31,3 +38,4 @@ data/default_credential_file.json
 vcfexpress
 scripts/process_lee-six/.snakemake/*
 scripts/quality_control/mospow.py
+scripts/pks/Nissle_processed.RData

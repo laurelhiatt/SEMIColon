@@ -1,5 +1,5 @@
 executor: slurm
-retries: 1
+retries: 2
 jobs: 100
 resources:
 - threads=100
