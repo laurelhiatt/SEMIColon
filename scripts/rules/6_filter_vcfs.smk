@@ -602,7 +602,7 @@ rule count_indels_ds:
     output:
         out_vcf= out_dir + "/results_ds/{donor}/{sample}.indels.vcf.gz",
     params:
-        sample_name = "{donor}_{sample}",
+        sample_name = "{sample}",
         ref = reference,
         high_vaf_threshold = 1.1,
         low_vaf_threshold = 0.0
@@ -618,7 +618,7 @@ rule count_snvs_ds:
         out_vcf= out_dir + "/results_ds/{donor}/{sample}.snvs.vcf.gz",
         txt= out_dir + "/results_ds/{donor}/{sample}.snv_count.txt"
     params:
-        sample_name = "{donor}_{sample}",
+        sample_name = "{sample}",
         ref = reference,
         high_vaf_threshold = 1.1,
         low_vaf_threshold = 0.0
