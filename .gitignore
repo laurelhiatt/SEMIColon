@@ -39,3 +39,5 @@ vcfexpress
 scripts/process_lee-six/.snakemake/*
 scripts/quality_control/mospow.py
 scripts/pks/Nissle_processed.RData
+
+inSTRbility
