@@ -325,6 +325,7 @@ rule filter_by_recurrent:
         vcf= out_dir + "/results/{donor}/{sample}.vcf.gz"
     shell:
         """
+        tabix -f -p vcf {input.sample_vcf}
         module load bcftools
         bcftools isec -C -w1 -O z -o {output.vcf} {input.sample_vcf} {input.recurrent_vcf}
         """

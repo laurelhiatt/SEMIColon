@@ -1,14 +1,18 @@
 executor: slurm
-retries: 1
+retries: 3
 jobs: 100
 resources:
 - threads=100
 - mem_mb=200000
 default-resources:
 - slurm_account="owner-guest"
-- slurm_partition="redwood-shared-guest"
+- slurm_partition="redwood-guest"
 - runtime=1440
 - mem_mb=16000*attempt
+# - slurm_account="quinlan-rw"
+# - slurm_partition="quinlan-rw"
+# - runtime=1440
+# - mem_mb=16000*attempt
 # - slurm_extra="--qos=ucgd-rw"
 software-deployment-method: conda
 rerun-incomplete: True
