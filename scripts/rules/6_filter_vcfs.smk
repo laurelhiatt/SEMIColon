@@ -334,12 +334,27 @@ rule count_indels:
     input:
         vcf= out_dir + "/results/{donor}/{sample}.vcf.gz"
     output:
-        out_vcf= out_dir + "/results/{donor}/{sample}.indels.vcf.gz",
+        nuclear_all_vcf   = out_dir + "/results/{donor}/{sample}.nuclear_all_indels.vcf.gz",
+        nuclear_clonal_vcf= out_dir + "/results/{donor}/{sample}.nuclear_clonal_indels.vcf.gz",
+        nuclear_subclonal_vcf = out_dir + "/results/{donor}/{sample}.nuclear_subclonal_indels.vcf.gz",
+
+        mito_all_vcf      = out_dir + "/results/{donor}/{sample}.mito_all_indels.vcf.gz",
+        mito_clonal_vcf   = out_dir + "/results/{donor}/{sample}.mito_clonal_indels.vcf.gz",
+        mito_subclonal_vcf= out_dir + "/results/{donor}/{sample}.mito_subclonal_indels.vcf.gz",
+
+        # TXT outputs (nuclear + mito)
+        nuclear_all_txt   = out_dir + "/results/{donor}/{sample}.nuclear_all.indels_count.txt",
+        nuclear_clonal_txt= out_dir + "/results/{donor}/{sample}.nuclear_clonal.indels_count.txt",
+        nuclear_subclonal_txt = out_dir + "/results/{donor}/{sample}.nuclear_subclonal.indels_count.txt",
+
+        mito_all_txt      = out_dir + "/results/{donor}/{sample}.mito_all.indels_count.txt",
+        mito_clonal_txt   = out_dir + "/results/{donor}/{sample}.mito_clonal.indels_count.txt",
+        mito_subclonal_txt= out_dir + "/results/{donor}/{sample}.mito_subclonal.indels_count.txt"
     params:
         sample_name = "{donor}_{sample}",
         ref = reference,
-        high_vaf_threshold = 1.1,
-        low_vaf_threshold = 0.0
+        high_vaf_threshold = 0.6,
+        low_vaf_threshold = 0.2
     conda:
         "../../envs/cyvcf2.yaml"
     script:
@@ -349,13 +364,27 @@ rule count_snvs:
     input:
         vcf= out_dir + "/results/{donor}/{sample}.vcf.gz"
     output:
-        out_vcf= out_dir + "/results/{donor}/{sample}.snvs.vcf.gz",
-        txt= out_dir + "/results/{donor}/{sample}.snv_count.txt"
+        nuclear_all_vcf   = out_dir + "/results/{donor}/{sample}.nuclear_all.vcf.gz",
+        nuclear_clonal_vcf= out_dir + "/results/{donor}/{sample}.nuclear_clonal.vcf.gz",
+        nuclear_subclonal_vcf = out_dir + "/results/{donor}/{sample}.nuclear_subclonal.vcf.gz",
+
+        mito_all_vcf      = out_dir + "/results/{donor}/{sample}.mito_all.vcf.gz",
+        mito_clonal_vcf   = out_dir + "/results/{donor}/{sample}.mito_clonal.vcf.gz",
+        mito_subclonal_vcf= out_dir + "/results/{donor}/{sample}.mito_subclonal.vcf.gz",
+
+        # TXT outputs (nuclear + mito)
+        nuclear_all_txt   = out_dir + "/results/{donor}/{sample}.nuclear_all.snv_count.txt",
+        nuclear_clonal_txt= out_dir + "/results/{donor}/{sample}.nuclear_clonal.snv_count.txt",
+        nuclear_subclonal_txt = out_dir + "/results/{donor}/{sample}.nuclear_subclonal.snv_count.txt",
+
+        mito_all_txt      = out_dir + "/results/{donor}/{sample}.mito_all.snv_count.txt",
+        mito_clonal_txt   = out_dir + "/results/{donor}/{sample}.mito_clonal.snv_count.txt",
+        mito_subclonal_txt= out_dir + "/results/{donor}/{sample}.mito_subclonal.snv_count.txt"
     params:
         sample_name = "{donor}_{sample}",
         ref = reference,
-        high_vaf_threshold = 1.1,
-        low_vaf_threshold = 0.0
+        high_vaf_threshold = 0.6,
+        low_vaf_threshold = 0.2
     conda:
         "../../envs/cyvcf2.yaml"
     script:
@@ -591,7 +620,6 @@ rule filter_by_recurrent_ds:
         vcf= out_dir + "/results_ds/{donor}/{sample}.vcf.gz"
     shell:
         """
-        tabix -p vcf {input.sample_vcf}
         module load bcftools
         bcftools isec -C -w1 -O z -o {output.vcf} {input.sample_vcf} {input.recurrent_vcf}
         """
@@ -600,12 +628,28 @@ rule count_indels_ds:
     input:
         vcf= out_dir + "/results_ds/{donor}/{sample}.vcf.gz"
     output:
-        out_vcf= out_dir + "/results_ds/{donor}/{sample}.indels.vcf.gz",
+        # VCF outputs (nuclear + mito)
+        nuclear_all_vcf   = out_dir + "/results_ds/{donor}/{sample}.nuclear_all_indels.vcf.gz",
+        nuclear_clonal_vcf= out_dir + "/results_ds/{donor}/{sample}.nuclear_clonal_indels.vcf.gz",
+        nuclear_subclonal_vcf = out_dir + "/results_ds/{donor}/{sample}.nuclear_subclonal_indels.vcf.gz",
+
+        mito_all_vcf      = out_dir + "/results_ds/{donor}/{sample}.mito_all_indels.vcf.gz",
+        mito_clonal_vcf   = out_dir + "/results_ds/{donor}/{sample}.mito_clonal_indels.vcf.gz",
+        mito_subclonal_vcf= out_dir + "/results_ds/{donor}/{sample}.mito_subclonal_indels.vcf.gz",
+
+        # TXT outputs (nuclear + mito)
+        nuclear_all_txt   = out_dir + "/results_ds/{donor}/{sample}.nuclear_all.indels_count.txt",
+        nuclear_clonal_txt= out_dir + "/results_ds/{donor}/{sample}.nuclear_clonal.indels_count.txt",
+        nuclear_subclonal_txt = out_dir + "/results_ds/{donor}/{sample}.nuclear_subclonal.indels_count.txt",
+
+        mito_all_txt      = out_dir + "/results_ds/{donor}/{sample}.mito_all.indels_count.txt",
+        mito_clonal_txt   = out_dir + "/results_ds/{donor}/{sample}.mito_clonal.indels_count.txt",
+        mito_subclonal_txt= out_dir + "/results_ds/{donor}/{sample}.mito_subclonal.indels_count.txt"
     params:
         sample_name = "{sample}",
         ref = reference,
-        high_vaf_threshold = 1.1,
-        low_vaf_threshold = 0.0
+        high_vaf_threshold = 0.6,
+        low_vaf_threshold = 0.2
     conda:
         "../../envs/cyvcf2.yaml"
     script:
@@ -615,13 +659,28 @@ rule count_snvs_ds:
     input:
         vcf= out_dir + "/results_ds/{donor}/{sample}.vcf.gz"
     output:
-        out_vcf= out_dir + "/results_ds/{donor}/{sample}.snvs.vcf.gz",
-        txt= out_dir + "/results_ds/{donor}/{sample}.snv_count.txt"
+        # VCF outputs (nuclear + mito)
+        nuclear_all_vcf   = out_dir + "/results_ds/{donor}/{sample}.nuclear_all.vcf.gz",
+        nuclear_clonal_vcf= out_dir + "/results_ds/{donor}/{sample}.nuclear_clonal.vcf.gz",
+        nuclear_subclonal_vcf = out_dir + "/results_ds/{donor}/{sample}.nuclear_subclonal.vcf.gz",
+
+        mito_all_vcf      = out_dir + "/results_ds/{donor}/{sample}.mito_all.vcf.gz",
+        mito_clonal_vcf   = out_dir + "/results_ds/{donor}/{sample}.mito_clonal.vcf.gz",
+        mito_subclonal_vcf= out_dir + "/results_ds/{donor}/{sample}.mito_subclonal.vcf.gz",
+
+        # TXT outputs (nuclear + mito)
+        nuclear_all_txt   = out_dir + "/results_ds/{donor}/{sample}.nuclear_all.snv_count.txt",
+        nuclear_clonal_txt= out_dir + "/results_ds/{donor}/{sample}.nuclear_clonal.snv_count.txt",
+        nuclear_subclonal_txt = out_dir + "/results_ds/{donor}/{sample}.nuclear_subclonal.snv_count.txt",
+
+        mito_all_txt      = out_dir + "/results_ds/{donor}/{sample}.mito_all.snv_count.txt",
+        mito_clonal_txt   = out_dir + "/results_ds/{donor}/{sample}.mito_clonal.snv_count.txt",
+        mito_subclonal_txt= out_dir + "/results_ds/{donor}/{sample}.mito_subclonal.snv_count.txt"
     params:
         sample_name = "{sample}",
         ref = reference,
-        high_vaf_threshold = 1.1,
-        low_vaf_threshold = 0.0
+        high_vaf_threshold = 0.6,
+        low_vaf_threshold = 0.2
     conda:
         "../../envs/cyvcf2.yaml"
     script:
