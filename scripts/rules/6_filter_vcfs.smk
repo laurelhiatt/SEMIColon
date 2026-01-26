@@ -81,6 +81,50 @@ def get_all_inputs(donors, matches, out_dir):
 
     return all_inputs
 
+def read_count_table(path):
+    """
+    Read CHROM POS REF ALT VAF-like files into dict keyed by (chrom,pos,ref,alt).
+    Skip blank lines, comment lines (starting '#'), and header lines
+    (e.g. 'CHROM POS REF ALT VAF' or any line whose first column == 'CHROM').
+    """
+    d = {}
+    if not path:
+        return d
+    if not os.path.exists(path):
+        return d
+
+    with open(path) as fh:
+        for raw in fh:
+            line = raw.strip()
+            if not line:
+                continue
+            # skip explicit comment headers
+            if line.startswith("#"):
+                continue
+
+            parts = line.split()
+            if not parts:
+                continue
+
+            # Detect and skip a header row even if it's not commented:
+            # e.g. "CHROM POS REF ALT VAF" (case-insensitive),
+            # or any header containing the string "VAF" in the first 6 cols.
+            first = parts[0].upper()
+            upper_parts = [p.upper() for p in parts[:6]]  # check only first few cols
+            if first == "CHROM" or "VAF" in upper_parts or "POSITION" in upper_parts:
+                # this is a header line — skip it
+                continue
+
+            # require at least 5 columns: CHROM POS REF ALT VAF
+            if len(parts) < 5:
+                continue
+
+            chrom, pos, ref, alt, vaf = parts[0], parts[1], parts[2], parts[3], parts[4]
+            key = (chrom, pos, ref, alt)
+            d[key] = vaf
+
+    return d
+
 
 # decompose the vcf for downstream
 rule decompose_vcfs:
@@ -685,3 +729,197 @@ rule count_snvs_ds:
         "../../envs/cyvcf2.yaml"
     script:
         "../mutations/per-sample-report.py"
+
+rule isec_pair:
+    input:
+        a = out_dir + "/results_ds/{donor}/{sample}.nuclear_all.vcf.gz",
+        b = out_dir + "/results/{donor}/{sample}.nuclear_all.vcf.gz"
+    params:
+        sample = lambda wc: wc.sample,
+        tmpdir = lambda wc: os.path.join("/tmp", f"snk_isec_{wc.sample}")
+
+    output:
+        vcf = out_dir + "/overlap_variants/{donor}/{sample}.nuclear_all.intersection.vcf.gz"
+    threads: 1
+    shell:
+        """
+        module load bcftools
+        mkdir -p "{params.tmpdir}"
+        mkdir -p "$(dirname {output.vcf})"
+
+        tabix -f -p vcf {input.a}
+        tabix -f -p vcf {input.b}
+        bcftools isec -p "{params.tmpdir}" {input.a} {input.b}
+
+        shared_vcf="{params.tmpdir}/0002.vcf"
+
+        if [[ -s "$shared_vcf" ]]; then
+            echo "[OK] shared variants found for {wildcards.sample} -> compressing"
+            bgzip -c "$shared_vcf" > "{output.vcf}"
+        else
+            echo "[INFO] no shared variants for {wildcards.sample} -> creating header-only VCF"
+            bcftools view -h "{input.a}" | bgzip -c > "{output.vcf}"
+        fi
+
+        tabix -f -p vcf "{output.vcf}"
+        rm -rf "{params.tmpdir}"
+        """
+
+rule isec_pair_id:
+    input:
+        a = out_dir + "/results_ds/{donor}/{sample}.nuclear_all_indels.vcf.gz",
+        b = out_dir + "/results/{donor}/{sample}.nuclear_all_indels.vcf.gz"
+    params:
+        sample = lambda wc: wc.sample,
+        tmpdir = lambda wc: os.path.join("/tmp", f"snk_isec_id_{wc.sample}")
+    output:
+        vcf = out_dir + "/overlap_variants/{donor}/{sample}.nuclear_all_indels.intersection.vcf.gz"
+    threads: 1
+    shell:
+        """
+        module load bcftools
+        mkdir -p "{params.tmpdir}"
+        mkdir -p "$(dirname {output.vcf})"
+
+        tabix -f -p vcf {input.a}
+        tabix -f -p vcf {input.b}
+        bcftools isec -p "{params.tmpdir}" {input.a} {input.b}
+
+        shared_vcf="{params.tmpdir}/0002.vcf"
+
+        if [[ -s "$shared_vcf" ]]; then
+            echo "[OK] shared variants found for {wildcards.sample} -> compressing"
+            bgzip -c "$shared_vcf" > "{output.vcf}"
+        else
+            echo "[INFO] no shared variants for {wildcards.sample} -> creating header-only VCF"
+            bcftools view -h "{input.a}" | bgzip -c > "{output.vcf}"
+        fi
+
+        tabix -f -p vcf "{output.vcf}"
+        rm -rf "{params.tmpdir}"
+        """
+
+
+rule merge_indels:
+    input:
+        a = out_dir + "/results_ds/{donor}/{sample}.nuclear_all.indels_count.txt",
+        b = out_dir + "/results/{donor}/{sample}.nuclear_all.indels_count.txt"
+    output:
+        merged = out_dir + "/overlap_variants/{donor}/{sample}.indels_merged.tsv"
+    threads: 1
+    params:
+        sample = lambda wc: wc.sample
+    run:
+        import csv, os
+
+        out_path = output.merged
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+
+        # input.a and input.b are lists (maybe empty)
+        a_path = input.a
+        b_path = input.b
+
+        def read_indel_table(path):
+            d = {}
+            if not path:
+                return d
+            if not os.path.exists(path):
+                return d
+            with open(path) as fh:
+                for raw in fh:
+                    line = raw.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    parts = line.split()
+                    if len(parts) < 5:
+                        continue
+                    chrom, pos, ref, alt, vaf = parts[0], parts[1], parts[2], parts[3], parts[4]
+                    d[(chrom, pos, ref, alt)] = vaf
+            return d
+
+        a_table = read_indel_table(a_path)
+        b_table = read_indel_table(b_path)
+        print(f"A variants: {len(a_table)}")
+        print(f"B variants: {len(b_table)}")
+
+
+        keys = sorted(set(a_table.keys()) & set(b_table.keys()),
+              key=lambda k: (k[0],
+                             int(k[1]) if k[1].isdigit() else k[1],
+                             k[2], k[3]))
+
+
+        with open(out_path, "w") as out:
+            writer = csv.writer(out, delimiter="\t", lineterminator="\n")
+            writer.writerow(["CHROM","POS","REF","ALT","VAF_DS","VAF_FB"])
+            for k in keys:
+                vds = a_table.get(k, "NA")
+                vfb = b_table.get(k, "NA")
+                writer.writerow([k[0], k[1], k[2], k[3], vds, vfb])
+
+        print(f"[merge_indels] wrote {out_path} (rows: {len(keys)})")
+
+
+rule merge_snvs:
+    input:
+        a = out_dir + "/results_ds/{donor}/{sample}.nuclear_all.snv_count.txt",
+        b = out_dir + "/results/{donor}/{sample}.nuclear_all.snv_count.txt"
+    output:
+        merged = out_dir + "/overlap_variants/{donor}/{sample}.snvs_merged.tsv"
+    threads: 1
+    params:
+        sample = lambda wc: wc.sample
+    run:
+        import csv, os
+
+        out_path = output.merged
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+
+        a_path = input.a
+        b_path = input.b
+
+        def read_snv_table(path):
+            d = {}
+            if not path:
+                return d
+            if not os.path.exists(path):
+                return d
+            with open(path) as fh:
+                for raw in fh:
+                    line = raw.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    parts = line.split()
+                    if len(parts) < 5:
+                        continue
+                    chrom, pos, ref, alt, vaf = parts[0], parts[1], parts[2], parts[3], parts[4]
+                    d[(chrom, pos, ref, alt)] = vaf
+            return d
+
+        a_table = read_snv_table(a_path)
+        b_table = read_snv_table(b_path)
+
+
+        def sort_key(k):
+            chrom, pos = k[0], k[1]
+            try:
+                posnum = int(pos)
+            except Exception:
+                posnum = pos
+            return (chrom, posnum, k[2], k[3])
+
+        keys = sorted(set(a_table.keys()) & set(b_table.keys()),
+              key=lambda k: (k[0],
+                             int(k[1]) if k[1].isdigit() else k[1],
+                             k[2], k[3]))
+
+
+        with open(out_path, "w") as out:
+            writer = csv.writer(out, delimiter="\t", lineterminator="\n")
+            writer.writerow(["CHROM","POS","REF","ALT","VAF_DS","VAF_FB"])
+            for k in keys:
+                vds = a_table.get(k, "NA")
+                vfb = b_table.get(k, "NA")
+                writer.writerow([k[0], k[1], k[2], k[3], vds, vfb])
+
+        print(f"[merge_snvs] wrote {out_path} (rows: {len(keys)})")

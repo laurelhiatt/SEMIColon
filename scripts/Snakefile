@@ -229,4 +229,8 @@ rule all:
             f"{out_dir}/mosdepth/{donor}/{sample}_mosdepth_coverage.html"
             for donor, sample in zip(donors, filtered_samples)
         ],
-        expand(out_dir + "/vcf/merged/{donor}.GRCh38.joint_genotyped.vcf.gz.tbi", donor=donors)
+        expand(out_dir + "/vcf/merged/{donor}.GRCh38.joint_genotyped.vcf.gz.tbi", donor=donors),
+        [f"{out_dir}/overlap_variants/{donor}/{sample}.indels_merged.tsv" for donor, sample in zip(donors_ds, filtered_samples_ds)],
+        [f"{out_dir}/overlap_variants/{donor}/{sample}.snvs_merged.tsv" for donor, sample in zip(donors_ds, filtered_samples_ds)],
+        [f"{out_dir}/overlap_variants/{donor}/{sample}.nuclear_all_indels.intersection.vcf.gz" for donor, sample in zip(donors_ds, filtered_samples_ds)],
+        [f"{out_dir}/overlap_variants/{donor}/{sample}.nuclear_all.intersection.vcf.gz" for donor, sample in zip(donors_ds, filtered_samples_ds)]
