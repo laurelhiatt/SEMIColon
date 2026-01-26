@@ -3,7 +3,7 @@ import sys
 
 input_type = "matrix"
 output = "ID"
-input_data = "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/overlap_variants/indels/output/ID/indels.ID83.all"
+input_data = "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/overlap_variants/indels_all/output/ID/indels.ID83.all"
 
 def run():
     sig.sigProfilerExtractor(input_type,

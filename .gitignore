@@ -41,3 +41,7 @@ scripts/quality_control/mospow.py
 scripts/pks/Nissle_processed.RData
 
 inSTRbility
+
+ID/*
+
+snvs/*
