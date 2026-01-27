@@ -16,9 +16,9 @@ def swap_acct(wc, attempt):
 # If first attempt, redwood-guest (matches owner-guest). Else, quinlan.
 def swap_part(wc, attempt):
     if attempt == 1:
-        return "quinlan-shared-rw"
+        return "quinlan-rw"
     else:
-        return "quinlan-shared-rw"
+        return "quinlan-rw"
 
 # If first attempt, 24 hours. Else, two weeks.
 def swap_time(wc, attempt):
