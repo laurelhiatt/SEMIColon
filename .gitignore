@@ -2,7 +2,7 @@
 /scripts/.snakemake/*
 /scripts/pks/.snakemake/*
 .conda/*
-pks*
+pks/.snakemake/*
 
 /scripts/LeeSixdata/.snakemake/
 /scripts/log.txt
@@ -45,3 +45,12 @@ inSTRbility
 ID/*
 
 snvs/*
+pks_index.1.bt2
+pks_index.2.bt2
+pks_index.3.bt2
+pks_index.4.bt2
+pks_index.rev.1.bt2
+pks_index.rev.2.bt2
+scripts/pks/colibactinFig1.RData
+scripts/pks/colibactincoding.RData
+scripts/pks/vcfs.RData

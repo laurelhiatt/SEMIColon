@@ -1,0 +1,167 @@
+# Snakefile for paired-end unmapped -> pks align -> aggregated featureCounts
+# Edit config values below or provide them via config.yaml
+
+import os
+from glob import glob
+
+# Load config from file if present
+#configfile: "config.yaml"
+
+BAM_DIR = config.get("bam_dir", "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/bam")
+OUT_DIR = config.get("out_dir", "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/pks")
+PKS_INDEX = config.get("pks_index", "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/pks_index")   # bowtie2 index basename (provide full path if needed)
+GTF = config.get("gtf", "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/clb_genes.gtf")
+STRANDED = config.get("stranded", 0)               # 0, 1, or 2 for featureCounts
+THREADS_PER_JOB = config.get("threads_per_job", 2)
+FEATURECOUNTS_THREADS = config.get("featurecounts_threads", 8)
+
+# adapt if your bam filenames differ
+bam_glob = os.path.join(BAM_DIR, "*-sorted.bam")
+SAMPLES = [ os.path.basename(p).replace("-sorted.bam","") for p in glob(bam_glob) ]
+SAMPLES = sorted(SAMPLES)
+SAMPLES.remove("Laurel-13")
+
+# aggregated featureCounts output
+OUT_FC = os.path.join(OUT_DIR, "clb_featureCounts_aggregated.txt")
+
+# convenience function to get filenames
+def pks_sorted_bam(wildcards):
+    return os.path.join(OUT_DIR, f"{wildcards.sample}-pks-sorted.bam")
+
+rule all:
+    input:
+        OUT_FC,
+        expand(os.path.join(OUT_DIR, "mosdepth", "{sample}.mosdepth.global.dist.txt"), sample=SAMPLES),
+        expand(os.path.join(OUT_DIR, "mosdepth", "{sample}_mosdepth_coverage.html"), sample=SAMPLES)
+
+#### Per-sample pipeline ####
+
+# 1) extract paired unmapped reads (both mates unmapped: -f 12)
+rule extract_paired_unmapped:
+    input:
+        bam = lambda wc: os.path.join(BAM_DIR, f"{wc.sample}-sorted.bam")
+    output:
+        os.path.join(OUT_DIR, "pks_temp", "{sample}-unsorted-unmapped.bam")
+    threads: 1
+    conda: config.get("conda_extract", None)
+    shell:
+        r"""
+        samtools view -b -f 12 {input.bam} -o {output}
+        """
+
+# 2) convert to paired FASTQ
+rule bam_to_paired_fastq:
+    input:
+        unsorted_bam = rules.extract_paired_unmapped.output
+    output:
+        r1 = temp(os.path.join(OUT_DIR, "pks_temp", "{sample}_unmapped_R1.fastq")),
+        r2 = temp(os.path.join(OUT_DIR, "pks_temp", "{sample}_unmapped_R2.fastq"))
+    threads: 1
+    conda: config.get("conda_fastq", None)
+    shell:
+        """
+        samtools fastq -1 {output.r1} -2 {output.r2} -0 /dev/null -s /dev/null -n {input.unsorted_bam}
+        """
+
+# 3) align paired FASTQs to pks index -> BAM
+rule bowtie2_align:
+    input:
+        r1 = rules.bam_to_paired_fastq.output.r1,
+        r2 = rules.bam_to_paired_fastq.output.r2
+    output:
+        temp(os.path.join(OUT_DIR, "{sample}-pks.bam"))
+    threads: THREADS_PER_JOB
+    conda: config.get("conda_align", None)
+    shell:
+        r"""
+        bowtie2 -x {PKS_INDEX} -1 {input.r1} -2 {input.r2} -p {threads} --very-sensitive-local \
+            | samtools view -b -o {output}
+        """
+
+# 4) sort & index resulting BAM
+rule sort_index_pks_bam:
+    input:
+        bam = rules.bowtie2_align.output
+    output:
+        sorted = os.path.join(OUT_DIR, "{sample}-pks-sorted.bam"),
+        bai = os.path.join(OUT_DIR, "{sample}-pks-sorted.bam.bai")
+    threads: THREADS_PER_JOB
+    conda: config.get("conda_samtools", None)
+    shell:
+        r"""
+        samtools sort -@ {threads} -o {output.sorted} {input.bam}
+        samtools index {output.sorted}
+        """
+
+#### Aggregation ####
+
+# per-sample featureCounts (one rule that produces sample-specific files)
+rule featurecounts_per_sample:
+    input:
+        bam = os.path.join(OUT_DIR, "{sample}-pks-sorted.bam")
+    output:
+        os.path.join(OUT_DIR, "{sample}_featureCounts.txt")
+    threads: 4
+    shell:
+        r"""
+        featureCounts -T {threads} -p -s {STRANDED} -t CDS -g gene_id -a {GTF} -o {output} {input.bam}
+        """
+
+# aggregate from the per-sample outputs using the python script above
+rule merge_featurecounts:
+    input:
+        expand(os.path.join(OUT_DIR, "{sample}_featureCounts.txt"), sample=SAMPLES)
+    output:
+        os.path.join(OUT_DIR, "clb_featureCounts_aggregated.txt")
+    script:
+        "merge_featurecounts.py"
+
+# ----------------------------
+# mosdepth + plotting rules
+# ----------------------------
+
+# mosdepth rule
+rule mosdepth:
+    input:
+        bam_sort = lambda wc: os.path.join(OUT_DIR, f"{wc.sample}-pks-sorted.bam"),
+        bai = lambda wc: os.path.join(OUT_DIR, f"{wc.sample}-pks-sorted.bam.bai")
+    output:
+        os.path.join(OUT_DIR, "mosdepth", "{sample}.mosdepth.global.dist.txt")
+    params:
+        mos_dir = os.path.join(OUT_DIR, "mosdepth"),
+        sample = "{sample}"
+    resources:
+        mem_mb = 16000
+    threads:
+        2
+    envmodules:
+        "mosdepth/0.3.1"
+    log:
+        os.path.join(OUT_DIR, "logs", "{sample}_mosdepth.log")
+    shell:
+        """
+        mkdir -p {params.mos_dir}
+        module load mosdepth/0.3.1
+        mosdepth -n --fast-mode --by 500 \
+           {params.mos_dir}/{params.sample} \
+           {input.bam_sort} 2>> {log}
+        """
+
+# plotting mosdepth results
+rule plot_mosdepth:
+    input:
+        file = os.path.join(OUT_DIR, "mosdepth", "{sample}.mosdepth.global.dist.txt")
+    output:
+        html = os.path.join(OUT_DIR, "mosdepth", "{sample}_mosdepth_coverage.html")
+    conda:
+        "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/envs/plot_mosdepth.yaml"
+    resources:
+        mem_mb = 8000
+    threads:
+        2
+    shell:
+        """
+        mkdir -p {OUT_DIR}/mosdepth/
+        echo "Plotting mosdepth coverage for {input.file}"
+        python /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/quality_control/plot-dist.py {input.file} --output {output.html}
+        """
