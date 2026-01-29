@@ -1,4 +1,4 @@
-"","total_indels","in_pks_motif","fraction_pksmotif"
+"sample","total_coding_indels","in_pks_motif_coding","fraction_pksmotif_coding"
 "029_DC_T",1,0,0
 "030_CE_T",3,0,0
 "031_RE_T",2,0,0

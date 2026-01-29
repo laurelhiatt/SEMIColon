@@ -1,4 +1,4 @@
-"","total_indels","in_pks_motif","fraction_pksmotif"
+"sample","total_indels_genic","in_pks_motif_genic","fraction_pksmotif_genic"
 "029_DC_T",52,5,0.0961538461538462
 "030_CE_T",110,15,0.136363636363636
 "031_RE_T",71,21,0.295774647887324

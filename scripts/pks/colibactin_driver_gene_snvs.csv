@@ -1,4 +1,4 @@
-"sample","n_with_gene","driver_genes"
+"sample","n_with_driver_gene_snv","driver_genes_snv"
 "029_DC_T",0,NA
 "030_CE_T",0,NA
 "031_RE_T",0,NA
