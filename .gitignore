@@ -21,6 +21,7 @@ pks/.snakemake/*
 /scripts/mutations/signatures/ID/*
 /scripts/mutations/s
 scripts/mutations/instability.tsv
+scripts/figures/plots/*
 
 #Data for tools
 /data/KRAKEN/*
@@ -55,3 +56,4 @@ scripts/pks/colibactinFig1.RData
 scripts/pks/colibactincoding.RData
 scripts/pks/vcfs.RData
 scripts/mutations/selection.RData
+scripts/figures/ProcessData.RData
