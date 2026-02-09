@@ -57,3 +57,5 @@ scripts/pks/colibactincoding.RData
 scripts/pks/vcfs.RData
 scripts/mutations/selection.RData
 scripts/figures/ProcessData.RData
+scripts/mutations/split_indels.txt
+scripts/mutations/split_snvs.txt
