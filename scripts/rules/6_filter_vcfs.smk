@@ -135,7 +135,8 @@ rule decompose_vcfs:
         clean_vcf = temp(out_dir + "/vcf/{donor}-clean-var.vcf.gz")
     resources:
         mem_mb = mem_large
-    threads: 8
+    threads:
+        8
     envmodules:
         "bcftools/1.16"
     log:
@@ -144,8 +145,15 @@ rule decompose_vcfs:
         bench_dir + "/{donor}_decompose.tsv"
     shell:
         """
-        module load bcftools/1.16
-        bcftools norm -m - {input.vcf} --threads {threads} -w 10000 -f {input.fasta} -O b -o {output.clean_vcf} > {log} 2>&1
+        bcftools norm \
+            -m - \
+            {input.vcf} \
+            --threads {threads} \
+            -w 10000 \
+            -f {input.fasta} \
+            -O b \
+            -o {output.clean_vcf} \
+            > {log} 2>&1
         """
 
 
@@ -159,7 +167,8 @@ rule decompose_vcfs_ds:
         clean_vcf = temp(out_dir + "/vcf/merged/{donor}-clean-var.vcf.gz")
     resources:
         mem_mb = mem_large
-    threads: 8
+    threads: 
+        8
     envmodules:
         "bcftools/1.16"
     log:
@@ -168,8 +177,14 @@ rule decompose_vcfs_ds:
         bench_dir + "/{donor}_decompose_ds.tsv"
     shell:
         """
-        module load bcftools/1.16
-        bcftools norm -m - {input.vcf} --threads {threads} -w 10000 -f {input.fasta} -O b -o {output.clean_vcf} > {log} 2>&1
+        bcftools norm \
+            -m - {input.vcf} \
+            --threads {threads} \
+            -w 10000 \
+            -f {input.fasta} \
+            -O b \
+            -o {output.clean_vcf} \
+            > {log} 2>&1
         """
 
 # annotate the vcf with gnomAD
@@ -180,14 +195,18 @@ rule gnomad_VCFs:
         annotated_vcf = temp(out_dir + "/vcf/{donor}-annotated-var.vcf.gz")
     resources:
         mem_mb = mem_large
-    threads: 2
+    threads:
+        2
     log:
         log_dir + "/{donor}_gnomad.log"
     envmodules:
         "slivar/0.3.1"
     shell:
         """
-        slivar expr -g /scratch/ucgd/lustre/common/data/Slivar/db/gnomad.hg38.genomes.v3.fix.zip -v {input.clean_vcf} -o {output.annotated_vcf}
+        slivar expr \
+            -g /scratch/ucgd/lustre/common/data/Slivar/db/gnomad.hg38.genomes.v3.fix.zip \
+            -v {input.clean_vcf} \
+            -o {output.annotated_vcf}
         """
 
 rule remove_lcr:
@@ -197,19 +216,21 @@ rule remove_lcr:
         simplerepeats_bed = "/scratch/ucgd/lustre-labs/quinlan/data-shared/annotations/GRCh38.UCSC.SimpleRepeats.bed.gz"
     output:
         filtered_vcf = out_dir + "/vcf/{donor}-annotated-var-noLCR.vcf.gz"
-
     resources:
         mem_mb = mem_xlarge
-    threads: 4
+    envmodules:
+        "bedtools"
+    threads:
+        4
     log:
         log_dir + "/{donor}_noLCR.log"
     benchmark:
         bench_dir + "/{donor}_noLCR.tsv"
     shell:
         """
-        module load bedtools
         bedtools intersect -header -v -a {input.annotated_vcf} -b {input.lcr_bed} | \
-        bedtools intersect -header -v -a - -b {input.simplerepeats_bed} | bgzip -c > {output.filtered_vcf}
+        bedtools intersect -header -v -a - -b {input.simplerepeats_bed} | \
+        bgzip -c > {output.filtered_vcf}
         tabix -p vcf {output.filtered_vcf}
         """
 
@@ -219,10 +240,15 @@ rule filter_by_gnomad:
         filtered_vcf= out_dir + "/vcf/{donor}-annotated-var-noLCR.vcf.gz"
     output:
         gnomad_vcf= out_dir + "/results/{donor}.gnomad.filtered.vcf.gz"
+    envmodules:
+        "bcftools/1.16"
     shell:
         """
-        module load bcftools
-        bcftools filter -i '(gnomad_popmax_af <= 0 || gnomad_popmax_af == ".")' -Oz -o {output.gnomad_vcf} {input.filtered_vcf}
+        bcftools filter \
+            -i '(gnomad_popmax_af <= 0 || gnomad_popmax_af == ".")' \
+            -Oz \
+            -o {output.gnomad_vcf} \
+            {input.filtered_vcf}
         """
 
 rule annotate_gene:
@@ -241,13 +267,19 @@ rule annotate_gene:
         log_dir + "/{donor}_annotate.log"
     threads:
         8
-    envmodules:
-        "vep/104.2"
     shell:
         """
-        module load vep/104.2
         echo "Running VEP annotation for {wildcards.donor}"
-        vep --cache --dir_cache {params.dir_cache} -i {input.gnomad_vcf} --vcf --compress_output bgzip -o {output.vcf} --symbol --force_overwrite --fork 10
+        vep \
+            --cache \
+            --dir_cache {params.dir_cache} \
+            -i {input.gnomad_vcf} \
+            --vcf \
+            --compress_output bgzip \
+            -o {output.vcf} \
+            --symbol \
+            --force_overwrite \
+            --fork 10
         tabix -p vcf {output.vcf}
         echo "Finished VEP annotation for {wildcards.donor}"
         touch {output.done}
@@ -329,7 +361,12 @@ rule filter_by_alt_depth:
         vcf= out_dir + "/results/{donor}/{sample}.filtered.vcf.gz",
     shell:
         """
-        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 3 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.sample_vcf}
+        ./vcfexpress filter \
+            -p {input.lua} \
+            -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua \
+            -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 3 end, sampleIndexes, variant:format("AD"))' \
+            -o {output.vcf} \
+            {input.sample_vcf}
         """
 
 rule find_recurrent:
@@ -339,8 +376,8 @@ rule find_recurrent:
     params:
         min_recurrence = 2
     output:
-        recurrent_vcf =  out_dir + "/" + "results/recurrent.vcf",
-        report= out_dir + "/" + "results/recurrent.txt"
+        recurrent_vcf =  out_dir + "/results/recurrent.vcf",
+        report= out_dir + "/results/recurrent.txt"
     conda:
         "../../envs/recurrent.yaml"
     script:
@@ -349,14 +386,15 @@ rule find_recurrent:
 
 rule compress_recurrent:
     input:
-        recurrent = out_dir + "/" + "results/recurrent.vcf"
+        recurrent = out_dir + "/results/recurrent.vcf"
     output:
-        recurrent_vcf = out_dir + "/" + "results/recurrent.vcf.gz"
+        recurrent_vcf = out_dir + "/results/recurrent.vcf.gz"
+    envmodules:
+        "bcftools"
     threads:
         8
     shell:
         """
-        module load bcftools
         bcftools sort -Oz -o {output.recurrent_vcf} {input.recurrent}
         tabix -p vcf {output.recurrent_vcf}
         """
@@ -367,10 +405,11 @@ rule filter_by_recurrent:
         recurrent_vcf = out_dir + "/results/recurrent.vcf.gz"
     output:
         vcf= out_dir + "/results/{donor}/{sample}.vcf.gz"
+    envmodules:
+        "bcftools"
     shell:
         """
         tabix -f -p vcf {input.sample_vcf}
-        module load bcftools
         bcftools isec -C -w1 -O z -o {output.vcf} {input.sample_vcf} {input.recurrent_vcf}
         """
 
@@ -460,19 +499,21 @@ rule remove_lcr_ds:
         simplerepeats_bed = "/scratch/ucgd/lustre-labs/quinlan/data-shared/annotations/GRCh38.UCSC.SimpleRepeats.bed.gz"
     output:
         filtered_vcf = out_dir + "/vcf/merged/{donor}-annotated-var-noLCR.vcf.gz"
-
     resources:
         mem_mb = mem_xlarge
-    threads: 4
+    envmodules:
+        "bedtools"
+    threads:
+        4
     log:
         log_dir + "/{donor}_noLCR_ds.log"
     benchmark:
         bench_dir + "/{donor}_noLCR_ds.tsv"
     shell:
         """
-        module load bedtools
         bedtools intersect -header -v -a {input.annotated_vcf} -b {input.lcr_bed} | \
-        bedtools intersect -header -v -a - -b {input.simplerepeats_bed} | bgzip -c > {output.filtered_vcf}
+        bedtools intersect -header -v -a - -b {input.simplerepeats_bed} | \
+        bgzip -c > {output.filtered_vcf}
         tabix -p vcf {output.filtered_vcf}
         """
 
@@ -481,9 +522,10 @@ rule filter_by_gnomad_ds:
         filtered_vcf= out_dir + "/vcf/merged/{donor}-annotated-var-noLCR.vcf.gz"
     output:
         gnomad_vcf= out_dir + "/results_ds/{donor}.gnomad.filtered.vcf.gz"
+    envmodules:
+        "bcftools"
     shell:
         """
-        module load bcftools
         bcftools filter -i '(gnomad_popmax_af <= 0 || gnomad_popmax_af == ".")' -Oz -o {output.gnomad_vcf} {input.filtered_vcf}
         """
 
@@ -503,13 +545,19 @@ rule annotate_gene_ds:
         log_dir + "/{donor}_annotate_ds.log"
     threads:
         8
-    envmodules:
-        "vep/104.2"
     shell:
         """
-        module load vep/104.2
         echo "Running VEP annotation for {wildcards.donor}"
-        vep --cache --dir_cache {params.dir_cache} -i {input.gnomad_vcf} --vcf --compress_output bgzip -o {output.vcf} --symbol --force_overwrite --fork 10
+        vep \
+            --cache \
+            --dir_cache {params.dir_cache} \
+            -i {input.gnomad_vcf} \
+            --vcf \
+            --compress_output bgzip \
+            -o {output.vcf} \
+            --symbol \
+            --force_overwrite \
+            --fork 10
         tabix -p vcf {output.vcf}
         echo "Finished VEP annotation for {wildcards.donor}"
         touch {output.done}
@@ -592,7 +640,12 @@ rule filter_by_alt_depth_ds:
         vcf= out_dir + "/results_ds/{donor}/{sample}.filtered.vcf.gz",
     shell:
         """
-        ./vcfexpress filter -p {input.lua} -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 3 end, sampleIndexes, variant:format("AD"))' -o {output.vcf} {input.sample_vcf}
+        ./vcfexpress filter \
+            -p {input.lua} \
+            -p /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/config/sample-groups.lua \
+            -e 'return all_none(function(ad) return #ad > 1 and ad[2] > 3 end, sampleIndexes, variant:format("AD"))' \
+            -o {output.vcf} \
+            {input.sample_vcf}
         """
 
 rule index_by_alt_depth_ds:
@@ -633,8 +686,8 @@ rule find_recurrent_ds:
     params:
         min_recurrence = 2
     output:
-        recurrent_vcf =  out_dir + "/" + "results_ds/recurrent.vcf",
-        report= out_dir + "/" + "results_ds/recurrent.txt"
+        recurrent_vcf =  out_dir + "/results_ds/recurrent.vcf",
+        report= out_dir + "/results_ds/recurrent.txt"
     conda:
         "../../envs/recurrent.yaml"
     script:
@@ -643,14 +696,15 @@ rule find_recurrent_ds:
 
 rule compress_recurrent_ds:
     input:
-        recurrent = out_dir + "/" + "results_ds/recurrent.vcf"
+        recurrent = out_dir + "/results_ds/recurrent.vcf"
     output:
-        recurrent_vcf = out_dir + "/" + "results_ds/recurrent.vcf.gz"
+        recurrent_vcf = out_dir + "/results_ds/recurrent.vcf.gz"
+    envmodules:
+        "bcftools"
     threads:
         8
     shell:
         """
-        module load bcftools
         bcftools sort -Oz -o {output.recurrent_vcf} {input.recurrent}
         tabix -p vcf {output.recurrent_vcf}
         """
@@ -662,9 +716,10 @@ rule filter_by_recurrent_ds:
         recurrent_vcf = out_dir + "/results_ds/recurrent.vcf.gz"
     output:
         vcf= out_dir + "/results_ds/{donor}/{sample}.vcf.gz"
+    envmodules:
+        "bcftools"
     shell:
         """
-        module load bcftools
         bcftools isec -C -w1 -O z -o {output.vcf} {input.sample_vcf} {input.recurrent_vcf}
         """
 
@@ -734,16 +789,17 @@ rule isec_pair:
     input:
         a = out_dir + "/results_ds/{donor}/{sample}.nuclear_all.vcf.gz",
         b = out_dir + "/results/{donor}/{sample}.nuclear_all.vcf.gz"
+    output:
+        vcf = out_dir + "/overlap_variants/{donor}/{sample}.nuclear_all.intersection.vcf.gz"
     params:
         sample = lambda wc: wc.sample,
         tmpdir = lambda wc: os.path.join("/tmp", f"snk_isec_{wc.sample}")
-
-    output:
-        vcf = out_dir + "/overlap_variants/{donor}/{sample}.nuclear_all.intersection.vcf.gz"
-    threads: 1
+    envmodules:
+        "bcftools"
+    threads:
+        1
     shell:
         """
-        module load bcftools
         mkdir -p "{params.tmpdir}"
         mkdir -p "$(dirname {output.vcf})"
 
@@ -769,15 +825,17 @@ rule isec_pair_id:
     input:
         a = out_dir + "/results_ds/{donor}/{sample}.nuclear_all_indels.vcf.gz",
         b = out_dir + "/results/{donor}/{sample}.nuclear_all_indels.vcf.gz"
+    output:
+        vcf = out_dir + "/overlap_variants/{donor}/{sample}.nuclear_all_indels.intersection.vcf.gz"
     params:
         sample = lambda wc: wc.sample,
         tmpdir = lambda wc: os.path.join("/tmp", f"snk_isec_id_{wc.sample}")
-    output:
-        vcf = out_dir + "/overlap_variants/{donor}/{sample}.nuclear_all_indels.intersection.vcf.gz"
-    threads: 1
+    envmodules:
+        "bcftools"
+    threads:
+        1
     shell:
         """
-        module load bcftools
         mkdir -p "{params.tmpdir}"
         mkdir -p "$(dirname {output.vcf})"
 
@@ -806,7 +864,8 @@ rule merge_indels:
         b = out_dir + "/results/{donor}/{sample}.nuclear_all.indels_count.txt"
     output:
         merged = out_dir + "/overlap_variants/{donor}/{sample}.indels_merged.tsv"
-    threads: 1
+    threads:
+        1
     params:
         sample = lambda wc: wc.sample
     run:
@@ -866,7 +925,8 @@ rule merge_snvs:
         b = out_dir + "/results/{donor}/{sample}.nuclear_all.snv_count.txt"
     output:
         merged = out_dir + "/overlap_variants/{donor}/{sample}.snvs_merged.tsv"
-    threads: 1
+    threads:
+        1
     params:
         sample = lambda wc: wc.sample
     run:

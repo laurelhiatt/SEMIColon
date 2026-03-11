@@ -73,11 +73,13 @@ matches = config["matches"]
 
 # Wildcard constraints; should all be alphanumeric
 wildcard_constraints:
-    sample = "[A-Za-z0-9_-]+",
-    chroms = "[A-Za-z0-9]+",
-    i = "[0-9]+",
+    sample = r"[A-Za-z0-9_-]+",
+    chrom = r"chr[0-9]{1,2}|chrX|chrY|chrM",
+    chroms = r"[A-Za-z0-9]+",
+    i = r"[0-9]+",
     out_dir = out_dir,
-    donor = "[A-Za-z0-9]+"
+    donor = r"[A-Za-z0-9]+",
+
 
 # Ensure sample_files is initialized
 sample_files = {}

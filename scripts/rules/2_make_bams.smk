@@ -14,17 +14,23 @@ rule bwa_mem:
         ref = reference
     output:
         temp(out_dir + "/bam/{sample}.sam")
-    threads: 16
+    threads:
+        16
     resources:
         mem_mb = mem_medium
+    envmodules:
+        "bwa"
     log:
         log_dir + "/{sample}_bwa_mem.log"
     benchmark:
         bench_dir + "/{sample}_bwa_mem.tsv"
     shell:
         """
-        module load bwa
-        bwa mem -t {threads} {input.ref} {input.r1_clean} {input.r2_clean} > {output} 2> {log}
+        bwa mem \
+            -t {threads} \
+            {input.ref} \
+            {input.r1_clean} {input.r2_clean} \
+            > {output} 2> {log}
         """
 
 rule samblaster:
@@ -32,7 +38,8 @@ rule samblaster:
         sam = rules.bwa_mem.output
     output:
         temp(out_dir + "/bam/{sample}.samblaster.sam")
-    threads: 8
+    threads:
+        8
     resources:
         mem_mb = mem_medium
     benchmark:
@@ -41,7 +48,9 @@ rule samblaster:
         "../../envs/make_bams.yaml"
     shell:
         """
-        samblaster -i {input.sam} | samtools view -b -@ {threads} - > {output}
+        samblaster -i {input.sam} | \
+            samtools view -b -@ {threads} - \
+            > {output}
         """
 
 rule samtools_sort:
@@ -49,7 +58,8 @@ rule samtools_sort:
         bam = rules.samblaster.output
     output:
         bam_sort = out_dir + "/bam/{sample}-sortednoRG.bam"
-    threads: 8
+    threads:
+        8
     resources:
         mem_mb = mem_medium
     log:
@@ -60,7 +70,11 @@ rule samtools_sort:
         "../../envs/make_bams.yaml"
     shell:
         """
-        samtools sort -@ {threads} -o {output.bam_sort} {input.bam} 2> {log}
+        samtools sort \
+            -@ {threads} \
+            -o {output.bam_sort} \
+            {input.bam} \
+            2> {log}
         """
 
 # read groups are necessary for joint calling so we're gonna make sure they're there
@@ -81,10 +95,11 @@ rule add_rg:
          "../../envs/make_bams.yaml"
     shell:
         """
-        samtools addreplacerg -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" \
-        --threads {threads} \
-        -o {output.sort_bam_RG} \
-        {input.bam_sort}
+        samtools addreplacerg \
+            -r "@RG\\tID:{params.donor}_{wildcards.sample}\\tSM:{params.donor}_{wildcards.sample}\\tLB:{params.donor}_{wildcards.sample}\\tPL:Illumina" \
+            --threads {threads} \
+            -o {output.sort_bam_RG} \
+            {input.bam_sort}
         """
 
 # an index helps
@@ -99,7 +114,8 @@ rule index_bam:
         mem_mb = mem_small
     conda:
          "../../envs/make_bams.yaml"
-    localrule: True
+    localrule:
+        True
     shell:
         """
         samtools index --threads {threads} {input.bam_sort}

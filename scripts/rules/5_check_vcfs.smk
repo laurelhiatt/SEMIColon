@@ -23,8 +23,14 @@ rule somalier_extract:
     shell:
         """
         mkdir -p {output.somalier_dir}
-        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier extract {input.vcf} --sites {params.sites} --fasta {params.fasta} -d {output.somalier_dir} > {log} 2>&1
+        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier extract \
+            {input.vcf} \
+            --sites {params.sites} \
+            --fasta {params.fasta} \
+            -d {output.somalier_dir} \
+            > {log} 2>&1
         """
+# TODO - create a container, include somalier. ^^^
 
 #finish somalier analysis
 rule somalier_check:
@@ -37,14 +43,17 @@ rule somalier_check:
         samples = out_dir + "/somalier/{donor}/relate.samples.tsv"
     resources:
         mem_mb = mem_medium
-    threads: 1
+    threads:
+        1
     log:
         log_dir + "/{donor}_somalier_check.log"
     benchmark:
         bench_dir + "/{donor}_somalier_check.tsv"
     shell:
         """
-        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier relate {input.somalier_dir}/*.somalier -o {out_dir}/somalier/{wildcards.donor}/relate
+        /uufs/chpc.utah.edu/common/HIPAA/u1264408/tools/somalier/somalier relate \
+            {input.somalier_dir}/*.somalier \
+            -o {out_dir}/somalier/{wildcards.donor}/relate
         """
 
 #code for the bcftools stats
@@ -55,15 +64,21 @@ rule bcftools_stats:
         stats = temp(out_dir + "/vcf/{donor}-vcf_stats.txt")
     resources:
         mem_mb = mem_small
-    threads: 4
+    threads:
+        4
     log:
         log_dir + "/{donor}_bcftools_stats.log"
     envmodules:
         "bcftools/1.16"
     shell:
         """
-        module load bcftools/1.16
-        bcftools stats -s - --verbose --threads {threads} {input.vcf} > {output.stats} 2> {log}
+        bcftools stats \
+            -s - \
+            --verbose \
+            --threads {threads} \
+            {input.vcf} \
+            > {output.stats} \
+            2> {log}
         """
 
 # plot the bcftools stats output
@@ -77,7 +92,8 @@ rule plot_stats:
         "../../envs/vcfstats.yaml"
     resources:
         mem_mb = mem_medium
-    threads: 2
+    threads:
+        2
     log:
         log_dir + "/{donor}_bcftools_plot.log"
     benchmark:

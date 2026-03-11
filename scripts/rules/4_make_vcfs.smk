@@ -111,7 +111,7 @@ def chunks_n_chroms(*iterables):
 
     return ret_list
 
-chromosome_chunks_dict = make_chroms_dict("/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/data/output/CellCut/regions", chroms = chroms)
+chromosome_chunks_dict = make_chroms_dict("../../data/output/CellCut/regions", chroms = chroms)
 
 rule make_bam_list:
     input:
@@ -124,10 +124,12 @@ rule make_bam_list:
         bam_file_list = temp(out_dir + "/bam/bam_list_{donor}.txt")
     resources:
         mem_mb = mem_xsmall
-    threads: 2
-    localrule: True
+    threads:
+        2
+    localrule:
+        True
     script:
-        "/uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/variant_calling/create_bam_list.py"
+        "../variant_calling/create_bam_list.py"
 
 rule generate_regions:
     input:
@@ -139,18 +141,16 @@ rule generate_regions:
         regions = out_dir + "/regions/chunk.{chroms}.region.{i}.bed"
     resources:
         mem_mb = mem_small
-    threads: 2
-    localrule: True
+    threads:
+        2
+    localrule:
+        True
     conda:
          "../../envs/plot_mosdepth.yaml"
     script:
         """
         ../variant_calling/fasta_generate_regions.py
         """
-
-# Add these wildcard constraints if you want to ensure assembly/chrom matching:
-wildcard_constraints:
-    chrom = r"chr[0-9]{1,2}|chrX|chrY|chrM"
 
 # helper: return list of g.vcf paths (per-chrom) for a donor (all crypts)
 def collect_donor_vcfs(wildcards):
@@ -194,7 +194,8 @@ rule deepsomatic_call_snvs:
     output:
         vcf = out_dir + "/vcf/per-chrom/{donor}.{crypt}.GRCh38.{chrom}.vcf.gz",
         gvcf = out_dir + "/vcf/per-chrom/{donor}.{crypt}.GRCh38.{chrom}.g.vcf.gz"
-    threads: 16
+    threads:
+        16
     params:
         # model_type, normal_cmd, normal_name computed from matches
         model_type = lambda wildcards: normal_flags(wildcards)[0],
@@ -217,7 +218,8 @@ rule deepsomatic_combine_donor_chrom_vcfs:
         gvcfs = collect_donor_vcfs
     output:
         out_dir + "/vcf/per-chrom/{donor}.GRCh38.{chrom}.joint_genotyped.vcf.gz"
-    threads: 8
+    threads:
+        8
     params:
         # put glnexus DB inside the pipeline output tree (not external abspath)
         gl_nexus_prefix = lambda wildcards: out_dir + f"/vcf/per-chrom/gl_nexus_dbs/{wildcards.donor}_GRCh38_{wildcards.chrom}"
@@ -232,14 +234,18 @@ rule deepsomatic_merge_donor_vcfs:
         vcfs = expand(out_dir + "/vcf/per-chrom/{{donor}}.GRCh38.{chrom}.joint_genotyped.vcf.gz", chrom=chroms)
     output:
         out_dir + "/vcf/merged/{donor}.GRCh38.joint_genotyped.vcf.gz"
-    threads: 16
+    envmodules:
+        "bcftools/1.16"
+    threads:
+        16
     resources:
         runtime = 1440,
         mem_mb = 64_000
     shell:
         """
-        module load bcftools/1.16 || true
-        bcftools concat {input.vcfs} | bcftools view --threads {threads} | bgzip > {output}
+        bcftools concat {input.vcfs} | \
+            bcftools view --threads {threads} | \
+            bgzip > {output}
         """
 
 
@@ -248,7 +254,8 @@ rule index_deepsomatic_donor_vcfs:
         joint = out_dir + "/vcf/merged/{donor}.GRCh38.joint_genotyped.vcf.gz"
     output:
         joint_index = out_dir + "/vcf/merged/{donor}.GRCh38.joint_genotyped.vcf.gz.tbi"
-    threads: 16
+    threads:
+        16
     resources:
         runtime = 1440,
         mem_mb = 64_000
@@ -284,9 +291,15 @@ rule freebayes_variant_calling:
         "freebayes/1.3.4"
     shell:
         """
-        module load freebayes/1.3.4
         mkdir -p {params.out_dir}/vcf/{wildcards.chroms}
-        freebayes --min-alternate-count 2 --min-alternate-qsum 40 -f {input.ref} -t {input.regions} -L {input.bam_file_list} > {output.full} 2> {log}
+        freebayes \
+            --min-alternate-count 2 \
+            --min-alternate-qsum 40 \
+            -f {input.ref} \
+            -t {input.regions} \
+            -L {input.bam_file_list} \
+            > {output.full} \
+            2> {log}
         """
 
 rule compress_chunks:
@@ -296,7 +309,8 @@ rule compress_chunks:
         chunk_zip = temp(out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf.gz")
     resources:
         mem_mb = mem_medium
-    threads: 4
+    threads:
+        4
     shell:
         """
         bgzip -f {input.chunk_vcf} --threads {threads}
@@ -307,7 +321,8 @@ rule index_chunks:
         chunk_zip = out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf.gz"
     output:
         chunk_zip_index = temp(out_dir + "/vcf/{chroms}/{donor}-variants.{i}.vcf.gz.tbi")
-    threads: 4
+    threads:
+        4
     resources:
         mem_mb = mem_medium
     shell:
@@ -334,7 +349,8 @@ rule concat_vcfs:
     output:
         vcf = out_dir + "/vcf/{donor}-var.vcf.gz",
         vcf_index = out_dir + "/vcf/{donor}-var.vcf.gz.tbi"
-    threads: 16
+    threads:
+        16
     log:
         log_dir + "/{donor}_concat.log"
     benchmark:
@@ -345,7 +361,6 @@ rule concat_vcfs:
         "bcftools/1.16"
     shell:
         """
-        module load bcftools/1.16
         bcftools concat -a {input.chunk_zip} -o {output.vcf} --threads {threads} > {log} 2>&1
         tabix -f -p vcf {output.vcf} --threads {threads}
         """

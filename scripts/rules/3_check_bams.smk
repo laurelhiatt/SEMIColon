@@ -51,7 +51,11 @@ rule samtools_stats:
          "../../envs/make_bams.yaml"
     shell:
         """
-        samtools stats --threads {threads} {input.bam_sort} > {output.stats} 2> {log}
+        samtools stats \
+            --threads {threads} \
+            {input.bam_sort} \
+            > {output.stats} \
+            2> {log}
         """
 
 # getting coverage across genome, chromosomes, etc
@@ -75,8 +79,6 @@ rule mosdepth:
     shell:
         """
         mkdir -p {params.mos_dir}
-
-        module load mosdepth/0.3.1
 
         mosdepth -n --fast-mode --by 500 \
            {params.mos_dir}/{params.sample} \
@@ -105,7 +107,7 @@ rule plot_mosdepth:
         """
         mkdir -p {out_dir}/mosdepth/{params.donor}
         echo "Plotting mosdepth coverage for {input.file}"
-        python /uufs/chpc.utah.edu/common/HIPAA/u1264408/u1264408/Git/SEMIColon/scripts/quality_control/plot-dist.py {input.file} --output {output.html}
+        python ../quality_control/plot-dist.py {input.file} --output {output.html}
         """
 
 # bam statistcs with downstream plotting of quality metrics
@@ -120,7 +122,8 @@ rule alfred_qc:
          "../../envs/alfred2.yaml"
     resources:
         mem_mb = mem_small
-    threads: 2
+    threads:
+        2
     log:
         log_dir + "/{sample}_alfred.log"
     benchmark:
@@ -139,13 +142,13 @@ rule alfred_summary:
         pdf = out_dir + "/alfred/{sample}.pdf"
     resources:
         mem_mb = mem_medium
-    threads: 2
+    threads:
+        2
     log:
         log_dir + "/{sample}_plot_alfred.log"
     envmodules:
         "R/4.4.2"
     shell:
         """
-        module load R
-        Rscript quality_control/stats.R {input.report} {output.pdf}
+        Rscript ../quality_control/stats.R {input.report} {output.pdf}
         """
