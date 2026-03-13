@@ -45,18 +45,18 @@ Within the scripts folder, there are (planned) subfolders specific to different 
 | │   ├── genomic.gtf  | [ ] |
 | │   ├── refcds_GRCh38_hg38.rda  | [ ] |
 | │   └── somalier-groups.txt  | [ ] |
-| ├── envs  | [ ] |
-| │   ├── alfred2.yaml  | [ ] |
-| │   ├── alfred.yaml  | [ ] |
-| │   ├── cyvcf2.yaml  | [ ] |
-| │   ├── fastp.yaml  | [ ] |
-| │   ├── make_bams.yaml  | [ ] |
-| │   ├── plot_mosdepth.yaml  | [ ] |
-| │   ├── recurrent.yaml  | [ ] |
-| │   └── vcfstats.yaml  | [ ] |
+| ├── envs  | [X] |
+| │   ├── alfred2.yaml  | [X] |
+| │   ├── alfred.yaml  | [X] |
+| │   ├── cyvcf2.yaml  | [X] |
+| │   ├── fastp.yaml  | [X] |
+| │   ├── make_bams.yaml  | [X] |
+| │   ├── plot_mosdepth.yaml  | [X] |
+| │   ├── recurrent.yaml  | [X] |
+| │   └── vcfstats.yaml  | [X] |
 | ├── genome.chrom.sizes  | [ ] |
-| ├── inSTRbility  | [ ] |
-| ├── MuSiCal  | [ ] |
+| ├── inSTRbility  | [X] |
+| ├── MuSiCal  | [X] |
 | ├── README.  | [ ] |
 | └── scripts  | [ ] |
 |     ├── figures  | [ ] |
