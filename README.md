@@ -8,9 +8,9 @@ We have a scripts folder and a data folder.
 Within the scripts folder, there are (planned) subfolders specific to different processes
 
 # Cleaning Branch To-Do's
-- [ ] Containerize software
-  - [ ] Create conda environments in container
-  - [ ] Create environments in container for respective envmodules
+- [X] Containerize software
+  - [X] Create conda environments in container
+  - [X] Create environments in container for respective envmodules
 - [ ] Hardcode paths
   - [ ] Remove hardcoded paths
   - [ ] Replace hardcoded paths with relative paths, input parameters, etc.

@@ -482,7 +482,8 @@ rule gnomad_VCFs_ds:
         annotated_vcf = temp(out_dir + "/vcf/merged/{donor}-annotated-var.vcf.gz")
     resources:
         mem_mb = mem_large
-    threads: 2
+    threads:
+        2
     log:
         log_dir + "/{donor}_gnomad_ds.log"
     envmodules:
