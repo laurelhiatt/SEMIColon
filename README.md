@@ -21,6 +21,9 @@ Within the scripts folder, there are (planned) subfolders specific to different 
 - [ ] Get Laurel's feedback on which scripts to remove and which scripts to keep.
 
 
+## Directions
+Please review the following files and directories. To mark those that you want removed (or those that should not show up in the final manuscript repository), please fill in the brackets with an X (i.e. [X]). If you mark a directory with this, I will assume that the directory and all contents within the directory are fine to remove. If you do this, don't worry about marking each independent file in that directory. 
+
 | Folder / File | Remove |
 | ---           | ---           |
 | ├── data  | [ ] |
