@@ -1,5 +1,7 @@
 # Temp file directory
 /scripts/.snakemake/*
+/scripts/logs/*
+/scripts/results/*
 /scripts/pks/.snakemake/*
 .conda/*
 pks/.snakemake/*
