@@ -27,27 +27,27 @@ Please review the following files and directories. To mark those that you want r
 | Folder / File | Remove |
 | ---           | ---           |
 | ├── data  | [ ] |
-| │   ├── clb_genes.gtf  | [ ] |
+| │   ├── clb_genes.gtf  | [X] |
 | │   ├── config  | [ ] |
 | │   │   ├── sample-groups.lua  | [ ] |
 | │   │   ├── slurm_config  | [ ] |
 | │   │   │   └── config.yaml  | [ ] |
 | │   │   ├── snakemake_config  | [ ] |
 | │   │   │   ├── CCconfig.yaml  | [ ] |
-| │   │   │   └── toyconfig.yaml  | [ ] |
-| │   │   ├── spectra_config  | [ ] |
-| │   │   │   ├── config.yaml  | [ ] |
-| │   │   │   └── spectraconfig.yaml  | [ ] |
-| │   │   └── test_config  | [ ] |
-| │   │       ├── config.yaml  | [ ] |
-| │   │       └── testconfig.yaml  | [ ] |
+| │   │   │   └── toyconfig.yaml  | [X] |
+| │   │   ├── spectra_config  | [X] |
+| │   │   │   ├── config.yaml  | [X] |
+| │   │   │   └── spectraconfig.yaml  | [X] |
+| │   │   └── test_config  | [X] |
+| │   │       ├── config.yaml  | [X] |
+| │   │       └── testconfig.yaml  | [X] |
 | │   ├── COSMIC_v3.4_ID_GRCh37.txt  | [ ] |
-| │   ├── COSMIC_v3.4_SBS_GRCh38.txt  | [ ] |
+| │   ├── COSMIC_v3.4_SBS_GRCh38.txt  | [X] |
 | │   ├── COSMIC_v3.5_SBS_GRCh38.txt  | [ ] |
-| │   ├── GCF_000025745.1_ASM2574v1_genomic.fna  | [ ] |
-| │   ├── genomic.gtf  | [ ] |
-| │   ├── refcds_GRCh38_hg38.rda  | [ ] |
-| │   └── somalier-groups.txt  | [ ] |
+| │   ├── GCF_000025745.1_ASM2574v1_genomic.fna  | [X] |
+| │   ├── genomic.gtf  | [X] |
+| │   ├── refcds_GRCh38_hg38.rda  | [X] |
+| │   └── somalier-groups.txt  | [X] |
 | ├── envs  | [X] |
 | │   ├── alfred2.yaml  | [X] |
 | │   ├── alfred.yaml  | [X] |
@@ -57,13 +57,13 @@ Please review the following files and directories. To mark those that you want r
 | │   ├── plot_mosdepth.yaml  | [X] |
 | │   ├── recurrent.yaml  | [X] |
 | │   └── vcfstats.yaml  | [X] |
-| ├── genome.chrom.sizes  | [ ] |
+| ├── genome.chrom.sizes  | [X] |
 | ├── inSTRbility  | [X] |
 | ├── MuSiCal  | [X] |
 | ├── README.  | [ ] |
 | └── scripts  | [ ] |
 |     ├── figures  | [ ] |
-|     │   ├── archive  | [ ] |
+|     │   ├── archive  | [X] |
 |     │   │   ├── Figure1.ipynb  | [ ] |
 |     │   │   ├── Figure2.ipynb  | [ ] |
 |     │   │   ├── Figure3.ipynb  | [ ] |
@@ -116,75 +116,75 @@ Please review the following files and directories. To mark those that you want r
 |     │   │   └── total_indels_clonal.svg  | [ ] |
 |     │   └── ProcessData.ipynb  | [ ] |
 |     ├── filtering  | [ ] |
-|     │   ├── filter.ipynb  | [ ] |
+|     │   ├── filter.ipynb  | [X] |
 |     │   ├── find_recurrent.py  | [ ] |
-|     │   ├── recurrent.ipynb  | [ ] |
-|     │   ├── slop.sh  | [ ] |
-|     │   └── Snakefile  | [ ] |
+|     │   ├── recurrent.ipynb  | [X] |
+|     │   ├── slop.sh  | [X] |
+|     │   └── Snakefile  | [X] |
 |     ├── mutations  | [ ] |
 |     │   ├── dataframe.ipynb  | [ ] |
-|     │   ├── gene-specific.ipynb  | [ ] |
+|     │   ├── gene-specific.ipynb  | [X] |
 |     │   ├── instability  | [ ] |
 |     │   │   ├── ADtodataframe.py  | [ ] |
-|     │   │   ├── instability.tsv  | [ ] |
+|     │   │   ├── instability.tsv  | [X] |
 |     │   │   └── inSTRbility.sh  | [ ] |
 |     │   ├── matrix.ipynb  | [ ] |
 |     │   ├── per-sample-report-indels.py  | [ ] |
 |     │   ├── per-sample-report.py  | [ ] |
-|     │   ├── selection.ipynb  | [ ] |
+|     │   ├── selection.ipynb  | [X] |
 |     │   ├── signatures  | [ ] |
-|     │   │   ├── LookingatMuSiCalModelPlots.ipynb  | [ ] |
-|     │   │   ├── MuSiCal_DeNovoSigAnalysis.py  | [ ] |
-|     │   │   ├── MuSiCal_DeNovoSigDiscovery.py  | [ ] |
-|     │   │   ├── MuSiCal_DeNovoSigMatching.py  | [ ] |
-|     │   │   ├── MuSiCal_SigMatchingOnly.py  | [ ] |
-|     │   │   ├── mutation_signatures.Rmd  | [ ] |
-|     │   │   ├── SBS88.tsv  | [ ] |
-|     │   │   ├── sigassignment.py  | [ ] |
+|     │   │   ├── LookingatMuSiCalModelPlots.ipynb  | [X] |
+|     │   │   ├── MuSiCal_DeNovoSigAnalysis.py  | [X] |
+|     │   │   ├── MuSiCal_DeNovoSigDiscovery.py  | [X] |
+|     │   │   ├── MuSiCal_DeNovoSigMatching.py  | [X] |
+|     │   │   ├── MuSiCal_SigMatchingOnly.py  | [X] |
+|     │   │   ├── mutation_signatures.Rmd  | [X] |
+|     │   │   ├── SBS88.tsv  | [X] |
+|     │   │   ├── sigassignment.py  | [X] |
 |     │   │   ├── sigpro_dbs.py  | [ ] |
-|     │   │   ├── SigProfiler.py  | [ ] |
+|     │   │   ├── SigProfiler.py  | [X] |
 |     │   │   ├── sigpro_IDs.py  | [ ] |
 |     │   │   └── sigpro.py  | [ ] |
-|     │   ├── split_vcfs_by_vaf.py  | [ ] |
+|     │   ├── split_vcfs_by_vaf.py  | [X] |
 |     │   └── within-donor  | [ ] |
-|     │       └── donor_shared.py  | [ ] |
-|     ├── overlap.ipynb  | [ ] |
+|     │       └── donor_shared.py  | [X] |
+|     ├── overlap.ipynb  | [X] |
 |     ├── pks  | [ ] |
-|     │   ├── 2026_01_15_indel_loads.csv  | [ ] |
-|     │   ├── 2026_01_26_ID18_refit_abs.csv  | [ ] |
-|     │   ├── 2026_01_26_ID18_refit.csv  | [ ] |
-|     │   ├── 2026_01_26_indel_loads.csv  | [ ] |
-|     │   ├── 2026_01_26_SBS88_refit_abs.csv  | [ ] |
-|     │   ├── 2026_01_26_SBS88_refit.csv  | [ ] |
-|     │   ├── 2026_01_26_snv_loads.csv  | [ ] |
+|     │   ├── 2026_01_15_indel_loads.csv  | [X] |
+|     │   ├── 2026_01_26_ID18_refit_abs.csv  | [X] |
+|     │   ├── 2026_01_26_ID18_refit.csv  | [X] |
+|     │   ├── 2026_01_26_indel_loads.csv  | [X] |
+|     │   ├── 2026_01_26_SBS88_refit_abs.csv  | [X] |
+|     │   ├── 2026_01_26_SBS88_refit.csv  | [X] |
+|     │   ├── 2026_01_26_snv_loads.csv  | [ X |
 |     │   ├── colibactin_all.ipynb  | [ ] |
-|     │   ├── colibactin_coding_genic.csv  | [ ] |
+|     │   ├── colibactin_coding_genic.csv  | [X] |
 |     │   ├── colibactin_coding.ipynb  | [ ] |
-|     │   ├── colibactin_driver_coding_gene_snvs.csv  | [ ] |
-|     │   ├── colibactin_driver_gene_IDs.csv  | [ ] |
-|     │   ├── colibactin_driver_gene_snvs.csv  | [ ] |
+|     │   ├── colibactin_driver_coding_gene_snvs.csv  | [X] |
+|     │   ├── colibactin_driver_gene_IDs.csv  | [X] |
+|     │   ├── colibactin_driver_gene_snvs.csv  | [X] |
 |     │   ├── colibactinFig2.ipynb  | [ ] |
-|     │   ├── colibactin_id_burden_coding.csv  | [ ] |
-|     │   ├── colibactin_id_burden_genic.csv  | [ ] |
+|     │   ├── colibactin_id_burden_coding.csv  | [X] |
+|     │   ├── colibactin_id_burden_genic.csv  | [X] |
 |     │   ├── colibactin.ipynb  | [ ] |
-|     │   ├── colibactin_snv_burden_coding.csv  | [ ] |
-|     │   ├── colibactin_snv_burden_genic.csv  | [ ] |
-|     │   ├── ID18_refit_coding.csv  | [ ] |
-|     │   ├── ID18_refit_genic.csv  | [ ] |
-|     │   ├── Output  | [ ] |
+|     │   ├── colibactin_snv_burden_coding.csv  | [X] |
+|     │   ├── colibactin_snv_burden_genic.csv  | [X] |
+|     │   ├── ID18_refit_coding.csv  | [X] |
+|     │   ├── ID18_refit_genic.csv  | [X] |
+|     │   ├── Output  | [X] |
 |     │   │   └── Supplementary_tables  | [ ] |
 |     │   │       └── Supplementary_Table_1.doc  | [ ] |
-|     │   ├── Processed_data  | [ ] |
+|     │   ├── Processed_data  | [X] |
 |     │   │   └── Contexts  | [ ] |
 |     │   │       ├── adenoma_unique_contexts_all.txt  | [ ] |
 |     │   │       ├── adenoma_unique_contexts.txt  | [ ] |
 |     │   │       ├── carcinoma_unique_contexts_all.txt  | [ ] |
 |     │   │       ├── normal_unique_contexts_all.txt  | [ ] |
 |     │   │       └── normal_unique_contexts.txt  | [ ] |
-|     │   ├── SBS88_refit_coding.csv  | [ ] |
-|     │   ├── SBS88_refit_genic.csv  | [ ] |
-|     │   └── Snakefile  | [ ] |
-|     ├── pks.sh  | [ ] |
+|     │   ├── SBS88_refit_coding.csv  | [X] |
+|     │   ├── SBS88_refit_genic.csv  | [X] |
+|     │   └── Snakefile  | [X] |
+|     ├── pks.sh  | [X] |
 |     ├── quality_control   | [ ] |
 |     │   ├── plot-dist.py  | [ ] |
 |     │   └── stats.R  | [ ] |
@@ -203,5 +203,5 @@ Please review the following files and directories. To mark those that you want r
 |         ├── call_tumor_only.sh  | [ ] |
 |         ├── create_bam_list.py  | [ ] |
 |         ├── fasta_generate_regions.py  | [ ] |
-|         ├── GenerateFreebayesRegions.R  | [ ] |
+|         ├── GenerateFreebayesRegions.R  | [X] |
 |         └── joint.sh  | [ ] |
